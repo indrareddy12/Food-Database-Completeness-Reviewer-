@@ -20,13 +20,12 @@ load_dotenv(dotenv_path=env_path)
 
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-# Models supported on current Groq tier (verified)
+# Models verified active on Groq Cloud API (/openai/v1/models), with fallback for standard tiers
 PREFERRED_GROQ_MODELS = [
     "qwen/qwen3.8-27b",
     "openai/gpt-oss-120b",
     "openai/gpt-oss-20b",
     "llama-3.3-70b-versatile",
-    "mixtral-8x7b-32768"
 ]
 
 

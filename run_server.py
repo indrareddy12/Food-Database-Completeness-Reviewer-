@@ -22,7 +22,7 @@ if __name__ == "__main__":
     print("=" * 70)
     print("  NUTRIAUDIT: Food Database Completeness Reviewer Server")
     print(f"  Local API & UI: http://localhost:{port}")
-    print("  Default Dataset: demo_subset(1).csv (552 records)")
+    print("  Default Dataset: food-db-reviewer/demo_subset.csv (552 records)")
     print("  Zero-Hallucination Guardrail: ENFORCED")
     print("=" * 70)
     app.run(host="0.0.0.0", port=port, debug=False)

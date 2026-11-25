@@ -121,7 +121,7 @@ DATASET_CONFIGS = {
     "demo": {
         "key": "demo",
         "name": "Demo Subset (552 rows)",
-        "filenames": ["demo_subset(1).csv", "demo_subset1.csv", "demo_subset.csv"],
+        "filenames": ["demo_subset.csv", "demo_subset(1).csv", "demo_subset1.csv"],
         "format": "csv_off",
         "expected_rows": 552,
         "is_default": True,

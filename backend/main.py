@@ -322,8 +322,16 @@ def add_product_record():
 
 
 # -----------------------------------------------------------------------------
-# Static File Hosting (Serves index.html at root)
+# Static File Hosting (Strict Allowlist — Never Expose .env, .git, or backend/)
 # -----------------------------------------------------------------------------
+
+ALLOWED_STATIC_FILES = {
+    "index.html",
+    "food-db-reviewer/demo_subset.csv",
+    "demo_subset(1).csv",
+}
+SENSITIVE_STATIC_PREFIXES = ("backend/", "tests/", "uploads/", "docs/")
+
 
 @app.route("/", methods=["GET"])
 def serve_index():
@@ -334,11 +342,29 @@ def serve_index():
 
 
 @app.route("/<path:path>", methods=["GET"])
-def serve_static(path):
-    file_path = frontend_dir / path
-    if file_path.exists():
-        return send_from_directory(str(frontend_dir), path)
-    return send_file(str(frontend_dir / "index.html"))
+def serve_static(path: str):
+    normalized = path.replace("\\", "/").lstrip("/")
+    if normalized == "favicon.ico":
+        return ("", 204)
+
+    parts = [p for p in normalized.split("/") if p]
+    if (
+        ".." in parts
+        or any(p.startswith(".") for p in parts)
+        or normalized.startswith(SENSITIVE_STATIC_PREFIXES)
+    ):
+        logger.warning("Blocked static access to protected path: %s", path)
+        return jsonify({"error": "Forbidden"}), 403
+
+    if normalized not in ALLOWED_STATIC_FILES:
+        return jsonify({"error": "Not found"}), 404
+
+    resolved_root = frontend_dir.resolve()
+    target = (resolved_root / normalized).resolve()
+    if not target.is_relative_to(resolved_root) or not target.is_file():
+        return jsonify({"error": "Not found"}), 404
+
+    return send_file(target)
 
 
 if __name__ == "__main__":

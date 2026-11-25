@@ -19,11 +19,11 @@ An agentic, zero-hallucination GenAI audit platform for Problem Statement 134 ("
 
 ## 📊 Datasets & Smooth Dataset Toggle
 
-The application defaults to `demo_subset(1).csv` (552 rows) and provides an instant one-click toggle in the UI and backend API:
+The application defaults to `food-db-reviewer/demo_subset.csv` (552 rows) and provides an instant one-click toggle in the UI and backend API:
 
 | Dataset | File Target | Rows | Default Status |
 | :--- | :--- | :--- | :--- |
-| **Demo Subset** | `demo_subset(1).csv` | **552** | **Default on load** (Ready out of the box) |
+| **Demo Subset** | `food-db-reviewer/demo_subset.csv` | **552** | **Default on load** (Ready out of the box) |
 | **Full Preprocessed Catalog** | `preprocessed_full(1).csv` | **16,091** | Auto-detected if present in workspace |
 | **Synthetic 2,000 Dataset** | `food_completeness_dataset_2000.xlsx` (`Products` sheet) | **2,000** | Auto-detected if present in workspace |
 
@@ -36,7 +36,7 @@ The application defaults to `demo_subset(1).csv` (552 rows) and provides an inst
 ## ⚙️ Architecture & Backend Modules
 
 ### 1. `backend/data_connector.py`
-- Loads active dataset (`demo_subset(1).csv` by default) and caches normalized records in memory.
+- Loads active dataset (`food-db-reviewer/demo_subset.csv` by default) and caches normalized records in memory.
 - Normalizes schemas from Open Food Facts CSVs (`energy_kcal_100g`, `proteins_100g`, `sodium_100g`, etc.) and synthetic Excel sheets (`serving_size_g`, `energy_kcal`, `sodium_mg`, etc.).
 - Converts `sodium_100g` from grams to `sodium_mg` (`sodium_g * 1000`).
 - **Pinecone-Ready Connector:** Clean interface (`get_records(dataset_key)`, `get_similar_records(code, dataset_key)`) that works locally out-of-the-box and stages query routing for Pinecone when `PINECONE_API_KEY` and `PINECONE_INDEX` are configured.

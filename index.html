@@ -2281,7 +2281,7 @@
       outputCard.classList.remove('hidden');
 
       if (modelBadge) {
-        modelBadge.textContent = isBackendConnected ? 'groq / qwen3.8-27b' : (activeProvider === 'gemini' ? 'gemini-2.5-flash' : 'groq/qwen3.8-27b');
+        modelBadge.textContent = isBackendConnected ? 'Connecting...' : (activeProvider === 'gemini' ? 'gemini-2.5-flash' : 'groq');
       }
 
       outputContent.innerHTML = `<p class="animate-pulse font-bold">Connecting to Zero-Hallucination Audit Engine (${isBackendConnected ? 'Groq Backend (.env)' : activeProvider.toUpperCase()})...</p>`;
@@ -2861,7 +2861,10 @@ ${anomPoints.join('\n')}
 
     async function loadDemoCsvClientSide() {
       try {
-        const resp = await fetch('./demo_subset(1).csv');
+        let resp = await fetch('./food-db-reviewer/demo_subset.csv');
+        if (!resp.ok) {
+          resp = await fetch('./demo_subset(1).csv');
+        }
         if (!resp.ok) return;
         const csvText = await resp.text();
         const rows = parseCsvRows(csvText);
@@ -2969,7 +2972,7 @@ ${anomPoints.join('\n')}
       switchTab('home');
       refreshIcons();
 
-      showToast(`Loaded ${foodDatabase.length} records (${activeDataset === 'demo' ? 'demo_subset(1).csv' : activeDataset})!`, 'bg-matcha');
+      showToast(`Loaded ${foodDatabase.length} records (${activeDataset === 'demo' ? 'demo_subset.csv' : activeDataset})!`, 'bg-matcha');
     }
 
     window.addEventListener('DOMContentLoaded', () => {

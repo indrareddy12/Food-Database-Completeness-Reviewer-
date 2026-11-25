@@ -296,6 +296,12 @@ def test_flask_endpoints():
     assert root_resp.status_code == 200
     assert "NUTRIAUDIT" in root_resp.data.decode("utf-8")
 
+    # Verify secret/source protection in serve_static (strict allowlist)
+    for sensitive_path in ("/.env", "/.env.example", "/.git/config", "/backend/main.py", "/tests/test_nutriaudit.py"):
+        sec_resp = client.get(sensitive_path)
+        assert sec_resp.status_code == 403, f"Expected 403 for {sensitive_path}, got {sec_resp.status_code}"
+    assert client.get("/nonexistent-file.txt").status_code == 404
+
 
 def test_triage_service_audit_and_warning_reporting():
     """Verify triage service returns structured zero-hallucination report and surfaces warnings on failures."""
