@@ -8,6 +8,9 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Lucide Icons CDN (2.5px stroke Neo-Brutalist icons) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <!-- Google Fonts: Space Grotesk (Neo-Brutalist display) & Plus Jakarta Sans (clean UI) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -145,6 +148,13 @@
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* Lucide Icons styled for Organic Neo-Brutalism (matches 2.5px ink borders) */
+    .lucide {
+      stroke-width: 2.5;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body class="min-h-screen pb-28 lg:pb-12">
@@ -181,39 +191,43 @@
 
       <!-- Desktop Pill Tab Navigation -->
       <nav class="hidden lg:flex items-center gap-1.5 bg-cream nb-border rounded-full p-1.5 shadow-[3px_3px_0px_#18181B]">
-        <button onclick="switchTab('home')" id="desk-tab-home" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
-          🏠 Home
+        <button onclick="switchTab('home')" id="desk-tab-home" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition inline-flex items-center gap-1.5">
+          <i data-lucide="home" class="w-3.5 h-3.5"></i>
+          <span>Home</span>
         </button>
-        <button onclick="switchTab('database')" id="desk-tab-database" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
-          🗄️ Database
+        <button onclick="switchTab('database')" id="desk-tab-database" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition inline-flex items-center gap-1.5">
+          <i data-lucide="database" class="w-3.5 h-3.5"></i>
+          <span>Database</span>
         </button>
-        <button onclick="switchTab('auditor')" id="desk-tab-auditor" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
-          ⚡ Auditor
+        <button onclick="switchTab('auditor')" id="desk-tab-auditor" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition inline-flex items-center gap-1.5">
+          <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+          <span>Auditor</span>
         </button>
-        <button onclick="switchTab('needs')" id="desk-tab-needs" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
-          🎯 My Needs
+        <button onclick="switchTab('needs')" id="desk-tab-needs" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition inline-flex items-center gap-1.5">
+          <i data-lucide="target" class="w-3.5 h-3.5"></i>
+          <span>My Needs</span>
         </button>
-        <button onclick="switchTab('settings')" id="desk-tab-settings" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition flex items-center gap-1.5">
-          <span>⚙️ Settings</span>
+        <button onclick="switchTab('settings')" id="desk-tab-settings" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition inline-flex items-center gap-1.5">
+          <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+          <span>Settings</span>
         </button>
       </nav>
 
       <!-- Top Header Action Controls (API Key Quick Pill + Add Record) -->
       <div class="flex items-center gap-2">
-        <!-- TOP API KEY OPTION BUTTON (User Requirement) -->
         <button
           onclick="openApiKeyModal()"
           id="top-api-key-btn"
           class="nb-pill bg-cream hover:bg-white px-3 sm:px-3.5 py-2 text-xs font-extrabold flex items-center gap-1.5 shrink-0"
           title="Configure Gemini or Groq API Key"
         >
-          <span class="text-sm">🔑</span>
+          <i data-lucide="key-round" class="w-3.5 h-3.5 text-amber-700"></i>
           <span id="top-api-label" class="hidden sm:inline">API Key</span>
           <span id="top-api-dot" class="w-2.5 h-2.5 rounded-full bg-butter border border-ink inline-block" title="API Status"></span>
         </button>
 
         <button onclick="openAddModal()" class="nb-pill bg-berry px-3.5 sm:px-4 py-2 text-xs font-extrabold flex items-center gap-1.5 shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <i data-lucide="plus" class="w-4 h-4"></i>
           <span class="hidden sm:inline">Add Record</span>
           <span class="sm:hidden">Add</span>
         </button>
@@ -233,7 +247,9 @@
     <div class="bg-cream nb-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <div class="flex items-center gap-2 shrink-0">
-          <span class="w-9 h-9 rounded-full bg-butter nb-border flex items-center justify-center text-lg">📊</span>
+          <span class="w-9 h-9 rounded-full bg-butter nb-border flex items-center justify-center">
+            <i data-lucide="bar-chart-3" class="w-5 h-5 text-ink"></i>
+          </span>
           <div>
             <p class="text-[10px] font-extrabold uppercase text-ink/70 leading-none">Active Dataset</p>
             <p id="active-dataset-name-label" class="font-display font-bold text-sm sm:text-base leading-tight mt-0.5">Demo Subset (552 rows)</p>
@@ -244,43 +260,46 @@
           <button
             id="btn-ds-demo"
             onclick="switchDataset('demo')"
-            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-ink text-cream transition"
+            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-ink text-cream transition inline-flex items-center gap-1.5"
             title="Default Open Food Facts benchmark (552 items)"
           >
-            ⚡ Demo Subset (552 rows)
+            <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+            <span>Demo Subset (552 rows)</span>
           </button>
           <button
             id="btn-ds-full"
             onclick="switchDataset('full')"
-            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-white text-ink hover:bg-cream transition flex items-center gap-1.5"
+            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-white text-ink hover:bg-cream transition inline-flex items-center gap-1.5"
             title="Full Preprocessed Catalog (16,091 rows)"
           >
-            <span>📦 Full Catalog (16,091 rows)</span>
+            <i data-lucide="package" class="w-3.5 h-3.5"></i>
+            <span>Full Catalog (16,091 rows)</span>
             <span id="badge-ds-full" class="px-1.5 py-0.2 rounded-full text-[9px] bg-peach/40 uppercase">Workspace Check</span>
           </button>
           <button
             id="btn-ds-synthetic"
             onclick="switchDataset('synthetic')"
-            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-white text-ink hover:bg-cream transition flex items-center gap-1.5"
+            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-white text-ink hover:bg-cream transition inline-flex items-center gap-1.5"
             title="Synthetic 2,000 Dataset (food_completeness_dataset_2000.xlsx)"
           >
-            <span>🧪 Synthetic (2,000 rows)</span>
+            <i data-lucide="flask-conical" class="w-3.5 h-3.5"></i>
+            <span>Synthetic (2,000 rows)</span>
             <span id="badge-ds-synthetic" class="px-1.5 py-0.2 rounded-full text-[9px] bg-peach/40 uppercase">Workspace Check</span>
           </button>
         </div>
       </div>
 
       <div class="flex items-center gap-2 self-start md:self-auto flex-wrap">
-        <span id="backend-conn-badge" class="nb-pill bg-matcha px-3 py-1.5 text-[11px] font-extrabold flex items-center gap-1.5">
+        <span id="backend-conn-badge" class="nb-pill bg-matcha px-3 py-1.5 text-[11px] font-extrabold inline-flex items-center gap-1.5">
           <span class="w-2.5 h-2.5 rounded-full bg-ink inline-block"></span>
           <span id="backend-conn-text">Backend: Connecting...</span>
         </span>
         <button
           onclick="triggerFileUploadModal()"
-          class="nb-pill bg-skyMint px-3 py-1.5 text-[11px] font-extrabold flex items-center gap-1"
+          class="nb-pill bg-skyMint px-3 py-1.5 text-[11px] font-extrabold inline-flex items-center gap-1.5"
           title="Upload full or synthetic dataset file directly"
         >
-          <span>📁</span>
+          <i data-lucide="folder-up" class="w-3.5 h-3.5"></i>
           <span>Upload File</span>
         </button>
         <input type="file" id="direct-file-input" onchange="handleDirectFileUpload(event)" accept=".csv,.xlsx" class="hidden" />
@@ -295,7 +314,8 @@
       <div class="bg-lilac nb-card p-6 sm:p-10 flex flex-col lg:flex-row items-center justify-between gap-8">
         <div class="max-w-xl space-y-4 text-center lg:text-left">
           <div class="inline-flex items-center gap-2 px-3.5 py-1 bg-cream nb-border rounded-full text-xs font-extrabold uppercase">
-            <span>🔒</span> Zero-Hallucination Food Audit Engine
+            <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-700"></i>
+            <span>Zero-Hallucination Food Audit Engine</span>
           </div>
           <h2 class="font-display font-bold text-3xl sm:text-5xl leading-[1.08] tracking-tight">
             Spot Missing Food Data Before It Hits Your Plate.
@@ -304,14 +324,17 @@
             NutriAudit inspects nutrition &amp; ingredient records, flags missing safety fields with review priorities, scores trust on a visual speed dial, and matches verified supplements strictly from your database—<strong>never inventing missing values</strong>.
           </p>
           <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
-            <button onclick="switchTab('database')" class="nb-pill bg-ink text-cream px-6 py-3 text-sm font-extrabold">
-              🗄️ Browse Food Database
+            <button onclick="switchTab('database')" class="nb-pill bg-ink text-cream px-6 py-3 text-sm font-extrabold inline-flex items-center gap-2">
+              <i data-lucide="database" class="w-4 h-4"></i>
+              <span>Browse Food Database</span>
             </button>
-            <button onclick="switchTab('auditor')" class="nb-pill bg-matcha text-ink px-6 py-3 text-sm font-extrabold">
-              ⚡ Open Speed Dial Auditor
+            <button onclick="switchTab('auditor')" class="nb-pill bg-matcha text-ink px-6 py-3 text-sm font-extrabold inline-flex items-center gap-2">
+              <i data-lucide="gauge" class="w-4 h-4"></i>
+              <span>Open Speed Dial Auditor</span>
             </button>
-            <button onclick="switchTab('needs')" class="nb-pill bg-cream text-ink px-5 py-3 text-sm font-extrabold">
-              🎯 Check My Health Needs
+            <button onclick="switchTab('needs')" class="nb-pill bg-cream text-ink px-5 py-3 text-sm font-extrabold inline-flex items-center gap-2">
+              <i data-lucide="target" class="w-4 h-4"></i>
+              <span>Check My Health Needs</span>
             </button>
           </div>
         </div>
@@ -331,7 +354,7 @@
           </div>
           <span class="mt-4 px-3 py-1 bg-ink text-cream rounded-full text-[11px] font-extrabold uppercase">Live Database Snapshot</span>
           <p class="text-xs font-bold text-ink/85 mt-2">
-            Click the <strong class="text-ink">🔑 API Key</strong> button above to connect your Google AI Studio or Groq key.
+            Click the <strong class="text-ink inline-flex items-center gap-1 align-baseline"><i data-lucide="key-round" class="w-3 h-3 inline"></i> API Key</strong> button above to connect your Google AI Studio or Groq key.
           </p>
         </div>
       </div>
@@ -341,42 +364,42 @@
         <button onclick="switchTab('database'); setFilter('ALL');" class="text-left bg-cream nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-extrabold uppercase text-ink/60">Total Items</span>
-            <span class="text-base">📦</span>
+            <i data-lucide="package" class="w-4 h-4 text-ink"></i>
           </div>
           <p id="stat-total" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
         <button onclick="switchTab('database'); setFilter('CRITICAL');" class="text-left bg-peach nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-extrabold uppercase text-ink/80">Critical Review</span>
-            <span class="text-base">🚨</span>
+            <i data-lucide="siren" class="w-4 h-4 text-red-700"></i>
           </div>
           <p id="stat-critical" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
         <button onclick="switchTab('database'); setFilter('COMPLETE');" class="text-left bg-matcha nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-extrabold uppercase text-ink/80">100% Complete</span>
-            <span class="text-base">✅</span>
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-700"></i>
           </div>
           <p id="stat-complete" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
         <button onclick="switchTab('auditor')" class="text-left bg-skyMint nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-extrabold uppercase text-ink/80">Avg Completeness</span>
-            <span class="text-base">📊</span>
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-sky-800"></i>
           </div>
           <p id="stat-avg" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0%</p>
         </button>
         <button onclick="switchTab('database'); setFilter('ANOMALIES');" class="text-left bg-butter nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-extrabold uppercase text-ink/80">Math Anomalies</span>
-            <span class="text-base">⚠️</span>
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-800"></i>
           </div>
           <p id="stat-anomalies" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
         <button onclick="switchTab('database'); setFilter('DUPLICATES');" class="text-left bg-lilac nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-extrabold uppercase text-ink/80">Duplicate SKUs</span>
-            <span class="text-base">🔁</span>
+            <i data-lucide="copy" class="w-4 h-4 text-ink"></i>
           </div>
           <p id="stat-duplicates" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
@@ -389,7 +412,7 @@
             <span class="inline-block px-3 py-1 bg-butter nb-border rounded-full text-xs font-extrabold">Step 01</span>
             <h3 class="font-display font-bold text-xl mt-3">Scan &amp; Prioritize Records</h3>
             <p class="text-xs font-semibold text-ink/75 mt-1 leading-relaxed">
-              View all products in the Database tab, filter by missing safety severity, or add your own incomplete food item to test.
+              View all products in the Database tab, filter by missing safety severity or math anomalies, or add your own incomplete food item to test.
             </p>
           </div>
           <button onclick="switchTab('database')" class="nb-pill bg-butter px-4 py-2 text-xs font-extrabold self-start">Go to Database →</button>
@@ -427,16 +450,20 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <div>
             <h2 class="font-display font-bold text-2xl flex items-center gap-2">
-              <span>🗄️</span> Product Database &amp; Review Queue
+              <i data-lucide="database" class="w-6 h-6 text-ink"></i>
+              <span>Product Database &amp; Review Queue</span>
+              <span id="dataset-count-badge" class="px-2.5 py-0.5 text-xs font-extrabold bg-butter nb-border rounded-full">0 Records</span>
             </h2>
             <p class="text-xs sm:text-sm font-semibold text-ink/70">Click any product card to open its full Completeness Audit &amp; Safety Speed Dial.</p>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold">
-              🔄 Re-Scan All
+            <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Re-Scan All</span>
             </button>
-            <button onclick="openAddModal()" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold">
-              + Add Product
+            <button onclick="openAddModal()" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Add Product</span>
             </button>
           </div>
         </div>
@@ -448,7 +475,7 @@
               id="db-search"
               type="text"
               oninput="renderProductList()"
-              placeholder="Search by product name, brand, or category..."
+              placeholder="Search by product name, brand, category, or barcode..."
               class="w-full bg-white nb-input px-4 py-2.5 text-xs sm:text-sm font-semibold placeholder:text-ink/45"
             />
           </div>
@@ -457,8 +484,14 @@
             <button data-filter="CRITICAL" onclick="setFilter('CRITICAL')" class="filter-btn nb-pill bg-peach px-3.5 py-2 text-xs font-extrabold">Critical</button>
             <button data-filter="HIGH" onclick="setFilter('HIGH')" class="filter-btn nb-pill bg-butter px-3.5 py-2 text-xs font-extrabold">High</button>
             <button data-filter="COMPLETE" onclick="setFilter('COMPLETE')" class="filter-btn nb-pill bg-matcha px-3.5 py-2 text-xs font-extrabold">Complete</button>
-            <button data-filter="ANOMALIES" onclick="setFilter('ANOMALIES')" class="filter-btn nb-pill bg-white text-ink hover:bg-cream px-3.5 py-2 text-xs font-extrabold">⚠️ Math Anomalies (<span id="filter-anomalies-count">0</span>)</button>
-            <button data-filter="DUPLICATES" onclick="setFilter('DUPLICATES')" class="filter-btn nb-pill bg-white text-ink hover:bg-cream px-3.5 py-2 text-xs font-extrabold">🔁 Duplicates (<span id="filter-duplicates-count">0</span>)</button>
+            <button data-filter="ANOMALIES" onclick="setFilter('ANOMALIES')" class="filter-btn nb-pill bg-white text-ink hover:bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-700"></i>
+              <span>Math Anomalies (<span id="filter-anomalies-count">0</span>)</span>
+            </button>
+            <button data-filter="DUPLICATES" onclick="setFilter('DUPLICATES')" class="filter-btn nb-pill bg-white text-ink hover:bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="copy" class="w-3.5 h-3.5 text-ink"></i>
+              <span>Duplicates (<span id="filter-duplicates-count">0</span>)</span>
+            </button>
           </div>
         </div>
 
@@ -481,8 +514,9 @@
             <!-- Populated dynamically -->
           </select>
         </div>
-        <button onclick="switchTab('needs')" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold shrink-0">
-          🎯 Check Against My Needs →
+        <button onclick="switchTab('needs')" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold shrink-0 inline-flex items-center gap-1.5">
+          <i data-lucide="target" class="w-3.5 h-3.5"></i>
+          <span>Check Against My Needs →</span>
         </button>
       </div>
 
@@ -490,8 +524,8 @@
       <div id="inspector-hero" class="bg-matcha nb-card p-5">
         <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div class="flex items-start gap-3">
-            <div id="selected-emoji" class="w-14 h-14 rounded-full bg-cream nb-border flex items-center justify-center text-3xl shadow-[3px_3px_0px_#18181B] shrink-0">
-              🥣
+            <div id="selected-emoji" class="w-14 h-14 rounded-full bg-cream nb-border flex items-center justify-center shadow-[3px_3px_0px_#18181B] shrink-0">
+              <i data-lucide="utensils" class="w-7 h-7 text-ink"></i>
             </div>
             <div>
               <div class="flex items-center gap-2 flex-wrap">
@@ -509,14 +543,14 @@
               onclick="runAIDeepReview()"
               class="nb-pill bg-ink text-cream px-5 py-2.5 text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shrink-0 hover:bg-[#2a2a30]"
             >
-              <span id="gemini-btn-icon">✨</span>
+              <span id="gemini-btn-icon" class="inline-flex"><i data-lucide="sparkles" class="w-4 h-4 text-butter"></i></span>
               <span id="gemini-btn-text">GenAI Deep Audit</span>
             </button>
           </div>
         </div>
 
         <div class="mt-4 bg-cream/95 nb-border rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5">
-          <span class="text-base shrink-0">🔒</span>
+          <i data-lucide="lock" class="w-4 h-4 text-emerald-700 shrink-0"></i>
           <p class="text-[11px] sm:text-xs font-bold leading-snug">
             <span class="uppercase font-extrabold">Strict Integrity Mode:</span> Missing ingredients, allergens, or nutrient metrics are flagged as <span class="underline decoration-2">UNVERIFIED / MISSING</span> and are never estimated or invented.
           </p>
@@ -584,7 +618,8 @@
           <!-- RECORDED NUTRITION & INGREDIENT LEDGER -->
           <div class="bg-cream nb-card p-5">
             <h3 class="font-display font-bold text-lg mb-3 flex items-center gap-2">
-              <span>🧾</span> Raw Database Record Audit
+              <i data-lucide="receipt" class="w-5 h-5 text-ink"></i>
+              <span>Raw Database Record Audit</span>
             </h3>
             <div id="nutrition-ledger" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-3">
               <!-- Populated dynamically -->
@@ -603,18 +638,19 @@
           </div>
         </div>
 
-        <!-- Right Column: Missing Fields + GenAI Deep Report -->
+        <!-- Right Column: GenAI Output + Anomalies + Zero-Hallucination Card + Missing Fields -->
         <div class="lg:col-span-7 flex flex-col gap-5">
           <!-- GENAI DEEP REVIEW OUTPUT CARD -->
           <div id="gemini-output-card" class="bg-lilac nb-card p-5 hidden">
             <div class="flex items-center justify-between mb-2">
               <h3 class="font-display font-bold text-lg flex items-center gap-2">
-                <span>✨</span> GenAI Deep Audit Report
+                <i data-lucide="sparkles" class="w-5 h-5 text-ink"></i>
+                <span>GenAI Deep Audit Report</span>
               </h3>
-              <span id="ai-model-badge" class="px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase">gemini-2.5-flash</span>
+              <span id="ai-model-badge" class="px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase">qwen3.8-27b</span>
             </div>
             <div id="gemini-output-content" class="bg-cream nb-border rounded-2xl p-4 text-xs sm:text-sm font-semibold space-y-3">
-              <!-- Populated by Gemini / Groq API -->
+              <!-- Populated by Groq / Gemini API -->
             </div>
           </div>
 
@@ -622,7 +658,8 @@
           <div id="anomalies-card" class="bg-peach/30 nb-card p-5 hidden">
             <div class="flex items-center justify-between mb-2">
               <h3 class="font-display font-bold text-lg flex items-center gap-2">
-                <span>⚠️</span> Cross-Field Math &amp; Chemistry Contradictions
+                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-800"></i>
+                <span>Cross-Field Math &amp; Chemistry Contradictions</span>
               </h3>
               <span id="anomaly-count-badge" class="px-2.5 py-0.5 text-[10px] font-extrabold bg-peach text-ink nb-border rounded-full uppercase">0 Issues</span>
             </div>
@@ -633,7 +670,9 @@
 
           <!-- ZERO-HALLUCINATION GUARANTEE CARD -->
           <div class="bg-matcha/40 nb-card p-4 flex items-center gap-3">
-            <span class="w-10 h-10 rounded-full bg-cream nb-border flex items-center justify-center text-xl shrink-0">🛡️</span>
+            <span class="w-10 h-10 rounded-full bg-cream nb-border flex items-center justify-center shrink-0">
+              <i data-lucide="shield-check" class="w-5 h-5 text-emerald-700"></i>
+            </span>
             <div>
               <p class="font-display font-bold text-xs uppercase tracking-wide">Strict Zero-Hallucination Contract Active</p>
               <p class="text-[11px] font-semibold text-ink/80 mt-0.5">
@@ -646,7 +685,8 @@
           <div class="bg-cream nb-card p-5">
             <div class="flex items-center justify-between mb-3">
               <h3 class="font-display font-bold text-lg flex items-center gap-2">
-                <span>📋</span> Incomplete Fields &amp; Review Priorities
+                <i data-lucide="clipboard-list" class="w-5 h-5 text-ink"></i>
+                <span>Incomplete Fields &amp; Review Priorities</span>
               </h3>
               <span id="missing-count-pill" class="px-3 py-0.5 text-xs font-extrabold nb-border rounded-full bg-peach">0 Missing</span>
             </div>
@@ -670,8 +710,9 @@
             <!-- Populated dynamically -->
           </select>
         </div>
-        <button onclick="switchTab('auditor')" class="nb-pill bg-matcha px-4 py-2 text-xs font-extrabold shrink-0">
-          ⚡ View Safety Speed Dial
+        <button onclick="switchTab('auditor')" class="nb-pill bg-matcha px-4 py-2 text-xs font-extrabold shrink-0 inline-flex items-center gap-1.5">
+          <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+          <span>View Safety Speed Dial</span>
         </button>
       </div>
 
@@ -680,23 +721,28 @@
         <div class="lg:col-span-5 bg-berry nb-card p-5">
           <div class="mb-3">
             <h2 class="font-display font-bold text-xl flex items-center gap-2">
-              <span>🎯</span> Your Health &amp; Nutrition Needs
+              <i data-lucide="target" class="w-5 h-5 text-ink"></i>
+              <span>Your Health &amp; Nutrition Needs</span>
             </h2>
             <p class="text-xs font-bold text-ink/75 mt-0.5">Pick a preset or enter manual nutrient goals</p>
           </div>
 
           <div class="flex flex-wrap gap-2 mb-4" id="goal-presets">
-            <button data-goal="gym" onclick="selectGoalPreset('gym')" class="goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold">
-              🏋️ Gym / High Protein
+            <button data-goal="gym" onclick="selectGoalPreset('gym')" class="goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="dumbbell" class="w-3.5 h-3.5"></i>
+              <span>Gym / High Protein</span>
             </button>
-            <button data-goal="daily" onclick="selectGoalPreset('daily')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold">
-              🌿 Daily Basic Health
+            <button data-goal="daily" onclick="selectGoalPreset('daily')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="leaf" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Daily Basic Health</span>
             </button>
-            <button data-goal="weightloss" onclick="selectGoalPreset('weightloss')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold">
-              🔥 Low Sugar / Lean
+            <button data-goal="weightloss" onclick="selectGoalPreset('weightloss')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="flame" class="w-3.5 h-3.5 text-orange-600"></i>
+              <span>Low Sugar / Lean</span>
             </button>
-            <button data-goal="clean" onclick="selectGoalPreset('clean')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold">
-              🛡️ Allergen-Safe Clean
+            <button data-goal="clean" onclick="selectGoalPreset('clean')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-sky-700"></i>
+              <span>Allergen-Safe Clean</span>
             </button>
           </div>
 
@@ -757,7 +803,8 @@
           <div class="bg-skyMint nb-card p-5">
             <div class="mb-2">
               <h3 class="font-display font-bold text-lg flex items-center gap-2">
-                <span>💊</span> Database Supplement Match
+                <i data-lucide="pill" class="w-5 h-5 text-ink"></i>
+                <span>Database Supplement Match</span>
               </h3>
               <p class="text-xs font-bold text-ink/75">Best verified complement or swap strictly from this database</p>
             </div>
@@ -778,7 +825,8 @@
         <div class="flex items-start justify-between gap-3 flex-wrap mb-4">
           <div>
             <h2 class="font-display font-bold text-2xl flex items-center gap-2">
-              <span>🔑</span> LLM API Provider Settings
+              <i data-lucide="key-round" class="w-6 h-6 text-ink"></i>
+              <span>LLM API Provider Settings</span>
             </h2>
             <p class="text-xs sm:text-sm font-semibold text-ink/80 mt-1">
               Configure your Google Gemini API key or Groq Cloud API key for zero-hallucination AI reviews.
@@ -798,17 +846,19 @@
                 type="button"
                 id="provider-btn-gemini"
                 onclick="setActiveProvider('gemini')"
-                class="px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition"
+                class="px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center gap-1.5"
               >
-                ✨ Gemini (Google AI Studio)
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span>Gemini (Google AI Studio)</span>
               </button>
               <button
                 type="button"
                 id="provider-btn-groq"
                 onclick="setActiveProvider('groq')"
-                class="px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition"
+                class="px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition inline-flex items-center gap-1.5"
               >
-                ⚡ Groq Cloud
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                <span>Groq Cloud</span>
               </button>
             </div>
           </div>
@@ -883,7 +933,7 @@
               </div>
             </div>
             <p class="text-[11px] font-bold text-ink/65 mt-1.5">
-              Get an ultra-fast key at <a href="https://console.groq.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">console.groq.com</a> (Llama 3.3 70B).
+              Get an ultra-fast key at <a href="https://console.groq.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">console.groq.com</a> (or use .env backend key).
             </p>
           </div>
 
@@ -897,19 +947,21 @@
       <div class="bg-skyMint nb-card p-6 space-y-3">
         <div class="flex items-center justify-between gap-2">
           <h3 class="font-display font-bold text-xl flex items-center gap-2">
-            <span>🌲</span> Pinecone Vector Storage (Roadmap Context)
+            <i data-lucide="trees" class="w-5 h-5 text-emerald-800"></i>
+            <span>Pinecone Vector Storage (Connector Ready)</span>
           </h3>
-          <span class="px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase">Staged</span>
+          <span class="px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase">Ready</span>
         </div>
         <p class="text-xs sm:text-sm font-semibold text-ink/80 leading-relaxed">
-          Vector search index <code class="bg-white nb-border px-2 py-0.5 rounded-full text-[11px]">food-database-completeness</code> is pre-architected in the PRD. In the next stage, Pinecone dense embeddings will power semantic cross-allergen clustering and supplement similarity matching.
+          Vector search index <code class="bg-white nb-border px-2 py-0.5 rounded-full text-[11px]">food-database-completeness</code> is integrated in <code>data_connector.py</code> with automatic local macronutrient similarity fallback.
         </p>
       </div>
 
       <!-- Data Integrity & Workspace Controls -->
       <div class="bg-cream nb-card p-6 space-y-4">
         <h3 class="font-display font-bold text-xl flex items-center gap-2">
-          <span>🛡️</span> Audit Guardrails &amp; Database Tools
+          <i data-lucide="shield-check" class="w-5 h-5 text-emerald-700"></i>
+          <span>Audit Guardrails &amp; Database Tools</span>
         </h3>
 
         <div class="bg-matcha/40 nb-border rounded-2xl p-4 flex items-center justify-between gap-3">
@@ -926,11 +978,12 @@
           <div>
             <p class="font-display font-bold text-sm">Re-Scan Entire Database</p>
             <p class="text-xs font-semibold text-ink/75 mt-0.5">
-              Recalculate completeness percentages, missing fields, and safety speed dial scores across all records.
+              Recalculate completeness percentages, missing fields, anomalies, and safety speed dial scores across all records.
             </p>
           </div>
-          <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold shrink-0 self-start sm:self-center">
-            🔄 Re-Scan Now
+          <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold shrink-0 self-start sm:self-center inline-flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Re-Scan Now</span>
           </button>
         </div>
       </div>
@@ -938,16 +991,18 @@
   </main>
 
   <!-- =========================================================================
-       TOP API KEY QUICK MODAL (POPUP ON CLICKING TOP HEADER API BUTTON)
+       TOP API KEY QUICK MODAL
        ========================================================================= -->
   <div id="api-key-modal" class="fixed inset-0 z-50 bg-ink/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-butter nb-card w-full max-w-lg p-5 sm:p-6 space-y-4 shadow-[8px_8px_0px_#18181B] animate-fadeIn">
+    <div class="bg-butter nb-card w-full max-w-lg p-5 sm:p-6 space-y-4 shadow-[8px_8px_0px_#18181B]">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <span class="text-2xl">🔑</span>
+          <i data-lucide="key-round" class="w-6 h-6 text-ink"></i>
           <h3 class="font-display font-bold text-xl">Connect GenAI API Key</h3>
         </div>
-        <button onclick="closeApiKeyModal()" class="w-8 h-8 rounded-full bg-cream nb-border flex items-center justify-center font-extrabold hover:bg-peach">✕</button>
+        <button onclick="closeApiKeyModal()" class="w-8 h-8 rounded-full bg-cream nb-border flex items-center justify-center font-extrabold hover:bg-peach">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
       </div>
 
       <p class="text-xs font-semibold text-ink/80 leading-relaxed">
@@ -960,23 +1015,25 @@
           type="button"
           id="modal-prov-gemini"
           onclick="setActiveProvider('gemini')"
-          class="flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition"
+          class="flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center justify-center gap-1.5"
         >
-          ✨ Gemini (AI Studio)
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>Gemini (AI Studio)</span>
         </button>
         <button
           type="button"
           id="modal-prov-groq"
           onclick="setActiveProvider('groq')"
-          class="flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition"
+          class="flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition inline-flex items-center justify-center gap-1.5"
         >
-          ⚡ Groq Cloud
+          <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+          <span>Groq Cloud</span>
         </button>
       </div>
 
       <!-- Quick Key Input Box -->
       <div class="bg-cream nb-border rounded-2xl p-4 space-y-3">
-        <label id="modal-key-label" class="block text-[11px] font-extrabold uppercase text-ink/75">Google Gemini API Key (AI Studio)</label>
+        <label id="modal-key-label" class="block text-[11px] font-extrabold uppercase text-ink/75">Groq Cloud API Key</label>
         <div class="flex items-center bg-white nb-input px-3.5 py-2 gap-2">
           <input
             id="modal-api-key-input"
@@ -993,7 +1050,7 @@
           </button>
         </div>
         <p id="modal-key-helper" class="text-[11px] font-bold text-ink/65">
-          Get your free key at <a href="https://aistudio.google.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">aistudio.google.com</a>
+          Get an ultra-fast key at <a href="https://console.groq.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">console.groq.com</a>
         </p>
       </div>
 
@@ -1005,23 +1062,28 @@
   </div>
 
   <!-- =========================================================================
-       MOBILE FLOATING PILL NAVIGATION BAR (5 Tabs — Dribbble Style)
+       MOBILE FLOATING PILL NAVIGATION BAR (5 Tabs)
        ========================================================================= -->
   <nav class="lg:hidden fixed bottom-3 left-3 right-3 z-40 bg-ink nb-border rounded-full p-2 flex items-center justify-around shadow-[4px_4px_0px_rgba(24,24,27,0.4)]">
-    <button onclick="switchTab('home')" id="mob-tab-home" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
-      🏠 Home
+    <button onclick="switchTab('home')" id="mob-tab-home" class="mob-tab-btn px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition inline-flex items-center gap-1">
+      <i data-lucide="home" class="w-3.5 h-3.5"></i>
+      <span>Home</span>
     </button>
-    <button onclick="switchTab('database')" id="mob-tab-database" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
-      🗄️ Database
+    <button onclick="switchTab('database')" id="mob-tab-database" class="mob-tab-btn px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition inline-flex items-center gap-1">
+      <i data-lucide="database" class="w-3.5 h-3.5"></i>
+      <span>DB</span>
     </button>
-    <button onclick="switchTab('auditor')" id="mob-tab-auditor" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
-      ⚡ Auditor
+    <button onclick="switchTab('auditor')" id="mob-tab-auditor" class="mob-tab-btn px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition inline-flex items-center gap-1">
+      <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+      <span>Audit</span>
     </button>
-    <button onclick="switchTab('needs')" id="mob-tab-needs" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
-      🎯 Needs
+    <button onclick="switchTab('needs')" id="mob-tab-needs" class="mob-tab-btn px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition inline-flex items-center gap-1">
+      <i data-lucide="target" class="w-3.5 h-3.5"></i>
+      <span>Needs</span>
     </button>
-    <button onclick="switchTab('settings')" id="mob-tab-settings" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
-      ⚙️ Config
+    <button onclick="switchTab('settings')" id="mob-tab-settings" class="mob-tab-btn px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition inline-flex items-center gap-1">
+      <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+      <span>Config</span>
     </button>
   </nav>
 
@@ -1032,10 +1094,12 @@
     <div class="bg-butter nb-card w-full max-w-xl max-h-[90vh] overflow-y-auto p-5 sm:p-7 space-y-4 shadow-[8px_8px_0px_#18181B]">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <span class="text-2xl">🥗</span>
+          <i data-lucide="salad" class="w-6 h-6 text-emerald-800"></i>
           <h3 class="font-display font-bold text-xl sm:text-2xl">Add Food Record to Audit</h3>
         </div>
-        <button onclick="closeAddModal()" class="w-8 h-8 rounded-full bg-cream nb-border flex items-center justify-center font-extrabold hover:bg-peach">✕</button>
+        <button onclick="closeAddModal()" class="w-8 h-8 rounded-full bg-cream nb-border flex items-center justify-center font-extrabold hover:bg-peach">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
       </div>
 
       <p class="text-xs font-semibold text-ink/80 leading-relaxed">
@@ -1132,6 +1196,10 @@
       { key: 'fiber_g', label: 'Dietary Fiber (g)', severity: 'LOW', penalty: 3, reason: 'Helpful for gut health and glycemic impact evaluation.' }
     ];
 
+    const MISSING_PLACEHOLDER_TOKENS = new Set([
+      '', 'null', 'none', 'nan', 'undefined', 'missing', 'unknown', 'na', 'n/a', 'tbd', '-', '?', '[]'
+    ]);
+
     /* =========================================================================
        2. INITIAL BENCHMARK DATASET & STATE
        ========================================================================= */
@@ -1141,7 +1209,8 @@
         name: 'Peanut butter',
         brand: 'Pistols',
         category: 'Butters, Peanut butters',
-        emoji: '🍫',
+        icon: 'candy',
+        iconColor: 'text-amber-700',
         serving_size: '1 portion (100 g)',
         calories: 639.0,
         protein_g: 30.0,
@@ -1171,8 +1240,8 @@
     let activeDataset = 'demo';
     let availableDatasets = [];
     let isBackendConnected = false;
-    let apiBaseUrl = (window.location.port === '8000') ? '' : 'http://localhost:8000';
     let duplicatesLookup = {};
+    const apiBaseUrl = window.location.protocol === 'file:' ? 'http://localhost:8000' : '';
 
     const GOAL_PRESETS = {
       gym: {
@@ -1207,12 +1276,37 @@
     function isFieldMissing(val) {
       if (val === null || val === undefined) return true;
       if (typeof val === 'string') {
-        const cleaned = val.trim().toLowerCase();
-        return cleaned === '' || cleaned === 'null' || cleaned === 'none' || cleaned === 'nan' || cleaned === 'undefined';
+        return MISSING_PLACEHOLDER_TOKENS.has(val.trim().toLowerCase());
       }
       if (Array.isArray(val) && val.length === 0) return true;
       if (typeof val === 'number' && isNaN(val)) return true;
       return false;
+    }
+
+    function assignFoodIcon(name, category) {
+      const text = `${name || ''} ${category || ''}`.toLowerCase();
+      if (/isolate|whey|shake|milk|yogurt|cheese|dairy|butter|cream/.test(text)) {
+        return { icon: 'milk', iconColor: 'text-sky-700' };
+      }
+      if (/protein|bar|creatine|supplement|candy|chocolate/.test(text)) {
+        return { icon: 'candy', iconColor: 'text-amber-700' };
+      }
+      if (/smoothie|drink|juice|beverage|tea|coffee|latte|water|soda/.test(text)) {
+        return { icon: 'cup-soda', iconColor: 'text-emerald-700' };
+      }
+      if (/ramen|noodle|soup|broth|pasta|penne|spaghetti/.test(text)) {
+        return { icon: 'soup', iconColor: 'text-orange-700' };
+      }
+      if (/chip|snack|crisp|popcorn|cracker|cookie|biscuit|spicy/.test(text)) {
+        return { icon: 'flame', iconColor: 'text-red-700' };
+      }
+      if (/salad|plant|pea|hemp|seed|green|kale|spinach/.test(text)) {
+        return { icon: 'sprout', iconColor: 'text-emerald-700' };
+      }
+      if (/apple|fruit|banana|berry|orange|cherry/.test(text)) {
+        return { icon: 'cherry', iconColor: 'text-rose-700' };
+      }
+      return { icon: 'utensils', iconColor: 'text-ink' };
     }
 
     function computeCrossFieldAnomalies(p) {
@@ -1228,7 +1322,6 @@
       const sodMg = p.sodium_mg;
       const salt = p.salt_g;
 
-      // 1. Negative values
       const fields = { calories: cal, fat: fat, saturated_fat: satFat, carbs: carbs, sugar: sugar, added_sugars: addSugar, protein: prot, fiber: fiber, sodium: sodMg, salt: salt };
       for (const [k, v] of Object.entries(fields)) {
         if (v !== null && v !== undefined && v < 0) {
@@ -1236,7 +1329,6 @@
         }
       }
 
-      // 2. >100g concentration per 100g
       const macro100 = { fat: fat, saturated_fat: satFat, carbs: carbs, sugar: sugar, added_sugars: addSugar, protein: prot, fiber: fiber, salt: salt };
       for (const [k, v] of Object.entries(macro100)) {
         if (v !== null && v !== undefined && v > 100.0) {
@@ -1244,27 +1336,22 @@
         }
       }
 
-      // 3. Energy > 900 kcal
       if (cal !== null && cal !== undefined && cal > 900.0) {
         anomalies.push({ type: 'excessive_calories', field: 'calories', severity: 'CRITICAL', message: `Implausible energy density: ${cal} kcal/100g exceeds maximum theoretical limit (~900 kcal/100g for pure fat).` });
       }
 
-      // 4. Added sugars > Sugars
       if (addSugar !== null && sugar !== null && addSugar > sugar + 0.05) {
         anomalies.push({ type: 'added_sugars_exceed_sugars', field: 'added_sugars', severity: 'HIGH', message: `Mathematical contradiction: Added sugars (${addSugar}g) cannot exceed total sugars (${sugar}g).` });
       }
 
-      // 5. Sugars > Carbs
       if (sugar !== null && carbs !== null && sugar > carbs + 0.05) {
         anomalies.push({ type: 'sugars_exceed_carbs', field: 'sugar', severity: 'HIGH', message: `Mathematical contradiction: Total sugars (${sugar}g) cannot exceed total carbohydrates (${carbs}g).` });
       }
 
-      // 6. Saturated fat > Fat
       if (satFat !== null && fat !== null && satFat > fat + 0.05) {
         anomalies.push({ type: 'saturated_fat_exceeds_fat', field: 'saturated_fat', severity: 'HIGH', message: `Mathematical contradiction: Saturated fat (${satFat}g) cannot exceed total fat (${fat}g).` });
       }
 
-      // 7. Salt vs Sodium contradictions
       const sodG = (sodMg !== null && sodMg !== undefined) ? (sodMg / 1000.0) : null;
       if (sodG !== null && salt !== null && salt !== undefined) {
         if (sodG > salt + 0.01) {
@@ -1353,7 +1440,6 @@
       else if (hasHigh) priority = 'HIGH';
       else if (missingFields.length > 0) priority = 'LOW';
 
-      // Check anomalies
       const anomalies = product.anomalies || computeCrossFieldAnomalies(product);
       const dupInfo = duplicatesLookup[String(product.id)] || null;
 
@@ -1383,6 +1469,12 @@
           return { bg: 'bg-lilac/45', badge: 'bg-lilac text-ink nb-border' };
         default:
           return { bg: 'bg-matcha/45', badge: 'bg-matcha text-ink nb-border' };
+      }
+    }
+
+    function refreshIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
       }
     }
 
@@ -1435,11 +1527,9 @@
       document.querySelectorAll('.filter-btn').forEach(btn => {
         const isTarget = btn.getAttribute('data-filter') === filter;
         if (isTarget) {
-          btn.classList.add('ring-2', 'ring-ink', 'ring-offset-2', 'bg-ink', 'text-cream');
-          btn.classList.remove('bg-white', 'text-ink');
+          btn.classList.add('ring-2', 'ring-ink', 'ring-offset-2');
         } else {
-          btn.classList.remove('ring-2', 'ring-ink', 'ring-offset-2', 'bg-ink', 'text-cream');
-          btn.classList.add('bg-white', 'text-ink');
+          btn.classList.remove('ring-2', 'ring-ink', 'ring-offset-2');
         }
       });
       renderProductList();
@@ -1483,40 +1573,42 @@
         return;
       }
 
-      // Smooth render subset (120 cards per view)
       const displaySubset = filtered.slice(0, 120);
 
       container.innerHTML = displaySubset.map(p => {
         const audit = auditProduct(p);
         const style = getPriorityStyle(audit.priority);
         const isSelected = String(p.id) === String(selectedProductId);
-
         const hasAnomalies = audit.anomalies && audit.anomalies.length > 0;
         const isDup = audit.isDuplicate;
+        const iconObj = p.icon ? { icon: p.icon, iconColor: p.iconColor || 'text-ink' } : assignFoodIcon(p.name, p.category);
+        const displayName = p.name ? escapeHtml(p.name) : '<span class="text-red-700 font-extrabold">MISSING NAME</span>';
+        const displayBrand = p.brand ? escapeHtml(p.brand) : 'MISSING BRAND';
 
         return `
           <button
-            onclick="selectProduct('${p.id}', true)"
+            onclick="selectProduct('${escapeHtml(p.id)}', true)"
             class="w-full text-left p-4 rounded-[24px] nb-border transition-all ${isSelected ? `${style.bg} shadow-[4px_4px_0px_#18181B] -translate-y-0.5` : 'bg-white hover:bg-[#FFF9E6] shadow-[3px_3px_0px_#18181B]'}"
           >
             <div class="flex items-start justify-between gap-2">
               <div class="flex items-center gap-2.5 min-w-0">
-                <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl shrink-0">${p.emoji || '🍽️'}</span>
+                <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center shrink-0">
+                  <i data-lucide="${escapeHtml(iconObj.icon)}" class="w-5 h-5 ${escapeHtml(iconObj.iconColor)}"></i>
+                </span>
                 <div class="min-w-0">
-                  <p class="font-display font-bold text-sm leading-tight truncate">${escapeHtml(p.name)}</p>
-                  <p class="text-[11px] font-semibold text-ink/70 truncate">${escapeHtml(p.brand)} • ${escapeHtml(p.id)}</p>
+                  <p class="font-display font-bold text-sm leading-tight truncate">${displayName}</p>
+                  <p class="text-[11px] font-semibold text-ink/70 truncate">${displayBrand} • ${escapeHtml(p.id)}</p>
                 </div>
               </div>
               <div class="flex flex-col items-end gap-1 shrink-0">
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${style.badge}">
                   ${audit.priority}
                 </span>
-                ${hasAnomalies ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-peach text-ink nb-border" title="${audit.anomalies.length} math contradictions">⚠️ Math</span>` : ''}
-                ${isDup ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-lilac text-ink nb-border" title="Duplicate product entry">🔁 Dup</span>` : ''}
+                ${hasAnomalies ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-peach text-ink nb-border inline-flex items-center gap-1" title="${audit.anomalies.length} math contradictions"><i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i> Math</span>` : ''}
+                ${isDup ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-lilac text-ink nb-border inline-flex items-center gap-1" title="Duplicate product entry"><i data-lucide="copy" class="w-2.5 h-2.5"></i> Dup</span>` : ''}
               </div>
             </div>
 
-            <!-- Completeness Progress Pill Bar -->
             <div class="mt-3.5 flex items-center gap-2">
               <div class="flex-1 h-2.5 bg-cream nb-border rounded-full overflow-hidden">
                 <div class="h-full ${audit.safetyScore < 45 ? 'bg-peach' : audit.safetyScore < 75 ? 'bg-butter' : 'bg-matcha'}" style="width: ${audit.completenessPct}%"></div>
@@ -1526,12 +1618,14 @@
           </button>
         `;
       }).join('');
+      refreshIcons();
     }
 
     function syncProductSelectors() {
       const optionsHtml = foodDatabase.slice(0, 300).map(p => {
         const audit = auditProduct(p);
-        return `<option value="${p.id}" ${String(p.id) === String(selectedProductId) ? 'selected' : ''}>${p.emoji || '🍽️'} ${escapeHtml(p.name)} — ${audit.priority} (${audit.safetyScore}/100)</option>`;
+        const labelName = p.name || `MISSING NAME (${p.id})`;
+        return `<option value="${escapeHtml(p.id)}" ${String(p.id) === String(selectedProductId) ? 'selected' : ''}>${escapeHtml(labelName)} — ${audit.priority} (${audit.safetyScore}/100)</option>`;
       }).join('');
 
       const audSel = document.getElementById('auditor-product-select');
@@ -1542,7 +1636,6 @@
 
     function selectProduct(id, navigateToAuditor = false) {
       selectedProductId = String(id);
-      // Clear stale AI output on selection change
       const outputCard = document.getElementById('gemini-output-card');
       if (outputCard) outputCard.classList.add('hidden');
 
@@ -1560,12 +1653,13 @@
       const product = foodDatabase.find(p => String(p.id) === String(selectedProductId)) || foodDatabase[0];
       if (!product) return;
       const audit = auditProduct(product);
+      const iconObj = product.icon ? { icon: product.icon, iconColor: product.iconColor || 'text-ink' } : assignFoodIcon(product.name, product.category);
 
-      // Hero header
-      document.getElementById('selected-emoji').textContent = product.emoji || '🍽️';
-      document.getElementById('selected-category').textContent = product.category || 'Food Item';
-      document.getElementById('selected-name').textContent = product.name;
-      document.getElementById('selected-brand').textContent = `${product.brand || 'Unbranded'} • ${product.id}`;
+      // Hero header (Lucide Icon)
+      document.getElementById('selected-emoji').innerHTML = `<i data-lucide="${escapeHtml(iconObj.icon)}" class="w-7 h-7 ${escapeHtml(iconObj.iconColor)}"></i>`;
+      document.getElementById('selected-category').textContent = product.category || 'MISSING CATEGORY';
+      document.getElementById('selected-name').textContent = product.name || 'MISSING PRODUCT NAME';
+      document.getElementById('selected-brand').textContent = `${product.brand || 'MISSING BRAND'} • ${product.id}`;
 
       const prioBadge = document.getElementById('selected-priority-badge');
       prioBadge.textContent = `${audit.priority} PRIORITY`;
@@ -1586,7 +1680,6 @@
           : 'bg-matcha'
       } nb-card p-5`;
 
-      // Speed Dial Animation (-90deg = 0, +90deg = 100)
       const angle = -90 + (audit.safetyScore / 100) * 180;
       const needle = document.getElementById('dial-needle');
       if (needle) {
@@ -1613,7 +1706,6 @@
       document.getElementById('metric-completeness').textContent = `${audit.filledCount}/${audit.totalFields}`;
       document.getElementById('metric-missing').textContent = audit.missingFields.length;
 
-      // Raw Nutrition Ledger (Never render image_url per strict directive)
       const macroFields = [
         { label: 'Serving', val: product.serving_size, unit: '' },
         { label: 'Calories', val: product.calories, unit: ' kcal' },
@@ -1653,7 +1745,6 @@
         algEl.textContent = algText;
       }
 
-      // Missing Fields & Review Priorities List
       const missingCountPill = document.getElementById('missing-count-pill');
       missingCountPill.textContent = `${audit.missingFields.length} Missing`;
       missingCountPill.className = `px-3 py-0.5 text-xs font-extrabold nb-border rounded-full ${
@@ -1664,7 +1755,9 @@
       if (audit.missingFields.length === 0) {
         listEl.innerHTML = `
           <div class="bg-matcha/45 nb-border rounded-2xl p-4 flex items-center gap-3">
-            <span class="text-2xl">🎉</span>
+            <span class="w-10 h-10 rounded-full bg-cream nb-border flex items-center justify-center shrink-0">
+              <i data-lucide="party-popper" class="w-5 h-5 text-emerald-700"></i>
+            </span>
             <div>
               <p class="font-display font-bold text-sm">100% Database Record Completeness!</p>
               <p class="text-xs font-semibold text-ink/75 mt-0.5">All required nutrition, serving, ingredient, and allergen fields are verified present in the database.</p>
@@ -1701,7 +1794,7 @@
         }).join('');
       }
 
-      // Render Cross-Field Math Anomalies & Duplicate Alert
+      // Render Cross-Field Math Anomalies & Duplicate Alert (Lucide Icons)
       const anomCard = document.getElementById('anomalies-card');
       const anomBadge = document.getElementById('anomaly-count-badge');
       const anomList = document.getElementById('anomalies-list');
@@ -1716,19 +1809,19 @@
           let html = '';
           if (dupInfo) {
             html += `
-              <div class="bg-lilac/45 nb-border rounded-xl p-3 flex items-start gap-2">
-                <span class="text-base">🔁</span>
+              <div class="bg-lilac/45 nb-border rounded-xl p-3 flex items-start gap-2.5">
+                <i data-lucide="copy" class="w-4 h-4 text-ink shrink-0 mt-0.5"></i>
                 <div>
                   <p class="font-extrabold text-xs">Duplicate SKU Identified</p>
-                  <p class="text-[11px] font-semibold mt-0.5">Shares identical product name and brand with ${dupInfo.count - 1} other item(s) in this dataset (${dupInfo.otherIds.join(', ')}).</p>
+                  <p class="text-[11px] font-semibold mt-0.5">Shares identical product name and brand with ${dupInfo.count - 1} other item(s) in this dataset (${escapeHtml(dupInfo.otherIds.join(', '))}).</p>
                 </div>
               </div>
             `;
           }
           anomalies.forEach(a => {
             html += `
-              <div class="bg-peach/50 nb-border rounded-xl p-3 flex items-start gap-2">
-                <span class="text-base">⚠️</span>
+              <div class="bg-peach/50 nb-border rounded-xl p-3 flex items-start gap-2.5">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-red-800 shrink-0 mt-0.5"></i>
                 <div>
                   <p class="font-extrabold text-xs">[${escapeHtml(a.severity)}] ${escapeHtml(a.type.replace(/_/g, ' ').toUpperCase())}</p>
                   <p class="text-[11px] font-semibold mt-0.5 leading-relaxed">${escapeHtml(a.message)}</p>
@@ -1741,6 +1834,8 @@
       } else {
         if (anomCard) anomCard.classList.add('hidden');
       }
+
+      refreshIcons();
     }
 
     /* =========================================================================
@@ -1765,7 +1860,6 @@
 
       activeDataset = datasetKey;
 
-      // Update button styling
       document.querySelectorAll('.ds-pill').forEach(btn => {
         btn.classList.remove('bg-ink', 'text-cream');
         btn.classList.add('bg-white', 'text-ink');
@@ -1790,11 +1884,16 @@
 
       if (isBackendConnected) {
         try {
-          await fetch(`${apiBaseUrl}/api/datasets/active`, {
+          const switchResp = await fetch(`${apiBaseUrl}/api/datasets/active`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ dataset_key: datasetKey })
           });
+
+          if (!switchResp.ok) {
+            const errJson = await switchResp.json().catch(() => ({}));
+            throw new Error(errJson.error || `HTTP ${switchResp.status}`);
+          }
 
           const resp = await fetch(`${apiBaseUrl}/api/records?dataset=${datasetKey}`);
           if (resp.ok) {
@@ -1814,11 +1913,12 @@
             return;
           }
         } catch (e) {
-          console.warn('Backend dataset fetch error, trying client fallback:', e);
+          console.warn('Backend dataset switch error:', e);
+          showToast(`Dataset switch error: ${e.message}`, 'bg-peach');
+          return;
         }
       }
 
-      // Standalone Fallback
       if (datasetKey === 'demo') {
         await loadDemoCsvClientSide();
       } else {
@@ -1845,13 +1945,16 @@
             method: 'POST',
             body: formData
           });
+          const result = await resp.json().catch(() => ({}));
           if (resp.ok) {
-            const result = await resp.json();
-            showToast(`Uploaded ${file.name}! Reloading dataset...`, 'bg-matcha');
+            showToast(`Uploaded ${result.filename || file.name}! Reloading dataset...`, 'bg-matcha');
             await checkBackendHealth();
             if (result.matched_dataset) {
               await switchDataset(result.matched_dataset);
             }
+            return;
+          } else {
+            showToast(result.error || `Upload rejected (HTTP ${resp.status})`, 'bg-peach');
             return;
           }
         } catch (e) {
@@ -1878,9 +1981,9 @@
       document.querySelectorAll('.goal-btn').forEach(btn => {
         const isTarget = btn.getAttribute('data-goal') === goalKey;
         if (isTarget) {
-          btn.className = 'goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold';
+          btn.className = 'goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5';
         } else {
-          btn.className = 'goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold';
+          btn.className = 'goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5';
         }
       });
 
@@ -1902,7 +2005,6 @@
       let failCount = 0;
       let unknownCount = 0;
 
-      // 1. Safety & Ingredient Transparency Check
       if (audit.hasCritical) {
         failCount++;
         checks.push({
@@ -1917,7 +2019,6 @@
         });
       }
 
-      // 2. Protein Check
       if (isFieldMissing(product.protein_g)) {
         unknownCount++;
         checks.push({
@@ -1938,7 +2039,6 @@
         });
       }
 
-      // 3. Sugar Check
       if (!isNaN(maxSugar)) {
         if (isFieldMissing(product.sugar_g)) {
           unknownCount++;
@@ -1961,7 +2061,6 @@
         }
       }
 
-      // 4. Sodium Check
       if (!isNaN(maxSodium)) {
         if (isFieldMissing(product.sodium_mg)) {
           unknownCount++;
@@ -1984,7 +2083,6 @@
         }
       }
 
-      // 5. Custom Note / Allergen String Scan
       if (customNote) {
         const allergenText = (product.allergens_text || (Array.isArray(product.allergens) ? product.allergens.join(' ') : (product.allergens || ''))).toLowerCase();
         const ingText = (product.ingredients_text || (Array.isArray(product.ingredients) ? product.ingredients.join(' ') : (product.ingredients || ''))).toLowerCase();
@@ -2004,7 +2102,6 @@
         }
       }
 
-      // Render Suitability Verdict Card
       const verdictCard = document.getElementById('verdict-card');
       const badge = document.getElementById('verdict-badge');
       const headline = document.getElementById('verdict-headline');
@@ -2060,11 +2157,12 @@
       const checklistEl = document.getElementById('verdict-checklist');
       if (checklistEl) {
         checklistEl.innerHTML = checks.map(c => {
-          const icon = c.status === 'PASS' ? '✅' : c.status === 'FAIL' ? '❌' : '⚠️';
+          const iconName = c.status === 'PASS' ? 'check-circle-2' : c.status === 'FAIL' ? 'x-circle' : 'alert-triangle';
+          const iconColor = c.status === 'PASS' ? 'text-emerald-700' : c.status === 'FAIL' ? 'text-red-700' : 'text-amber-700';
           const color = c.status === 'PASS' ? 'text-green-900 bg-matcha/40' : c.status === 'FAIL' ? 'text-red-900 bg-peach/40' : 'text-amber-900 bg-butter/40';
           return `
             <div class="flex items-center gap-2 p-2 rounded-xl nb-border ${color}">
-              <span class="text-sm shrink-0">${icon}</span>
+              <i data-lucide="${iconName}" class="w-4 h-4 ${iconColor} shrink-0"></i>
               <span class="text-xs font-bold leading-tight">${escapeHtml(c.text)}</span>
             </div>
           `;
@@ -2072,13 +2170,13 @@
       }
 
       renderDatabaseSupplement(product, failCount > 0 || unknownCount > 0);
+      refreshIcons();
     }
 
     function renderDatabaseSupplement(currentProduct, needsAlternative) {
       const resultsContainer = document.getElementById('supplement-results');
       if (!resultsContainer) return;
 
-      // Find best verified matches from database (Complete or high safety score, strictly from active database)
       const candidates = foodDatabase
         .filter(p => String(p.id) !== String(currentProduct.id))
         .map(p => ({ p, audit: auditProduct(p) }))
@@ -2096,26 +2194,31 @@
       }
 
       const best = candidates[0];
+      const bestIcon = best.p.icon ? { icon: best.p.icon, iconColor: best.p.iconColor || 'text-emerald-700' } : assignFoodIcon(best.p.name, best.p.category);
+
       resultsContainer.innerHTML = `
         <div class="bg-white nb-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-start gap-3">
-            <span class="w-12 h-12 rounded-full bg-cream nb-border flex items-center justify-center text-2xl shrink-0 shadow-[2px_2px_0px_#18181B]">${best.p.emoji || '🌱'}</span>
+            <span class="w-12 h-12 rounded-full bg-cream nb-border flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#18181B]">
+              <i data-lucide="${escapeHtml(bestIcon.icon)}" class="w-6 h-6 ${escapeHtml(bestIcon.iconColor)}"></i>
+            </span>
             <div>
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-matcha nb-border">TOP DATABASE MATCH</span>
-                <span class="text-[11px] font-bold text-ink/65">${escapeHtml(best.p.category)}</span>
+                <span class="text-[11px] font-bold text-ink/65">${escapeHtml(best.p.category || 'UNSPECIFIED')}</span>
               </div>
-              <h4 class="font-display font-bold text-base mt-0.5">${escapeHtml(best.p.name)}</h4>
+              <h4 class="font-display font-bold text-base mt-0.5">${escapeHtml(best.p.name || 'MISSING PRODUCT NAME')}</h4>
               <p class="text-xs font-semibold text-ink/75">
-                ${best.p.protein_g !== null ? `${best.p.protein_g}g Protein • ` : ''}${best.p.sugar_g !== null ? `${best.p.sugar_g}g Sugar • ` : ''}100% Ingredients & Allergens Declared
+                ${best.p.protein_g !== null ? `${best.p.protein_g}g Protein • ` : ''}${best.p.sugar_g !== null ? `${best.p.sugar_g}g Sugar • ` : ''}100% Ingredients &amp; Allergens Declared
               </p>
             </div>
           </div>
-          <button onclick="selectProduct('${best.p.id}', true)" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold shrink-0">
+          <button onclick="selectProduct('${escapeHtml(best.p.id)}', true)" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold shrink-0">
             Inspect Match →
           </button>
         </div>
       `;
+      refreshIcons();
     }
 
     /* =========================================================================
@@ -2133,7 +2236,7 @@
       const modelBadge = document.getElementById('ai-model-badge');
 
       btn.disabled = true;
-      btnText.textContent = `Auditing with Zero-Hallucination Guardrail...`;
+      btnText.textContent = 'Auditing with Zero-Hallucination Guardrail...';
       outputCard.classList.remove('hidden');
 
       if (modelBadge) {
@@ -2144,9 +2247,9 @@
 
       try {
         let aiText = '';
+        let warningBanner = '';
 
         if (isBackendConnected) {
-          // Direct backend call using GROQ_API_KEY from .env
           const resp = await fetch(`${apiBaseUrl}/api/audit/${encodeURIComponent(product.id)}?dataset=${activeDataset}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2158,7 +2261,7 @@
 
           if (!resp.ok) {
             const errBody = await resp.text();
-            throw new Error(`Server returned ${resp.status}: ${errBody.slice(0, 100)}`);
+            throw new Error(`Server returned ${resp.status}: ${errBody.slice(0, 120)}`);
           }
 
           const data = await resp.json();
@@ -2166,8 +2269,10 @@
           if (modelBadge && data.model) {
             modelBadge.textContent = `${(data.provider || 'GROQ').toUpperCase()} / ${(data.model || '').toUpperCase()}`;
           }
+          if (Array.isArray(data.warnings) && data.warnings.length > 0) {
+            warningBanner = `<div class="bg-butter/60 nb-border rounded-xl p-2.5 text-[11px] font-bold">Provider Notice: ${escapeHtml(data.warnings.join('; '))}</div>`;
+          }
         } else {
-          // Standalone browser fallback: use client API key if entered, otherwise deterministic report
           const userNeedNote = document.getElementById('custom-need-note')?.value || 'General health';
           const clientPrompt = `You are NutriAudit AI, an expert food safety and database auditor.\nCRITICAL DIRECTIVE: NEVER invent, guess, or estimate missing ingredients, allergens, or nutrients.\nRecord: ${JSON.stringify(product)}\nMissing fields: ${audit.missingFields.map(f => f.key).join(', ') || 'None'}\nUser Goal: ${userNeedNote}`;
           if (activeProvider === 'gemini' && userGeminiApiKey) {
@@ -2185,8 +2290,8 @@
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\n/g, '<br/>');
 
-        outputContent.innerHTML = `<div class="leading-relaxed space-y-2">${formattedHtml}</div>`;
-        showToast(`Zero-Hallucination Deep Audit complete!`, 'bg-lilac');
+        outputContent.innerHTML = `${warningBanner}<div class="leading-relaxed space-y-2">${formattedHtml}</div>`;
+        showToast('Zero-Hallucination Deep Audit complete!', 'bg-lilac');
       } catch (err) {
         outputContent.innerHTML = `
           <div class="bg-peach/40 nb-border rounded-xl p-3">
@@ -2211,33 +2316,33 @@
       const missingHigh = audit.missingFields.filter(f => f.severity === 'HIGH').map(f => f.label);
 
       if (missingCrit.includes('Allergen Declaration')) {
-        riskPoints.push('• CRITICAL ALLERGEN HAZARD: Undeclared allergen data creates direct anaphylactic health hazard for allergic consumers.');
+        riskPoints.push('* CRITICAL ALLERGEN HAZARD: Undeclared allergen data creates direct anaphylactic health hazard for allergic consumers.');
       }
       if (missingCrit.includes('Ingredients List')) {
-        riskPoints.push('• REGULATORY NON-COMPLIANCE: Complete ingredients list missing, preventing verification of artificial additives or binders.');
+        riskPoints.push('* REGULATORY NON-COMPLIANCE: Complete ingredients list missing, preventing verification of artificial additives or binders.');
       }
       if (missingHigh.length > 0) {
-        riskPoints.push(`• NUTRITIONAL OMISSIONS: Missing high-priority metrics: ${missingHigh.join(', ')}.`);
+        riskPoints.push(`* NUTRITIONAL OMISSIONS: Missing high-priority metrics: ${missingHigh.join(', ')}.`);
       }
       if (riskPoints.length === 0) {
-        riskPoints.push('• All primary safety and nutritional metrics are declared.');
+        riskPoints.push('* All primary safety and nutritional metrics are declared.');
       }
 
-      const anomPoints = (audit.anomalies || []).map(a => `• [${a.severity}] ${a.message}`);
-      if (anomPoints.length === 0) anomPoints.push('• No mathematical or chemical contradictions detected.');
+      const anomPoints = (audit.anomalies || []).map(a => `* [${a.severity}] ${a.message}`);
+      if (anomPoints.length === 0) anomPoints.push('* No mathematical or chemical contradictions detected.');
 
-      return `### 🛡️ Zero-Hallucination Verification Guarantee
-**ACTIVE GUARDRAIL:** No missing data points were inferred, estimated, or imputed for **${product.name}**. All missing fields are strictly preserved as \`MISSING\`.
+      return `### Zero-Hallucination Verification Guarantee
+**ACTIVE GUARDRAIL:** No missing data points were inferred, estimated, or imputed for **${product.name || 'MISSING'}**. All missing fields are strictly preserved as \`MISSING\`.
 
-### 🚨 Triage Priority: ${audit.priority} (${audit.completenessPct}% Complete)
+### Triage Priority: ${audit.priority} (${audit.completenessPct}% Complete)
 **Risk Assessment:**
 ${riskPoints.join('\n')}
 
-### ⚠️ Detected Cross-Field Anomalies & Contradictions
+### Detected Cross-Field Anomalies & Contradictions
 ${anomPoints.join('\n')}
 
-### 📋 Actionable QA Verification Guidance
-1. Cross-check manufacturer official technical specification sheet for '${product.brand}'.
+### Actionable QA Verification Guidance
+1. Cross-check manufacturer official technical specification sheet for '${product.brand || 'MISSING'}'.
 2. Inspect physical package label for mandatory nutrition facts and allergen declaration.
 3. If formula is disputed, mandate third-party certified chemical lab assay.`;
     }
@@ -2247,8 +2352,11 @@ ${anomPoints.join('\n')}
        ========================================================================= */
     function openApiKeyModal() {
       const modal = document.getElementById('api-key-modal');
+      const input = document.getElementById('modal-api-key-input');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      setActiveProvider(activeProvider);
+      if (input) input.focus();
     }
 
     function closeApiKeyModal() {
@@ -2267,18 +2375,17 @@ ${anomPoints.join('\n')}
       const groqGroup = document.getElementById('groq-input-group');
 
       if (provider === 'gemini') {
-        if (gemBtn) gemBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition';
-        if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition';
+        if (gemBtn) gemBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center gap-1.5';
+        if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition inline-flex items-center gap-1.5';
         if (gemGroup) gemGroup.classList.remove('hidden');
         if (groqGroup) groqGroup.classList.add('hidden');
       } else {
-        if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition';
-        if (gemBtn) gemBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition';
+        if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center gap-1.5';
+        if (gemBtn) gemBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition inline-flex items-center gap-1.5';
         if (groqGroup) groqGroup.classList.remove('hidden');
         if (gemGroup) gemGroup.classList.add('hidden');
       }
 
-      // Sync API Key Modal UI
       const modalGemini = document.getElementById('modal-prov-gemini');
       const modalGroq = document.getElementById('modal-prov-groq');
       const modalLabel = document.getElementById('modal-key-label');
@@ -2287,8 +2394,8 @@ ${anomPoints.join('\n')}
 
       if (modalGemini && modalGroq) {
         if (provider === 'gemini') {
-          modalGemini.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition';
-          modalGroq.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition';
+          modalGemini.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center justify-center gap-1.5';
+          modalGroq.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition inline-flex items-center justify-center gap-1.5';
           if (modalLabel) modalLabel.textContent = 'Google Gemini API Key (AI Studio)';
           if (modalInput) {
             modalInput.placeholder = 'AIzaSy...';
@@ -2296,8 +2403,8 @@ ${anomPoints.join('\n')}
           }
           if (modalHelper) modalHelper.innerHTML = 'Get your free key at <a href="https://aistudio.google.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">aistudio.google.com</a>';
         } else {
-          modalGroq.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition';
-          modalGemini.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition';
+          modalGroq.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center justify-center gap-1.5';
+          modalGemini.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition inline-flex items-center justify-center gap-1.5';
           if (modalLabel) modalLabel.textContent = 'Groq Cloud API Key';
           if (modalInput) {
             modalInput.placeholder = 'gsk_...';
@@ -2387,12 +2494,13 @@ ${anomPoints.join('\n')}
     function toggleKeyVisibility(inputId, labelId) {
       const input = document.getElementById(inputId);
       const label = document.getElementById(labelId);
+      if (!input) return;
       if (input.type === 'password') {
         input.type = 'text';
-        label.textContent = 'Hide';
+        if (label) label.textContent = 'Hide';
       } else {
         input.type = 'password';
-        label.textContent = 'Show';
+        if (label) label.textContent = 'Show';
       }
     }
 
@@ -2449,7 +2557,7 @@ ${anomPoints.join('\n')}
       const el = document.getElementById(id);
       if (!el) return null;
       const raw = el.value.trim();
-      if (raw === '') return null;
+      if (raw === '' || MISSING_PLACEHOLDER_TOKENS.has(raw.toLowerCase())) return null;
       const num = parseFloat(raw);
       return isNaN(num) ? null : num;
     }
@@ -2458,8 +2566,8 @@ ${anomPoints.join('\n')}
       const el = document.getElementById(id);
       if (!el) return null;
       const raw = el.value.trim();
-      if (raw === '') return null;
-      const items = raw.split(',').map(s => s.trim()).filter(Boolean);
+      if (raw === '' || MISSING_PLACEHOLDER_TOKENS.has(raw.toLowerCase())) return null;
+      const items = raw.split(',').map(s => s.trim()).filter(s => s && !MISSING_PLACEHOLDER_TOKENS.has(s.toLowerCase()));
       return items.length > 0 ? items : null;
     }
 
@@ -2469,12 +2577,14 @@ ${anomPoints.join('\n')}
       if (!name) return;
 
       const newId = `USER-${Date.now().toString().slice(-4)}`;
+      const brandVal = document.getElementById('new-brand').value.trim();
       const newRecord = {
         id: newId,
         name,
-        brand: document.getElementById('new-brand').value.trim() || 'Custom Entry',
+        brand: brandVal || null,
         category: 'Custom Audit',
-        emoji: '🥗',
+        icon: 'salad',
+        iconColor: 'text-emerald-700',
         serving_size: document.getElementById('new-serving').value.trim() || null,
         calories: parseNullableNumber('new-calories'),
         protein_g: parseNullableNumber('new-protein'),
@@ -2552,6 +2662,7 @@ ${anomPoints.join('\n')}
       }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      refreshIcons();
     }
 
     function showToast(message, bgClass = 'bg-butter') {
@@ -2583,7 +2694,7 @@ ${anomPoints.join('\n')}
           const data = await resp.json();
           isBackendConnected = true;
 
-          if (badge) badge.className = 'nb-pill bg-matcha px-3 py-1.5 text-[11px] font-extrabold flex items-center gap-1.5';
+          if (badge) badge.className = 'nb-pill bg-matcha px-3 py-1.5 text-[11px] font-extrabold inline-flex items-center gap-1.5';
           if (text) text.textContent = `Backend: Online (${data.groq_configured ? 'Groq Active' : 'Local'})`;
 
           const dsResp = await fetch(`${apiBaseUrl}/api/datasets`);
@@ -2597,7 +2708,7 @@ ${anomPoints.join('\n')}
         }
       } catch (e) {
         isBackendConnected = false;
-        if (badge) badge.className = 'nb-pill bg-butter px-3 py-1.5 text-[11px] font-extrabold flex items-center gap-1.5';
+        if (badge) badge.className = 'nb-pill bg-butter px-3 py-1.5 text-[11px] font-extrabold inline-flex items-center gap-1.5';
         if (text) text.textContent = 'Backend: Standalone UI';
       }
       return false;
@@ -2686,7 +2797,7 @@ ${anomPoints.join('\n')}
             const pos = idx(name);
             if (pos === -1 || pos >= cols.length) return null;
             const v = (cols[pos] || '').trim();
-            return v === '' ? null : v;
+            return MISSING_PLACEHOLDER_TOKENS.has(v.toLowerCase()) ? null : v;
           };
           const getNum = (name) => {
             const s = getStr(name);
@@ -2696,20 +2807,22 @@ ${anomPoints.join('\n')}
           };
 
           const code = getStr('code') || `ITEM-${i}`;
-          const name = getStr('product_name') || `Product ${code}`;
-          const brand = getStr('brands') || 'Unbranded';
-          const cat = getStr('categories') || 'General';
+          const name = getStr('product_name');
+          const brand = getStr('brands');
+          const cat = getStr('categories');
           const ingText = getStr('ingredients_text');
           const algText = getStr('allergens');
           const sodG = getNum('sodium_100g');
+          const iconObj = assignFoodIcon(name, cat);
 
-          // NOTE: image_url is intentionally ignored
+          // NOTE: image_url is intentionally ignored & missing name/brand/category remain null
           records.push({
             id: code,
             name,
             brand,
             category: cat,
-            emoji: '🥗',
+            icon: iconObj.icon,
+            iconColor: iconObj.iconColor,
             serving_size: getStr('serving_size'),
             calories: getNum('energy_kcal_100g'),
             protein_g: getNum('proteins_100g'),
@@ -2721,9 +2834,9 @@ ${anomPoints.join('\n')}
             fiber_g: getNum('fiber_100g'),
             sodium_mg: sodG !== null ? Math.round(sodG * 1000.0 * 10) / 10 : null,
             salt_g: getNum('salt_100g'),
-            ingredients: ingText ? ingText.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean) : null,
+            ingredients: ingText ? ingText.split(/[,;\n]+/).map(s => s.trim()).filter(s => s && !MISSING_PLACEHOLDER_TOKENS.has(s.toLowerCase())) : null,
             ingredients_text: ingText,
-            allergens: algText ? algText.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean) : null,
+            allergens: algText ? algText.split(/[,;\n]+/).map(s => s.trim()).filter(s => s && !MISSING_PLACEHOLDER_TOKENS.has(s.toLowerCase())) : null,
             allergens_text: algText,
             dataset_key: 'demo'
           });
@@ -2746,10 +2859,8 @@ ${anomPoints.join('\n')}
     }
 
     async function initNutriAuditApp() {
-      // 1. Check backend status
       const hasBackend = await checkBackendHealth();
 
-      // 2. Load default dataset (demo_subset(1).csv)
       if (hasBackend) {
         try {
           const resp = await fetch(`${apiBaseUrl}/api/records?dataset=demo`);
@@ -2767,7 +2878,6 @@ ${anomPoints.join('\n')}
         await loadDemoCsvClientSide();
       }
 
-      // 3. Render initial state
       updateGlobalStats();
       syncProductSelectors();
       renderProductList();
@@ -2775,6 +2885,7 @@ ${anomPoints.join('\n')}
       evaluateUserNeeds();
       setActiveProvider(activeProvider);
       switchTab('home');
+      refreshIcons();
 
       showToast(`Loaded ${foodDatabase.length} records (${activeDataset === 'demo' ? 'demo_subset(1).csv' : activeDataset})!`, 'bg-matcha');
     }

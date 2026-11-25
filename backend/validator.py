@@ -13,6 +13,11 @@ HIGH_FIELDS = ["calories", "protein_g", "sugar_g", "sodium_mg"]
 LOW_FIELDS = ["carbs_g", "fat_g", "serving_size", "fiber_g"]
 ALL_EVALUATED_FIELDS = CRITICAL_FIELDS + HIGH_FIELDS + LOW_FIELDS
 
+MISSING_TOKENS = frozenset({
+    "", "null", "none", "nan", "undefined", "missing",
+    "unknown", "na", "n/a", "tbd", "-", "?", "[]"
+})
+
 
 def is_missing_value(val: Any) -> bool:
     """Check if a field value is missing without guessing or imputing."""
@@ -22,7 +27,7 @@ def is_missing_value(val: Any) -> bool:
         return len(val) == 0
     if isinstance(val, str):
         cleaned = val.strip().lower()
-        return cleaned in ("", "null", "none", "nan", "undefined", "missing", "unknown", "[]")
+        return cleaned in MISSING_TOKENS
     if isinstance(val, (int, float)):
         import math
         return math.isnan(val)

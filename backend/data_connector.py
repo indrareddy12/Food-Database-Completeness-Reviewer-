@@ -5,17 +5,30 @@ synthetic Excel files, and provides vector similarity querying (Pinecone-ready w
 """
 
 import os
+import re
 import csv
 import math
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from validator import audit_record_completeness, audit_cross_field_anomalies, detect_dataset_duplicates
+from validator import (
+    MISSING_TOKENS,
+    audit_record_completeness,
+    audit_cross_field_anomalies,
+    detect_dataset_duplicates,
+)
 
+logger = logging.getLogger("nutriaudit.connector")
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+UPLOAD_DIR = PROJECT_ROOT / "uploads"
 
 WORKSPACE_DIRS = [
-    Path(__file__).resolve().parent.parent,                     # Food-Database-Completeness-Reviewer-
-    Path(__file__).resolve().parent.parent.parent,              # Genai ahck
+    UPLOAD_DIR,                                   # Isolated uploaded files
+    PROJECT_ROOT,                                 # Food-Database-Completeness-Reviewer-
+    PROJECT_ROOT / "food-db-reviewer",            # Shared demo CSV location if merged
+    PROJECT_ROOT.parent,                          # Genai ahck
     Path.cwd()
 ]
 
@@ -29,28 +42,30 @@ def resolve_file_path(filename: str) -> Optional[Path]:
     return None
 
 
-def assign_food_emoji(name: str, category: str) -> str:
-    """Assign playful, category-appropriate food emoji for the Neo-Brutalist UI."""
-    text = f"{name} {category}".lower()
+def assign_food_icon(name: Optional[str], category: Optional[str]) -> Tuple[str, str]:
+    """Assign a clean Lucide icon token and Tailwind ink-compatible color class."""
+    text = f"{name or ''} {category or ''}".lower()
     if any(k in text for k in ["protein", "bar", "isolate", "whey", "shake", "creatine", "supplement"]):
-        return "🍫"
+        if any(k in text for k in ["isolate", "whey", "shake", "milk"]):
+            return ("milk", "text-sky-700")
+        return ("candy", "text-amber-700")
     if any(k in text for k in ["smoothie", "drink", "juice", "beverage", "tea", "coffee", "latte", "water", "soda"]):
-        return "🍵"
+        return ("cup-soda", "text-emerald-700")
     if any(k in text for k in ["ramen", "noodle", "soup", "broth", "pasta", "penne", "spaghetti"]):
-        return "🍜"
+        return ("soup", "text-orange-700")
     if any(k in text for k in ["yogurt", "milk", "cheese", "dairy", "butter", "cream"]):
-        return "🫐"
-    if any(k in text for k in ["chip", "snack", "crisp", "popcorn", "cracker", "cookie", "biscuit"]):
-        return "🌶️"
+        return ("milk", "text-sky-700")
+    if any(k in text for k in ["chip", "snack", "crisp", "popcorn", "cracker", "cookie", "biscuit", "spicy"]):
+        return ("flame", "text-red-700")
     if any(k in text for k in ["salad", "plant", "pea", "hemp", "seed", "green", "kale", "spinach"]):
-        return "🌱"
+        return ("sprout", "text-emerald-700")
+    if any(k in text for k in ["apple", "fruit", "banana", "berry", "orange", "cherry"]):
+        return ("cherry", "text-rose-700")
     if any(k in text for k in ["bread", "toast", "bakery", "bagel", "croissant", "flour"]):
-        return "🍞"
+        return ("wheat", "text-amber-700")
     if any(k in text for k in ["salmon", "fish", "meat", "chicken", "beef", "tuna"]):
-        return "🐟"
-    if any(k in text for k in ["apple", "fruit", "banana", "berry", "orange"]):
-        return "🍎"
-    return "🥣"
+        return ("fish", "text-sky-700")
+    return ("utensils", "text-ink")
 
 
 def parse_clean_float(val: Any) -> Optional[float]:
@@ -58,7 +73,7 @@ def parse_clean_float(val: Any) -> Optional[float]:
     if val is None:
         return None
     s = str(val).strip()
-    if s == "" or s.lower() in ("nan", "null", "none", "undefined", "na", "-"):
+    if s.lower() in MISSING_TOKENS:
         return None
     try:
         f = float(s)
@@ -68,11 +83,11 @@ def parse_clean_float(val: Any) -> Optional[float]:
 
 
 def parse_clean_text(val: Any) -> Optional[str]:
-    """Parse text string, returning None if empty."""
+    """Parse text string, returning None if empty or a placeholder token."""
     if val is None:
         return None
     s = str(val).strip()
-    if s == "" or s.lower() in ("nan", "null", "none", "undefined", "na", "-"):
+    if s.lower() in MISSING_TOKENS:
         return None
     return s
 
@@ -82,10 +97,8 @@ def parse_ingredients_or_allergens(val: Any) -> Optional[List[str]]:
     text = parse_clean_text(val)
     if not text:
         return None
-    # Split by comma or semicolon or newline
-    import re
     tokens = re.split(r"[,;\n]+", text)
-    cleaned = [t.strip() for t in tokens if t.strip()]
+    cleaned = [t.strip() for t in tokens if t.strip() and t.strip().lower() not in MISSING_TOKENS]
     return cleaned if cleaned else None
 
 
@@ -146,7 +159,6 @@ class DataConnector:
             available = resolved is not None
             row_count = conf["expected_rows"]
 
-            # If already cached, use exact count
             if key in self._cache:
                 row_count = len(self._cache[key])
 
@@ -159,16 +171,20 @@ class DataConnector:
                 "is_active": (key == self.active_dataset_key),
                 "file_path": str(resolved) if resolved else None,
                 "row_count": row_count,
-                "missing_hint": f"Place {conf['filenames'][0]} in project folder to enable" if not available else None
+                "missing_hint": f"Place {conf['filenames'][0]} in workspace or upload via UI to enable" if not available else None
             })
         return results
 
     def normalize_off_csv_row(self, row: Dict[str, Any], index: int, dataset_key: str) -> Dict[str, Any]:
-        """Normalize an Open Food Facts CSV row to the unified NutriAudit schema."""
+        """
+        Normalize an Open Food Facts CSV row to the unified NutriAudit schema.
+        Strict Zero-Hallucination Rule: Missing metadata (name, brand, category) and
+        nutrients remain None rather than being replaced with synthetic fallback strings.
+        """
         code = parse_clean_text(row.get("code")) or f"ITEM-{index:04d}"
-        name = parse_clean_text(row.get("product_name")) or f"Food Item {code}"
-        brand = parse_clean_text(row.get("brands")) or "Unbranded"
-        category = parse_clean_text(row.get("categories")) or "General Grocery"
+        name = parse_clean_text(row.get("product_name"))
+        brand = parse_clean_text(row.get("brands"))
+        category = parse_clean_text(row.get("categories"))
         serving = parse_clean_text(row.get("serving_size"))
 
         calories = parse_clean_float(row.get("energy_kcal_100g"))
@@ -182,7 +198,7 @@ class DataConnector:
         salt = parse_clean_float(row.get("salt_100g"))
         sodium_g = parse_clean_float(row.get("sodium_100g"))
 
-        # Convert sodium in grams to sodium_mg
+        # Unit conversion only of explicitly declared sodium_100g -> mg
         sodium_mg = round(sodium_g * 1000.0, 1) if sodium_g is not None else None
 
         ingredients_text = parse_clean_text(row.get("ingredients_text"))
@@ -191,7 +207,7 @@ class DataConnector:
         ingredients_list = parse_ingredients_or_allergens(ingredients_text)
         allergens_list = parse_ingredients_or_allergens(allergens_text)
 
-        emoji = assign_food_emoji(name, category)
+        icon, icon_color = assign_food_icon(name, category)
 
         # NOTE: image_url is deliberately ignored per strict requirement!
         return {
@@ -199,7 +215,8 @@ class DataConnector:
             "name": name,
             "brand": brand,
             "category": category,
-            "emoji": emoji,
+            "icon": icon,
+            "iconColor": icon_color,
             "serving_size": serving,
             "calories": calories,
             "protein_g": protein,
@@ -219,11 +236,15 @@ class DataConnector:
         }
 
     def normalize_synthetic_xlsx_row(self, row: Dict[str, Any], index: int, dataset_key: str) -> Dict[str, Any]:
-        """Normalize a row from food_completeness_dataset_2000.xlsx Products sheet."""
+        """
+        Normalize a row from food_completeness_dataset_2000.xlsx Products sheet.
+        Strict Zero-Hallucination Rule: Missing metadata and absent columns (such as
+        salt_g when not present in Excel) remain None and are never derived/imputed.
+        """
         code = parse_clean_text(row.get("barcode")) or parse_clean_text(row.get("product_id")) or f"SYNTH-{index:04d}"
-        name = parse_clean_text(row.get("product_name")) or f"Product {code}"
-        brand = parse_clean_text(row.get("brand")) or "Generic"
-        category = parse_clean_text(row.get("category")) or "Pantry"
+        name = parse_clean_text(row.get("product_name"))
+        brand = parse_clean_text(row.get("brand"))
+        category = parse_clean_text(row.get("category"))
 
         serving_g = parse_clean_float(row.get("serving_size_g"))
         serving = f"{int(serving_g)}g" if (serving_g is not None and not math.isnan(serving_g)) else parse_clean_text(row.get("serving_size"))
@@ -236,8 +257,7 @@ class DataConnector:
         sat_fat = parse_clean_float(row.get("saturated_fat_g"))
         fiber = parse_clean_float(row.get("fiber_g"))
         sodium_mg = parse_clean_float(row.get("sodium_mg"))
-
-        salt_g = round((sodium_mg / 1000.0) * 2.54, 3) if sodium_mg is not None else None
+        salt_g = parse_clean_float(row.get("salt_g"))  # Do NOT impute salt_g from sodium_mg
 
         ingredients_text = parse_clean_text(row.get("ingredients_text"))
         allergens_text = parse_clean_text(row.get("allergens"))
@@ -245,14 +265,15 @@ class DataConnector:
         ingredients_list = parse_ingredients_or_allergens(ingredients_text)
         allergens_list = parse_ingredients_or_allergens(allergens_text)
 
-        emoji = assign_food_emoji(name, category)
+        icon, icon_color = assign_food_icon(name, category)
 
         return {
             "id": code,
             "name": name,
             "brand": brand,
             "category": category,
-            "emoji": emoji,
+            "icon": icon,
+            "iconColor": icon_color,
             "serving_size": serving,
             "calories": calories,
             "protein_g": protein,
@@ -272,11 +293,14 @@ class DataConnector:
         }
 
     def load_dataset(self, dataset_key: str = "demo") -> List[Dict[str, Any]]:
-        """Load and cache the requested dataset, normalizing all rows."""
+        """Load and cache the requested dataset, raising explicit errors if unavailable or malformed."""
         if dataset_key in self._cache:
             return self._cache[dataset_key]
 
-        conf = DATASET_CONFIGS.get(dataset_key, DATASET_CONFIGS["demo"])
+        if dataset_key not in DATASET_CONFIGS:
+            raise KeyError(f"Unknown dataset key '{dataset_key}'.")
+
+        conf = DATASET_CONFIGS[dataset_key]
         file_path = None
         for fn in conf["filenames"]:
             p = resolve_file_path(fn)
@@ -285,10 +309,10 @@ class DataConnector:
                 break
 
         if not file_path:
-            # If requested non-demo dataset is absent, fallback gracefully to demo
-            if dataset_key != "demo":
-                return self.load_dataset("demo")
-            raise FileNotFoundError("Default demo_subset(1).csv not found in workspace.")
+            logger.warning("Requested dataset '%s' file not found (candidates: %s).", dataset_key, conf["filenames"])
+            raise FileNotFoundError(
+                f"Dataset '{conf['name']}' file ({conf['filenames'][0]}) not found in workspace or uploads."
+            )
 
         records: List[Dict[str, Any]] = []
 
@@ -310,8 +334,8 @@ class DataConnector:
                     rec = self.normalize_synthetic_xlsx_row(row_dict, idx + 1, dataset_key)
                     records.append(rec)
             except Exception as e:
-                # If reading xlsx fails, fallback to demo
-                return self.load_dataset("demo")
+                logger.exception("Failed to parse Excel dataset '%s' at %s: %s", dataset_key, file_path, e)
+                raise RuntimeError(f"Failed to read Excel dataset '{file_path.name}': {e}") from e
 
         self._cache[dataset_key] = records
         self._duplicates_cache[dataset_key] = detect_dataset_duplicates(records)
@@ -332,7 +356,6 @@ class DataConnector:
         all_records = self.load_dataset(dataset_key)
         dup_lookup = self._duplicates_cache.get(dataset_key, {}).get("lookup", {})
 
-        # Compute full audit for all records once (deterministic)
         audited_records = []
         stats = {
             "total": len(all_records),
@@ -365,13 +388,11 @@ class DataConnector:
             if anomalies:
                 stats["anomalies_count"] += 1
 
-            # Match search query
             if search_query:
-                haystack = f"{rec.get('name', '')} {rec.get('brand', '')} {rec.get('category', '')} {rec.get('id', '')}".lower()
+                haystack = f"{rec.get('name') or ''} {rec.get('brand') or ''} {rec.get('category') or ''} {rec.get('id') or ''}".lower()
                 if search_query not in haystack:
                     continue
 
-            # Match priority filter
             if priority_filter != "ALL":
                 if priority_filter == "ANOMALIES":
                     if not anomalies:
@@ -427,15 +448,13 @@ class DataConnector:
 
         if pinecone_key and pinecone_index and pinecone_key != "your_pinecone_api_key_here":
             try:
-                # Pinecone Connector Staging Hook
-                import pinecone
-                # Staged for Pinecone vector search
-                # Fallback to local if index is unreachable
-            except ImportError:
-                pass
+                import pinecone  # noqa: F401
+                logger.info("Pinecone client available; index '%s' staged for semantic retrieval.", pinecone_index)
+            except ImportError as exc:
+                logger.warning("PINECONE_API_KEY configured but pinecone package is unavailable (%s); falling back to local similarity.", exc)
+            except Exception as exc:
+                logger.warning("Pinecone similarity lookup failed (%s); falling back to local similarity.", exc)
 
-        # Local deterministic similarity fallback:
-        # Matches complete, verified records in the same category / macro proximity
         all_records = self.load_dataset(dataset_key)
         target = self.get_record_by_id(record_id, dataset_key)
         if not target:
@@ -451,7 +470,6 @@ class DataConnector:
                 continue
 
             audit = audit_record_completeness(r)
-            # Prioritize records with high completeness (>70%) so recommendations are safe!
             if audit["completeness_pct"] < 70.0:
                 continue
 
@@ -461,7 +479,6 @@ class DataConnector:
             r_cal = r.get("calories") or 200.0
             r_prot = r.get("protein_g") or 10.0
 
-            # Proximity in calorie & protein space
             cal_diff = abs(target_cal - r_cal) / max(target_cal, 50.0)
             prot_diff = abs(target_prot - r_prot) / max(target_prot, 5.0)
             macro_score = 1.0 / (1.0 + cal_diff + prot_diff)
@@ -477,16 +494,22 @@ class DataConnector:
         return candidates[:limit]
 
     def add_custom_record(self, record_data: Dict[str, Any], dataset_key: str = "demo") -> Dict[str, Any]:
-        """Add a custom product to the active dataset session."""
+        """Add a custom product to the active dataset session without inventing missing values."""
         records = self.load_dataset(dataset_key)
         new_id = record_data.get("id") or f"USER-{len(records) + 1:04d}"
 
+        name = parse_clean_text(record_data.get("name"))
+        brand = parse_clean_text(record_data.get("brand"))
+        category = parse_clean_text(record_data.get("category")) or "Custom Audit"
+        icon, icon_color = ("salad", "text-emerald-700")
+
         new_rec = {
             "id": new_id,
-            "name": parse_clean_text(record_data.get("name")) or "Custom Product",
-            "brand": parse_clean_text(record_data.get("brand")) or "Custom Entry",
-            "category": parse_clean_text(record_data.get("category")) or "User Submitted",
-            "emoji": assign_food_emoji(record_data.get("name", ""), record_data.get("category", "")),
+            "name": name,
+            "brand": brand,
+            "category": category,
+            "icon": icon,
+            "iconColor": icon_color,
             "serving_size": parse_clean_text(record_data.get("serving_size")),
             "calories": parse_clean_float(record_data.get("calories")),
             "protein_g": parse_clean_float(record_data.get("protein_g")),
@@ -505,7 +528,6 @@ class DataConnector:
             "dataset_key": dataset_key
         }
 
-        # Add to front of session list
         records.insert(0, new_rec)
         self._duplicates_cache[dataset_key] = detect_dataset_duplicates(records)
 

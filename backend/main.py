@@ -6,7 +6,15 @@ Serves REST API, dataset toggle, deterministic validator, and Groq/Gemini GenAI 
 
 import os
 import sys
+import logging
 from pathlib import Path
+
+# Configure baseline logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("nutriaudit.api")
 
 # Ensure backend directory is in python path
 current_dir = Path(__file__).resolve().parent
@@ -15,16 +23,17 @@ if str(current_dir) not in sys.path:
 
 from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 
-from data_connector import DataConnector, DATASET_CONFIGS
+from data_connector import DataConnector, DATASET_CONFIGS, UPLOAD_DIR
 from triage_service import (
     run_triage_audit,
     get_active_groq_key,
     get_active_gemini_key
 )
-from validator import audit_record_completeness, audit_cross_field_anomalies
 
 frontend_dir = current_dir.parent
+ALLOWED_UPLOAD_EXTENSIONS = {".csv", ".xlsx"}
 
 app = Flask(__name__, static_folder=str(frontend_dir))
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -77,8 +86,12 @@ def switch_active_dataset():
     try:
         connector.load_dataset(key)
         connector.active_dataset_key = key
+    except FileNotFoundError as e:
+        logger.warning("Dataset '%s' not found: %s", key, e)
+        return jsonify({"error": str(e)}), 404
     except Exception as e:
-        return jsonify({"error": f"Failed to load dataset '{key}': {str(e)}"}), 404
+        logger.exception("Failed to switch to dataset '%s': %s", key, e)
+        return jsonify({"error": f"Failed to load dataset '{key}': {str(e)}"}), 500
 
     return jsonify({
         "status": "success",
@@ -89,25 +102,53 @@ def switch_active_dataset():
 
 @app.route("/api/datasets/upload", methods=["POST"])
 def upload_dataset_file():
-    """Upload preprocessed_full(1).csv or food_completeness_dataset_2000.xlsx directly."""
+    """
+    Upload preprocessed_full(1).csv or food_completeness_dataset_2000.xlsx safely.
+    Sanitizes filename with werkzeug.utils.secure_filename(), validates extension,
+    and writes exclusively into an isolated uploads/ directory.
+    """
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
-    filename = file.filename
-    if not filename:
+    raw_filename = (file.filename or "").strip()
+    if not raw_filename:
         return jsonify({"error": "Empty filename"}), 400
 
-    target_path = frontend_dir / filename
+    # Reject explicit traversal paths or suspicious filenames
+    if ".." in raw_filename or "/" in raw_filename or "\\" in raw_filename:
+        safe_candidate = Path(raw_filename).name
+        if safe_candidate != raw_filename:
+            return jsonify({"error": "Invalid filename: path traversal characters are forbidden."}), 400
+
+    safe_filename = secure_filename(raw_filename)
+    if not safe_filename:
+        return jsonify({"error": "Invalid filename after sanitization."}), 400
+
+    ext = Path(safe_filename).suffix.lower()
+    if ext not in ALLOWED_UPLOAD_EXTENSIONS:
+        return jsonify({
+            "error": f"Unsupported file extension '{ext}'. Allowed extensions: {sorted(ALLOWED_UPLOAD_EXTENSIONS)}"
+        }), 400
+
+    resolved_upload_dir = UPLOAD_DIR.resolve()
+    resolved_upload_dir.mkdir(parents=True, exist_ok=True)
+    target_path = (resolved_upload_dir / safe_filename).resolve()
+
+    if not target_path.is_relative_to(resolved_upload_dir):
+        return jsonify({"error": "Invalid upload path: escapes sandboxed upload directory."}), 400
+
     file.save(str(target_path))
+    logger.info("Saved uploaded dataset '%s' to %s", safe_filename, target_path)
 
     # Invalidate cache
     connector._cache.clear()
     connector._duplicates_cache.clear()
 
     matched_key = None
+    # Match against canonical or sanitized dataset names
     for key, conf in DATASET_CONFIGS.items():
-        if filename in conf["filenames"]:
+        if safe_filename in conf["filenames"] or safe_filename in {secure_filename(fn) for fn in conf["filenames"]}:
             matched_key = key
             break
 
@@ -116,9 +157,9 @@ def upload_dataset_file():
 
     return jsonify({
         "status": "success",
-        "filename": filename,
+        "filename": safe_filename,
         "matched_dataset": matched_key,
-        "message": f"Successfully uploaded '{filename}' and updated dataset registry.",
+        "message": f"Successfully uploaded '{safe_filename}' into isolated uploads directory.",
         "datasets": connector.get_dataset_metadata()
     })
 
@@ -140,7 +181,10 @@ def get_records():
             limit=limit,
             offset=offset
         )
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
     except Exception as e:
+        logger.exception("Error loading records for dataset '%s': %s", dataset, e)
         return jsonify({"error": f"Error loading records: {str(e)}"}), 500
 
     return jsonify({
@@ -157,7 +201,14 @@ def get_records():
 def get_record(record_id: str):
     """Fetch single product record with full audit, anomalies, duplicates, and Pinecone-ready similar items."""
     dataset = request.args.get("dataset") or connector.active_dataset_key
-    rec = connector.get_record_by_id(record_id, dataset)
+    try:
+        rec = connector.get_record_by_id(record_id, dataset)
+    except FileNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        logger.exception("Error retrieving record '%s': %s", record_id, e)
+        return jsonify({"error": f"Failed to retrieve record: {str(e)}"}), 500
+
     if not rec:
         return jsonify({"error": f"Record '{record_id}' not found in dataset '{dataset}'"}), 404
 
@@ -177,7 +228,12 @@ def audit_product_triage(record_id: str):
     Uses backend GROQ_API_KEY from .env by default.
     """
     dataset = request.args.get("dataset") or connector.active_dataset_key
-    rec = connector.get_record_by_id(record_id, dataset)
+    try:
+        rec = connector.get_record_by_id(record_id, dataset)
+    except Exception as e:
+        logger.exception("Error fetching record '%s' for triage: %s", record_id, e)
+        return jsonify({"error": str(e)}), 500
+
     if not rec:
         return jsonify({"error": f"Record '{record_id}' not found in dataset '{dataset}'"}), 404
 
@@ -204,7 +260,7 @@ def add_product_record():
     new_record = connector.add_custom_record(data, dataset)
     return jsonify({
         "status": "success",
-        "message": f"Added and audited '{new_record.get('name')}' successfully.",
+        "message": f"Added and audited '{new_record.get('name') or new_record.get('id')}' successfully.",
         "record": new_record
     })
 
@@ -231,5 +287,5 @@ def serve_static(path):
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    print(f"Starting NutriAudit Backend Server on http://localhost:{port}")
+    logger.info("Starting NutriAudit Backend Server on http://localhost:%s", port)
     app.run(host="0.0.0.0", port=port, debug=False)

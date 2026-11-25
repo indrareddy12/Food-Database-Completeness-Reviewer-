@@ -2,15 +2,17 @@
 NutriAudit GenAI Triage & Review Service
 Calls Groq or Google Gemini under the Strict Zero-Hallucination Contract.
 Never infers, estimates, or imputes missing food nutrition or allergen data.
-Includes safe, deterministic fallback when keys or network are unavailable.
+Includes safe, logged deterministic fallback when keys or network are unavailable.
 """
 
 import os
-import json
+import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 import requests
 from dotenv import load_dotenv
+
+logger = logging.getLogger("nutriaudit.triage")
 
 # Load workspace .env
 env_path = Path(__file__).resolve().parent.parent / ".env"
@@ -44,9 +46,9 @@ def get_active_gemini_key() -> Optional[str]:
 
 def build_audit_prompt(record: Dict[str, Any], audit: Dict[str, Any], anomalies: list) -> str:
     """Build a structured zero-hallucination audit prompt."""
-    product_name = record.get("name", "Unknown Product")
-    brand = record.get("brand", "Unknown Brand")
-    category = record.get("category", "General Food")
+    product_name = record.get("name") or "MISSING"
+    brand = record.get("brand") or "MISSING"
+    category = record.get("category") or "MISSING"
     serving = record.get("serving_size") or "MISSING"
 
     nutrients = {
@@ -66,8 +68,8 @@ def build_audit_prompt(record: Dict[str, Any], audit: Dict[str, Any], anomalies:
         for k, v in nutrients.items()
     )
 
-    ingredients = record.get("ingredients_text") or (", ".join(record.get("ingredients", [])) if record.get("ingredients") else "MISSING")
-    allergens = record.get("allergens_text") or (", ".join(record.get("allergens", [])) if record.get("allergens") else "MISSING")
+    ingredients = record.get("ingredients_text") or (", ".join(record.get("ingredients") or []) if record.get("ingredients") else "MISSING")
+    allergens = record.get("allergens_text") or (", ".join(record.get("allergens") or []) if record.get("allergens") else "MISSING")
 
     anomalies_str = "\n".join(
         f"  - [{a.get('severity')}] {a.get('message')}"
@@ -101,22 +103,27 @@ DETERMINISTIC VALIDATION ENGINE FINDINGS:
 - Cross-Field Anomalies:
 {anomalies_str}
 
-Please generate an audit response structured with these exact sections:
-1. 🛡️ ZERO-HALLUCINATION VERIFICATION GUARANTEE: Affirm explicitly that no missing metrics were inferred.
-2. 🚨 TRIAGE PRIORITY & RISK ASSESSMENT: Why this record requires review (e.g. anaphylaxis risk from missing allergens, compliance failure from missing ingredients, or metabolic risk).
-3. ⚠️ DETECTED ANOMALIES & OMISSIONS: Breakdown of missing fields and any mathematical contradictions.
-4. 📋 ACTIONABLE QA VERIFICATION GUIDANCE: Concrete, step-by-step instructions for human food safety auditors (packaging verification, manufacturer spec request, laboratory assay).
+Please generate an audit response structured with these exact plain-text section headings (no emojis):
+1. ZERO-HALLUCINATION VERIFICATION GUARANTEE: Affirm explicitly that no missing metrics were inferred.
+2. TRIAGE PRIORITY & RISK ASSESSMENT: Why this record requires review (e.g. anaphylaxis risk from missing allergens, compliance failure from missing ingredients, or metabolic risk).
+3. DETECTED ANOMALIES & OMISSIONS: Breakdown of missing fields and any mathematical contradictions.
+4. ACTIONABLE QA VERIFICATION GUIDANCE: Concrete, step-by-step instructions for human food safety auditors (packaging verification, manufacturer spec request, laboratory assay).
 """
     return prompt
 
 
-def generate_deterministic_fallback_audit(record: Dict[str, Any], audit: Dict[str, Any], anomalies: list) -> Dict[str, Any]:
+def generate_deterministic_fallback_audit(
+    record: Dict[str, Any],
+    audit: Dict[str, Any],
+    anomalies: list,
+    provider_warnings: Optional[List[str]] = None
+) -> Dict[str, Any]:
     """
     Deterministic rule-based audit report matching the zero-hallucination contract.
-    Used when offline or when no external LLM API key is reachable.
+    Used when offline, when no external LLM API key is configured, or when LLM providers fail.
     """
-    name = record.get("name", "Product")
-    brand = record.get("brand", "Unknown")
+    name = record.get("name") or "MISSING"
+    brand = record.get("brand") or "MISSING"
     priority = audit.get("review_priority", "HIGH")
     missing_crit = audit.get("missing_critical", [])
     missing_high = audit.get("missing_high", [])
@@ -137,9 +144,9 @@ def generate_deterministic_fallback_audit(record: Dict[str, Any], audit: Dict[st
     if not risk_points:
         risk_points.append("All primary safety and nutritional parameters are declared.")
 
-    anomaly_texts = [f"• [{a.get('severity')}] {a.get('message')}" for a in anomalies]
+    anomaly_texts = [f"* [{a.get('severity')}] {a.get('message')}" for a in anomalies]
     if not anomaly_texts:
-        anomaly_texts = ["• No mathematical or chemical contradictions detected."]
+        anomaly_texts = ["* No mathematical or chemical contradictions detected."]
 
     guidance = [
         f"1. Request official product specification sheet from manufacturer '{brand}'.",
@@ -147,22 +154,27 @@ def generate_deterministic_fallback_audit(record: Dict[str, Any], audit: Dict[st
         "3. If formulation is disputed, mandate third-party certified laboratory chemical assay."
     ]
 
-    content = f"""### 🛡️ Zero-Hallucination Verification Guarantee
+    warnings_list = provider_warnings or []
+    fallback_note = ""
+    if warnings_list:
+        fallback_note = f"\n\n### Provider Fallback Notice\nExternal LLM call fell back to deterministic mode: {'; '.join(warnings_list)}"
+
+    content = f"""### Zero-Hallucination Verification Guarantee
 **ACTIVE GUARDRAIL:** No missing data points were inferred, estimated, or imputed for **{name}**. All missing attributes are strictly preserved as `MISSING`.
 
-### 🚨 Triage Priority: {priority} ({audit.get('completeness_pct')}% Complete)
+### Triage Priority: {priority} ({audit.get('completeness_pct')}% Complete)
 **Risk Evaluation:**
-{chr(10).join('• ' + p for p in risk_points)}
+{chr(10).join('* ' + p for p in risk_points)}
 
-### ⚠️ Detected Omissions & Anomalies
+### Detected Omissions & Anomalies
 - **Missing Critical Fields:** {', '.join(missing_crit) if missing_crit else 'None'}
 - **Missing High-Priority Fields:** {', '.join(missing_high) if missing_high else 'None'}
 - **Missing Secondary Fields:** {', '.join(missing_low) if missing_low else 'None'}
 **Cross-Field Math Findings:**
 {chr(10).join(anomaly_texts)}
 
-### 📋 Actionable QA Verification Guidance
-{chr(10).join(guidance)}
+### Actionable QA Verification Guidance
+{chr(10).join(guidance)}{fallback_note}
 """
     return {
         "status": "success",
@@ -170,15 +182,24 @@ def generate_deterministic_fallback_audit(record: Dict[str, Any], audit: Dict[st
         "model": "NutriAudit-Deterministic-RuleEngine",
         "content": content,
         "review_priority": priority,
-        "zero_hallucination_guaranteed": True
+        "zero_hallucination_guaranteed": True,
+        "warnings": warnings_list,
+        "fallback_reason": "; ".join(warnings_list) if warnings_list else "No external LLM key configured."
     }
 
 
-def run_triage_audit(record: Dict[str, Any], audit: Dict[str, Any], anomalies: list, client_groq_key: Optional[str] = None, client_gemini_key: Optional[str] = None) -> Dict[str, Any]:
+def run_triage_audit(
+    record: Dict[str, Any],
+    audit: Dict[str, Any],
+    anomalies: list,
+    client_groq_key: Optional[str] = None,
+    client_gemini_key: Optional[str] = None
+) -> Dict[str, Any]:
     """
-    Run triage audit using Groq, Gemini, or safe deterministic fallback.
+    Run triage audit using Groq, Gemini, or safe logged deterministic fallback.
     """
     prompt = build_audit_prompt(record, audit, anomalies)
+    provider_warnings: List[str] = []
 
     # 1. Try Groq (Preferred with active Groq API Key)
     groq_key = client_groq_key or get_active_groq_key()
@@ -214,10 +235,20 @@ def run_triage_audit(record: Dict[str, Any], audit: Dict[str, Any], anomalies: l
                         "model": model,
                         "content": ai_content,
                         "review_priority": audit.get("review_priority"),
-                        "zero_hallucination_guaranteed": True
+                        "zero_hallucination_guaranteed": True,
+                        "warnings": provider_warnings
                     }
-            except Exception:
-                continue
+                msg = f"Groq ({model}) returned HTTP {resp.status_code}"
+                logger.warning("%s: %s", msg, resp.text[:160])
+                provider_warnings.append(msg)
+            except (requests.RequestException, OSError) as exc:
+                msg = f"Groq ({model}) request error: {type(exc).__name__}"
+                logger.warning("%s: %s", msg, exc)
+                provider_warnings.append(msg)
+            except (KeyError, IndexError, ValueError, TypeError) as exc:
+                msg = f"Groq ({model}) malformed response: {exc}"
+                logger.warning(msg)
+                provider_warnings.append(msg)
 
     # 2. Try Gemini if configured
     gemini_key = client_gemini_key or get_active_gemini_key()
@@ -245,10 +276,20 @@ def run_triage_audit(record: Dict[str, Any], audit: Dict[str, Any], anomalies: l
                     "model": "gemini-2.5-flash",
                     "content": ai_text,
                     "review_priority": audit.get("review_priority"),
-                    "zero_hallucination_guaranteed": True
+                    "zero_hallucination_guaranteed": True,
+                    "warnings": provider_warnings
                 }
-        except Exception:
-            pass
+            msg = f"Gemini returned HTTP {resp.status_code}"
+            logger.warning("%s: %s", msg, resp.text[:160])
+            provider_warnings.append(msg)
+        except (requests.RequestException, OSError) as exc:
+            msg = f"Gemini request error: {type(exc).__name__}"
+            logger.warning("%s: %s", msg, exc)
+            provider_warnings.append(msg)
+        except (KeyError, IndexError, ValueError, TypeError) as exc:
+            msg = f"Gemini malformed response: {exc}"
+            logger.warning(msg)
+            provider_warnings.append(msg)
 
-    # 3. Safe, deterministic fallback that always succeeds
-    return generate_deterministic_fallback_audit(record, audit, anomalies)
+    # 3. Safe, deterministic fallback that logs & reports warnings explicitly
+    return generate_deterministic_fallback_audit(record, audit, anomalies, provider_warnings=provider_warnings)
