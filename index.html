@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NutriAudit — Organic Neo-Brutalist Food Database Reviewer</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Space Grotesk (Neo-Brutalist display) & Plus Jakarta Sans (clean UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Space Grotesk"', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            ink: '#18181B',
+            cream: '#FFFDF5',
+            butter: '#FFD97D',
+            matcha: '#C7F464',
+            lilac: '#C4B5FD',
+            peach: '#FF9E7D',
+            berry: '#FFB3E6',
+            skyMint: '#A5F3FC',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* =========================================================================
+       ORGANIC NEO-BRUTALISM CUSTOM STYLES (Dribbble-inspired Pill Aesthetic)
+       ========================================================================= */
+    :root {
+      --ink: #18181B;
+      --cream: #FFFDF5;
+    }
+
+    body {
+      background-color: var(--cream);
+      background-image: radial-gradient(rgba(24, 24, 27, 0.11) 1.25px, transparent 1.25px);
+      background-size: 20px 20px;
+      color: var(--ink);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Chunky Neo-Brutalist Borders & Hard Offset Shadows */
+    .nb-border {
+      border: 2.5px solid var(--ink);
+    }
+
+    .nb-card {
+      border: 2.5px solid var(--ink);
+      border-radius: 30px;
+      box-shadow: 5px 5px 0px var(--ink);
+    }
+
+    .nb-card-sm {
+      border: 2.5px solid var(--ink);
+      border-radius: 22px;
+      box-shadow: 3.5px 3.5px 0px var(--ink);
+    }
+
+    .nb-pill {
+      border: 2.5px solid var(--ink);
+      border-radius: 9999px;
+      box-shadow: 3px 3px 0px var(--ink);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease;
+    }
+
+    .nb-pill:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0px var(--ink);
+    }
+
+    .nb-pill:active:not(:disabled) {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px var(--ink);
+    }
+
+    .nb-input {
+      border: 2.5px solid var(--ink);
+      border-radius: 9999px;
+      box-shadow: 2.5px 2.5px 0px var(--ink);
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .nb-input:focus {
+      outline: none;
+      box-shadow: 4px 4px 0px var(--ink);
+      transform: translate(-1px, -1px);
+    }
+
+    /* Speed Dial Needle Smooth Physics */
+    #dial-needle {
+      transition: transform 0.75s cubic-bezier(0.34, 1.45, 0.64, 1);
+      transform-origin: 150px 145px;
+    }
+
+    #dial-arc-progress {
+      transition: stroke-dashoffset 0.75s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.4s ease;
+    }
+
+    /* Subtle Floating Animation for Food Mascot */
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-4px) rotate(2deg); }
+    }
+    .animate-float {
+      animation: floatSlow 3.4s ease-in-out infinite;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FFFDF5;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #18181B;
+      border-radius: 9999px;
+    }
+
+    /* Multi-Tab View Switching (Desktop & Mobile) */
+    .tab-view {
+      display: none;
+    }
+    .tab-view.active {
+      display: block;
+      animation: fadeInTab 0.2s ease-out;
+    }
+    @keyframes fadeInTab {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-28 lg:pb-12">
+
+  <!-- =========================================================================
+       TOAST NOTIFICATION BANNER
+       ========================================================================= -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- =========================================================================
+       CLEAN TOP HEADER WITH DESKTOP PILL NAVIGATION & TOP API KEY BAR
+       ========================================================================= -->
+  <header class="sticky top-0 z-40 px-3 sm:px-6 pt-3 pb-2 bg-[#FFFDF5]/90 backdrop-blur-md">
+    <div class="max-w-[1320px] mx-auto bg-butter nb-card px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+
+      <!-- Brand Identity + Cute Organic Food Mascot SVG -->
+      <button onclick="switchTab('home')" class="flex items-center gap-3 text-left group">
+        <div class="w-11 h-11 rounded-full bg-matcha nb-border flex items-center justify-center shadow-[3px_3px_0px_#18181B] shrink-0 animate-float">
+          <svg viewBox="0 0 64 64" class="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 28C12 16 21 10 32 10C43 10 52 16 52 28H12Z" fill="#FF9E7D" stroke="#18181B" stroke-width="3.5" stroke-linejoin="round"/>
+            <path d="M10 34C10 31.8 11.8 30 14 30H50C52.2 30 54 31.8 54 34C54 36.2 52.2 38 50 38H14C11.8 38 10 36.2 10 34Z" fill="#C7F464" stroke="#18181B" stroke-width="3.5"/>
+            <path d="M14 40H50V44C50 48.4 46.4 52 42 52H22C17.6 52 14 48.4 14 44V40Z" fill="#FFD97D" stroke="#18181B" stroke-width="3.5" stroke-linejoin="round"/>
+            <rect x="19" y="18" width="11" height="7" rx="3" fill="#18181B"/>
+            <rect x="34" y="18" width="11" height="7" rx="3" fill="#18181B"/>
+            <line x1="30" y1="21" x2="34" y2="21" stroke="#18181B" stroke-width="3"/>
+            <path d="M28 45C29.5 47 34.5 47 36 45" stroke="#18181B" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-display font-bold text-xl sm:text-2xl tracking-tight leading-none">NUTRIAUDIT</h1>
+          <p class="text-[11px] font-bold text-ink/75 mt-0.5 hidden sm:block">Food Completeness Reviewer</p>
+        </div>
+      </button>
+
+      <!-- Desktop Pill Tab Navigation -->
+      <nav class="hidden lg:flex items-center gap-1.5 bg-cream nb-border rounded-full p-1.5 shadow-[3px_3px_0px_#18181B]">
+        <button onclick="switchTab('home')" id="desk-tab-home" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
+          🏠 Home
+        </button>
+        <button onclick="switchTab('database')" id="desk-tab-database" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
+          🗄️ Database
+        </button>
+        <button onclick="switchTab('auditor')" id="desk-tab-auditor" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
+          ⚡ Auditor
+        </button>
+        <button onclick="switchTab('needs')" id="desk-tab-needs" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
+          🎯 My Needs
+        </button>
+        <button onclick="switchTab('settings')" id="desk-tab-settings" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition flex items-center gap-1.5">
+          <span>⚙️ Settings</span>
+        </button>
+      </nav>
+
+      <!-- Top Header Action Controls (API Key Quick Pill + Add Record) -->
+      <div class="flex items-center gap-2">
+        <!-- TOP API KEY OPTION BUTTON (User Requirement) -->
+        <button
+          onclick="openApiKeyModal()"
+          id="top-api-key-btn"
+          class="nb-pill bg-cream hover:bg-white px-3 sm:px-3.5 py-2 text-xs font-extrabold flex items-center gap-1.5 shrink-0"
+          title="Configure Gemini or Groq API Key"
+        >
+          <span class="text-sm">🔑</span>
+          <span id="top-api-label" class="hidden sm:inline">API Key</span>
+          <span id="top-api-dot" class="w-2.5 h-2.5 rounded-full bg-butter border border-ink inline-block" title="API Status"></span>
+        </button>
+
+        <button onclick="openAddModal()" class="nb-pill bg-berry px-3.5 sm:px-4 py-2 text-xs font-extrabold flex items-center gap-1.5 shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          <span class="hidden sm:inline">Add Record</span>
+          <span class="sm:hidden">Add</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       MULTI-TAB MAIN CONTAINER
+       ========================================================================= -->
+  <main class="max-w-[1320px] mx-auto px-3 sm:px-6 mt-5">
+
+    <!-- =======================================================================
+         TAB 1: SIMPLE LANDING PAGE (HOME)
+         ======================================================================= -->
+    <section id="view-home" class="tab-view active space-y-6">
+      <!-- Hero Banner Card -->
+      <div class="bg-lilac nb-card p-6 sm:p-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+        <div class="max-w-xl space-y-4 text-center lg:text-left">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 bg-cream nb-border rounded-full text-xs font-extrabold uppercase">
+            <span>🔒</span> Zero-Hallucination Food Audit Engine
+          </div>
+          <h2 class="font-display font-bold text-3xl sm:text-5xl leading-[1.08] tracking-tight">
+            Spot Missing Food Data Before It Hits Your Plate.
+          </h2>
+          <p class="text-sm sm:text-base font-semibold text-ink/85 leading-relaxed">
+            NutriAudit inspects nutrition &amp; ingredient records, flags missing safety fields with review priorities, scores trust on a visual speed dial, and matches verified supplements strictly from your database—<strong>never inventing missing values</strong>.
+          </p>
+          <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
+            <button onclick="switchTab('database')" class="nb-pill bg-ink text-cream px-6 py-3 text-sm font-extrabold">
+              🗄️ Browse Food Database
+            </button>
+            <button onclick="switchTab('auditor')" class="nb-pill bg-matcha text-ink px-6 py-3 text-sm font-extrabold">
+              ⚡ Open Speed Dial Auditor
+            </button>
+            <button onclick="switchTab('needs')" class="nb-pill bg-cream text-ink px-5 py-3 text-sm font-extrabold">
+              🎯 Check My Health Needs
+            </button>
+          </div>
+        </div>
+
+        <!-- Playful Neo-Brutalist Mascot Illustration Card -->
+        <div class="bg-berry nb-card p-6 w-full max-w-[300px] flex flex-col items-center text-center shrink-0">
+          <div class="w-32 h-32 rounded-full bg-cream nb-border flex items-center justify-center shadow-[4px_4px_0px_#18181B] animate-float">
+            <svg viewBox="0 0 100 100" class="w-24 h-24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 44C18 25 32 16 50 16C68 16 82 25 82 44H18Z" fill="#FF9E7D" stroke="#18181B" stroke-width="4.5" stroke-linejoin="round"/>
+              <path d="M14 53C14 49.7 16.7 47 20 47H80C83.3 47 86 49.7 86 53C86 56.3 83.3 59 80 59H20C16.7 59 14 56.3 14 53Z" fill="#C7F464" stroke="#18181B" stroke-width="4.5"/>
+              <path d="M20 62H80V69C80 75.6 74.6 81 68 81H32C25.4 81 20 75.6 20 69V62Z" fill="#FFD97D" stroke="#18181B" stroke-width="4.5" stroke-linejoin="round"/>
+              <rect x="29" y="28" width="17" height="11" rx="4.5" fill="#18181B"/>
+              <rect x="54" y="28" width="17" height="11" rx="4.5" fill="#18181B"/>
+              <line x1="46" y1="33" x2="54" y2="33" stroke="#18181B" stroke-width="4"/>
+              <path d="M43 70C46 74 54 74 57 70" stroke="#18181B" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="mt-4 px-3 py-1 bg-ink text-cream rounded-full text-[11px] font-extrabold uppercase">Live Database Snapshot</span>
+          <p class="text-xs font-bold text-ink/85 mt-2">
+            Click the <strong class="text-ink">🔑 API Key</strong> button above to connect your Google AI Studio or Groq key.
+          </p>
+        </div>
+      </div>
+
+      <!-- Global Database Health Strip -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+        <button onclick="switchTab('database'); setFilter('ALL');" class="text-left bg-cream nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
+          <div>
+            <p class="text-[11px] font-extrabold uppercase text-ink/60">Total Records</p>
+            <p id="stat-total" class="font-display font-bold text-3xl leading-tight">0</p>
+          </div>
+          <span class="w-11 h-11 rounded-full bg-butter nb-border flex items-center justify-center text-xl">📦</span>
+        </button>
+        <button onclick="switchTab('database'); setFilter('CRITICAL');" class="text-left bg-peach nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
+          <div>
+            <p class="text-[11px] font-extrabold uppercase text-ink/80">Critical Priority</p>
+            <p id="stat-critical" class="font-display font-bold text-3xl leading-tight">0</p>
+          </div>
+          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl">🚨</span>
+        </button>
+        <button onclick="switchTab('auditor')" class="text-left bg-skyMint nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
+          <div>
+            <p class="text-[11px] font-extrabold uppercase text-ink/80">Avg Completeness</p>
+            <p id="stat-avg" class="font-display font-bold text-3xl leading-tight">0%</p>
+          </div>
+          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl">📊</span>
+        </button>
+        <button onclick="switchTab('database'); setFilter('COMPLETE');" class="text-left bg-matcha nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
+          <div>
+            <p class="text-[11px] font-extrabold uppercase text-ink/80">Verified Complete</p>
+            <p id="stat-complete" class="font-display font-bold text-3xl leading-tight">0</p>
+          </div>
+          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl">✅</span>
+        </button>
+      </div>
+
+      <!-- 3-Step Quick Guide Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-cream nb-card p-5 flex flex-col justify-between gap-3">
+          <div>
+            <span class="inline-block px-3 py-1 bg-butter nb-border rounded-full text-xs font-extrabold">Step 01</span>
+            <h3 class="font-display font-bold text-xl mt-3">Scan &amp; Prioritize Records</h3>
+            <p class="text-xs font-semibold text-ink/75 mt-1 leading-relaxed">
+              View all products in the Database tab, filter by missing safety severity, or add your own incomplete food item to test.
+            </p>
+          </div>
+          <button onclick="switchTab('database')" class="nb-pill bg-butter px-4 py-2 text-xs font-extrabold self-start">Go to Database →</button>
+        </div>
+
+        <div class="bg-cream nb-card p-5 flex flex-col justify-between gap-3">
+          <div>
+            <span class="inline-block px-3 py-1 bg-matcha nb-border rounded-full text-xs font-extrabold">Step 02</span>
+            <h3 class="font-display font-bold text-xl mt-3">Check Safety Speed Dial</h3>
+            <p class="text-xs font-semibold text-ink/75 mt-1 leading-relaxed">
+              Inspect missing ingredients &amp; allergens on the Speed Dial and run a zero-hallucination Gemini or Groq AI Deep Review.
+            </p>
+          </div>
+          <button onclick="switchTab('auditor')" class="nb-pill bg-matcha px-4 py-2 text-xs font-extrabold self-start">Open Auditor →</button>
+        </div>
+
+        <div class="bg-cream nb-card p-5 flex flex-col justify-between gap-3">
+          <div>
+            <span class="inline-block px-3 py-1 bg-berry nb-border rounded-full text-xs font-extrabold">Step 03</span>
+            <h3 class="font-display font-bold text-xl mt-3">Match Your Health Needs</h3>
+            <p class="text-xs font-semibold text-ink/75 mt-1 leading-relaxed">
+              Set Gym or Daily Health nutrient targets, see a visual verdict, and discover verified supplements strictly from the database.
+            </p>
+          </div>
+          <button onclick="switchTab('needs')" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold self-start">Set My Needs →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 2: PRODUCT DATABASE & PRIORITY QUEUE
+         ======================================================================= -->
+    <section id="view-database" class="tab-view space-y-5">
+      <div class="bg-cream nb-card p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="font-display font-bold text-2xl flex items-center gap-2">
+              <span>🗄️</span> Product Database &amp; Review Queue
+            </h2>
+            <p class="text-xs sm:text-sm font-semibold text-ink/70">Click any product card to open its full Completeness Audit &amp; Safety Speed Dial.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold">
+              🔄 Re-Scan All
+            </button>
+            <button onclick="openAddModal()" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold">
+              + Add Product
+            </button>
+          </div>
+        </div>
+
+        <!-- Search & Priority Filter Bar -->
+        <div class="flex flex-col md:flex-row md:items-center gap-3 mb-5">
+          <div class="flex-1">
+            <input
+              id="db-search"
+              type="text"
+              oninput="renderProductList()"
+              placeholder="Search by product name, brand, or category..."
+              class="w-full bg-white nb-input px-4 py-2.5 text-xs sm:text-sm font-semibold placeholder:text-ink/45"
+            />
+          </div>
+          <div id="filter-pills" class="flex flex-wrap gap-2">
+            <button data-filter="ALL" onclick="setFilter('ALL')" class="filter-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold">All</button>
+            <button data-filter="CRITICAL" onclick="setFilter('CRITICAL')" class="filter-btn nb-pill bg-peach px-3.5 py-2 text-xs font-extrabold">Critical</button>
+            <button data-filter="HIGH" onclick="setFilter('HIGH')" class="filter-btn nb-pill bg-butter px-3.5 py-2 text-xs font-extrabold">High</button>
+            <button data-filter="COMPLETE" onclick="setFilter('COMPLETE')" class="filter-btn nb-pill bg-matcha px-3.5 py-2 text-xs font-extrabold">Complete</button>
+          </div>
+        </div>
+
+        <!-- Responsive Product Grid -->
+        <div id="product-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 3: COMPLETENESS AUDITOR & SAFETY SPEED DIAL
+         ======================================================================= -->
+    <section id="view-auditor" class="tab-view space-y-5">
+      <!-- Quick Product Switcher Bar -->
+      <div class="bg-cream nb-card-sm px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 flex-1">
+          <span class="text-xs font-extrabold uppercase text-ink/70 shrink-0">Inspecting:</span>
+          <select id="auditor-product-select" onchange="selectProduct(this.value, false)" class="w-full sm:max-w-md bg-white nb-input px-4 py-2 text-xs sm:text-sm font-extrabold cursor-pointer">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+        <button onclick="switchTab('needs')" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold shrink-0">
+          🎯 Check Against My Needs →
+        </button>
+      </div>
+
+      <!-- Selected Product Hero Card + AI Trigger -->
+      <div id="inspector-hero" class="bg-matcha nb-card p-5">
+        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <div id="selected-emoji" class="w-14 h-14 rounded-full bg-cream nb-border flex items-center justify-center text-3xl shadow-[3px_3px_0px_#18181B] shrink-0">
+              🥣
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span id="selected-category" class="px-2.5 py-0.5 text-[11px] font-extrabold bg-cream nb-border rounded-full uppercase">Category</span>
+                <span id="selected-priority-badge" class="px-2.5 py-0.5 text-[11px] font-extrabold bg-ink text-cream rounded-full uppercase">PRIORITY</span>
+              </div>
+              <h2 id="selected-name" class="font-display font-bold text-2xl leading-tight mt-1">Select a Product</h2>
+              <p id="selected-brand" class="text-xs font-bold text-ink/75">Brand • SKU</p>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <button
+              id="btn-gemini-audit"
+              onclick="runAIDeepReview()"
+              class="nb-pill bg-ink text-cream px-5 py-2.5 text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shrink-0 hover:bg-[#2a2a30]"
+            >
+              <span id="gemini-btn-icon">✨</span>
+              <span id="gemini-btn-text">GenAI Deep Audit</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 bg-cream/95 nb-border rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5">
+          <span class="text-base shrink-0">🔒</span>
+          <p class="text-[11px] sm:text-xs font-bold leading-snug">
+            <span class="uppercase font-extrabold">Strict Integrity Mode:</span> Missing ingredients, allergens, or nutrient metrics are flagged as <span class="underline decoration-2">UNVERIFIED / MISSING</span> and are never estimated or invented.
+          </p>
+        </div>
+      </div>
+
+      <!-- 2-Column Auditor Layout on PC -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+        <!-- Left Column: Speed Dial + Raw Record Ledger -->
+        <div class="lg:col-span-5 flex flex-col gap-5">
+          <!-- SAFETY & COMPLETENESS SPEED DIAL METER -->
+          <div class="bg-cream nb-card p-5">
+            <div class="flex items-center justify-between mb-2 gap-2">
+              <div>
+                <h3 class="font-display font-bold text-lg">Safety Speed Dial</h3>
+                <p class="text-xs font-semibold text-ink/65">Penalized by missing safety-critical fields</p>
+              </div>
+              <span id="safety-grade-pill" class="px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-butter shrink-0">CHECKING</span>
+            </div>
+
+            <div class="flex flex-col items-center justify-center my-2">
+              <svg viewBox="0 0 300 175" class="w-full max-w-[320px] overflow-visible" aria-label="Safety Score Speed Dial">
+                <path d="M 35 145 A 115 115 0 0 1 114 36" fill="none" stroke="#FF9E7D" stroke-width="26" stroke-linecap="butt" />
+                <path d="M 114 36 A 115 115 0 0 1 231 64" fill="none" stroke="#FFD97D" stroke-width="26" stroke-linecap="butt" />
+                <path d="M 231 64 A 115 115 0 0 1 265 145" fill="none" stroke="#C7F464" stroke-width="26" stroke-linecap="butt" />
+                <path d="M 22 145 A 128 128 0 0 1 278 145" fill="none" stroke="#18181B" stroke-width="3" />
+                <path d="M 48 145 A 102 102 0 0 1 252 145" fill="none" stroke="#18181B" stroke-width="3" />
+                <line x1="22" y1="145" x2="48" y2="145" stroke="#18181B" stroke-width="3" />
+                <line x1="252" y1="145" x2="278" y2="145" stroke="#18181B" stroke-width="3" />
+                <text x="16" y="164" font-size="11" font-weight="800" fill="#18181B">0</text>
+                <text x="142" y="18" font-size="11" font-weight="800" fill="#18181B">50</text>
+                <text x="268" y="164" font-size="11" font-weight="800" fill="#18181B">100</text>
+                <g id="dial-needle" style="transform: rotate(-90deg);">
+                  <polygon points="145,145 155,145 150,42" fill="#18181B" stroke="#18181B" stroke-width="2" stroke-linejoin="round" />
+                  <circle cx="150" cy="145" r="14" fill="#FFFDF5" stroke="#18181B" stroke-width="3.5" />
+                  <circle cx="150" cy="145" r="5" fill="#18181B" />
+                </g>
+              </svg>
+
+              <div class="flex items-center gap-3 -mt-2">
+                <div class="nb-pill bg-ink text-cream px-5 py-1.5 flex items-baseline gap-1.5">
+                  <span id="dial-score-num" class="font-display font-bold text-2xl">0</span>
+                  <span class="text-xs font-bold text-cream/75">/ 100 SAFETY SCORE</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2.5 mt-4">
+              <div class="bg-lilac/40 nb-border rounded-2xl p-2.5 text-center">
+                <p class="text-[10px] font-extrabold uppercase text-ink/70">Fields Filled</p>
+                <p id="metric-completeness" class="font-display font-bold text-lg">0/10</p>
+              </div>
+              <div class="bg-peach/45 nb-border rounded-2xl p-2.5 text-center">
+                <p class="text-[10px] font-extrabold uppercase text-ink/70">Missing</p>
+                <p id="metric-missing" class="font-display font-bold text-lg">0</p>
+              </div>
+              <div class="bg-skyMint/50 nb-border rounded-2xl p-2.5 text-center">
+                <p class="text-[10px] font-extrabold uppercase text-ink/70">Safety Risk</p>
+                <p id="metric-risk" class="font-display font-bold text-sm mt-1">LOW</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- RECORDED NUTRITION & INGREDIENT LEDGER -->
+          <div class="bg-cream nb-card p-5">
+            <h3 class="font-display font-bold text-lg mb-3 flex items-center gap-2">
+              <span>🧾</span> Raw Database Record Audit
+            </h3>
+            <div id="nutrition-ledger" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-3">
+              <!-- Populated dynamically -->
+            </div>
+
+            <div class="bg-[#FFFDF5] nb-border rounded-2xl p-3 space-y-2">
+              <div>
+                <span class="text-[11px] font-extrabold uppercase text-ink/60">Ingredients List:</span>
+                <p id="ledger-ingredients" class="text-xs font-bold mt-0.5 leading-relaxed"></p>
+              </div>
+              <div class="pt-2 border-t-2 border-ink/15">
+                <span class="text-[11px] font-extrabold uppercase text-ink/60">Declared Allergens:</span>
+                <p id="ledger-allergens" class="text-xs font-bold mt-0.5"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Missing Fields + GenAI Deep Report -->
+        <div class="lg:col-span-7 flex flex-col gap-5">
+          <!-- GENAI DEEP REVIEW OUTPUT CARD -->
+          <div id="gemini-output-card" class="bg-lilac nb-card p-5 hidden">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-display font-bold text-lg flex items-center gap-2">
+                <span>✨</span> GenAI Deep Audit Report
+              </h3>
+              <span id="ai-model-badge" class="px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase">gemini-2.5-flash</span>
+            </div>
+            <div id="gemini-output-content" class="bg-cream nb-border rounded-2xl p-4 text-xs sm:text-sm font-semibold space-y-3">
+              <!-- Populated by Gemini / Groq API -->
+            </div>
+          </div>
+
+          <!-- INCOMPLETE FIELDS & REVIEW PRIORITIES LIST -->
+          <div class="bg-cream nb-card p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-display font-bold text-lg flex items-center gap-2">
+                <span>📋</span> Incomplete Fields &amp; Review Priorities
+              </h3>
+              <span id="missing-count-pill" class="px-3 py-0.5 text-xs font-extrabold nb-border rounded-full bg-peach">0 Missing</span>
+            </div>
+            <div id="missing-fields-list" class="flex flex-col gap-2.5">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 4: PERSONAL NEEDS, VISUAL VERDICT & DATABASE SUPPLEMENTS
+         ======================================================================= -->
+    <section id="view-needs" class="tab-view space-y-5">
+      <!-- Quick Product Switcher Bar -->
+      <div class="bg-cream nb-card-sm px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 flex-1">
+          <span class="text-xs font-extrabold uppercase text-ink/70 shrink-0">Evaluating Product:</span>
+          <select id="needs-product-select" onchange="selectProduct(this.value, false)" class="w-full sm:max-w-md bg-white nb-input px-4 py-2 text-xs sm:text-sm font-extrabold cursor-pointer">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+        <button onclick="switchTab('auditor')" class="nb-pill bg-matcha px-4 py-2 text-xs font-extrabold shrink-0">
+          ⚡ View Safety Speed Dial
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <!-- Left: Manual User Needs & Targets -->
+        <div class="lg:col-span-5 bg-berry nb-card p-5">
+          <div class="mb-3">
+            <h2 class="font-display font-bold text-xl flex items-center gap-2">
+              <span>🎯</span> Your Health &amp; Nutrition Needs
+            </h2>
+            <p class="text-xs font-bold text-ink/75 mt-0.5">Pick a preset or enter manual nutrient goals</p>
+          </div>
+
+          <div class="flex flex-wrap gap-2 mb-4" id="goal-presets">
+            <button data-goal="gym" onclick="selectGoalPreset('gym')" class="goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold">
+              🏋️ Gym / High Protein
+            </button>
+            <button data-goal="daily" onclick="selectGoalPreset('daily')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold">
+              🌿 Daily Basic Health
+            </button>
+            <button data-goal="weightloss" onclick="selectGoalPreset('weightloss')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold">
+              🔥 Low Sugar / Lean
+            </button>
+            <button data-goal="clean" onclick="selectGoalPreset('clean')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold">
+              🛡️ Allergen-Safe Clean
+            </button>
+          </div>
+
+          <div class="bg-cream nb-border rounded-2xl p-4 space-y-3">
+            <p class="text-[11px] font-extrabold uppercase tracking-wide text-ink/70">Manual Nutrient Targets (per serving)</p>
+            <div class="grid grid-cols-3 gap-2.5">
+              <div>
+                <label for="target-protein" class="block text-[10px] font-extrabold uppercase mb-1">Min Protein (g)</label>
+                <input id="target-protein" type="number" min="0" value="15" oninput="evaluateUserNeeds()" class="w-full bg-white nb-input px-3 py-2 text-xs font-extrabold text-center" />
+              </div>
+              <div>
+                <label for="target-sugar" class="block text-[10px] font-extrabold uppercase mb-1">Max Sugar (g)</label>
+                <input id="target-sugar" type="number" min="0" value="10" oninput="evaluateUserNeeds()" class="w-full bg-white nb-input px-3 py-2 text-xs font-extrabold text-center" />
+              </div>
+              <div>
+                <label for="target-sodium" class="block text-[10px] font-extrabold uppercase mb-1">Max Sodium (mg)</label>
+                <input id="target-sodium" type="number" min="0" value="400" oninput="evaluateUserNeeds()" class="w-full bg-white nb-input px-3 py-2 text-xs font-extrabold text-center" />
+              </div>
+            </div>
+
+            <div>
+              <label for="custom-need-note" class="block text-[10px] font-extrabold uppercase mb-1">Manual Custom Requirement / Allergen Note</label>
+              <input
+                id="custom-need-note"
+                type="text"
+                value="Post-workout muscle recovery, avoid peanuts"
+                oninput="evaluateUserNeeds()"
+                placeholder="e.g., High fiber, dairy-free, diabetic friendly..."
+                class="w-full bg-white nb-input px-3.5 py-2 text-xs font-bold placeholder:text-ink/40"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Visual Suitability Verdict + Database Supplement Match -->
+        <div class="lg:col-span-7 flex flex-col gap-5">
+          <div id="verdict-card" class="bg-butter nb-card p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-display font-bold text-lg">Visual Suitability Verdict</h3>
+              <span id="verdict-badge" class="px-3 py-1 text-[11px] font-extrabold bg-ink text-cream rounded-full uppercase">ANALYZING</span>
+            </div>
+
+            <div class="bg-cream nb-border rounded-2xl p-4 flex items-center gap-4">
+              <div id="verdict-mascot" class="w-16 h-16 rounded-full bg-matcha nb-border flex items-center justify-center shrink-0 shadow-[3px_3px_0px_#18181B]">
+                <!-- Dynamically rendered SVG -->
+              </div>
+              <div class="flex-1">
+                <h4 id="verdict-headline" class="font-display font-bold text-lg leading-tight">Evaluating...</h4>
+                <p id="verdict-subtext" class="text-xs font-semibold text-ink/80 mt-1 leading-snug"></p>
+              </div>
+            </div>
+
+            <div id="verdict-checklist" class="mt-3 flex flex-col gap-2">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <div class="bg-skyMint nb-card p-5">
+            <div class="mb-2">
+              <h3 class="font-display font-bold text-lg flex items-center gap-2">
+                <span>💊</span> Database Supplement Match
+              </h3>
+              <p class="text-xs font-bold text-ink/75">Best verified complement or swap strictly from this database</p>
+            </div>
+            <div id="supplement-results" class="mt-3 flex flex-col gap-3">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         TAB 5: SETTINGS PAGE (API KEYS & SYSTEM PREFERENCES)
+         ======================================================================= -->
+    <section id="view-settings" class="tab-view max-w-3xl mx-auto space-y-5">
+      <!-- Gemini & Groq API Key Card -->
+      <div class="bg-butter nb-card p-6">
+        <div class="flex items-start justify-between gap-3 flex-wrap mb-4">
+          <div>
+            <h2 class="font-display font-bold text-2xl flex items-center gap-2">
+              <span>🔑</span> LLM API Provider Settings
+            </h2>
+            <p class="text-xs sm:text-sm font-semibold text-ink/80 mt-1">
+              Configure your Google Gemini API key or Groq Cloud API key for zero-hallucination AI reviews.
+            </p>
+          </div>
+          <span id="settings-api-badge" class="px-3.5 py-1 text-xs font-extrabold nb-border rounded-full bg-cream">
+            Ready
+          </span>
+        </div>
+
+        <div class="bg-cream nb-border rounded-3xl p-4 space-y-4">
+          <!-- Active Provider Selector -->
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-extrabold uppercase text-ink/75">Active Provider:</span>
+            <div class="inline-flex bg-white nb-border rounded-full p-1 shadow-[2px_2px_0px_#18181B]">
+              <button
+                type="button"
+                id="provider-btn-gemini"
+                onclick="setActiveProvider('gemini')"
+                class="px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition"
+              >
+                ✨ Gemini (Google AI Studio)
+              </button>
+              <button
+                type="button"
+                id="provider-btn-groq"
+                onclick="setActiveProvider('groq')"
+                class="px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition"
+              >
+                ⚡ Groq Cloud
+              </button>
+            </div>
+          </div>
+
+          <!-- Gemini Key Input -->
+          <div id="gemini-input-group">
+            <label for="gemini-api-key" class="block text-xs font-extrabold uppercase tracking-wide text-ink/75 mb-2">
+              Google AI Studio Gemini API Key
+            </label>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              <div class="flex-1 flex items-center bg-white nb-input px-4 py-2 gap-2">
+                <span id="gemini-status-dot" class="w-3 h-3 rounded-full bg-butter border-2 border-ink shrink-0"></span>
+                <input
+                  id="gemini-api-key"
+                  type="password"
+                  placeholder="AIzaSy... (from aistudio.google.com)"
+                  class="w-full bg-transparent text-xs sm:text-sm font-bold text-ink placeholder:text-ink/40 focus:outline-none"
+                  autocomplete="off"
+                />
+                <button
+                  type="button"
+                  onclick="toggleKeyVisibility('gemini-api-key', 'gemini-eye-label')"
+                  class="px-2.5 py-1 text-xs font-extrabold rounded-full hover:bg-butter/60 transition shrink-0"
+                >
+                  <span id="gemini-eye-label">Show</span>
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="saveGeminiKey()" class="nb-pill bg-matcha px-5 py-2.5 text-xs font-extrabold flex-1 sm:flex-none">
+                  Save Key
+                </button>
+                <button type="button" onclick="clearGeminiKey()" class="nb-pill bg-peach px-4 py-2.5 text-xs font-extrabold">
+                  Clear
+                </button>
+              </div>
+            </div>
+            <p class="text-[11px] font-bold text-ink/65 mt-1.5">
+              Need a key? Get one for free at <a href="https://aistudio.google.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">aistudio.google.com</a>.
+            </p>
+          </div>
+
+          <!-- Groq Key Input -->
+          <div id="groq-input-group" class="hidden">
+            <label for="groq-api-key" class="block text-xs font-extrabold uppercase tracking-wide text-ink/75 mb-2">
+              Groq Cloud API Key
+            </label>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              <div class="flex-1 flex items-center bg-white nb-input px-4 py-2 gap-2">
+                <span id="groq-status-dot" class="w-3 h-3 rounded-full bg-butter border-2 border-ink shrink-0"></span>
+                <input
+                  id="groq-api-key"
+                  type="password"
+                  placeholder="gsk_... (from console.groq.com)"
+                  class="w-full bg-transparent text-xs sm:text-sm font-bold text-ink placeholder:text-ink/40 focus:outline-none"
+                  autocomplete="off"
+                />
+                <button
+                  type="button"
+                  onclick="toggleKeyVisibility('groq-api-key', 'groq-eye-label')"
+                  class="px-2.5 py-1 text-xs font-extrabold rounded-full hover:bg-butter/60 transition shrink-0"
+                >
+                  <span id="groq-eye-label">Show</span>
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="saveGroqKey()" class="nb-pill bg-matcha px-5 py-2.5 text-xs font-extrabold flex-1 sm:flex-none">
+                  Save Key
+                </button>
+                <button type="button" onclick="clearGroqKey()" class="nb-pill bg-peach px-4 py-2.5 text-xs font-extrabold">
+                  Clear
+                </button>
+              </div>
+            </div>
+            <p class="text-[11px] font-bold text-ink/65 mt-1.5">
+              Get an ultra-fast key at <a href="https://console.groq.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">console.groq.com</a> (Llama 3.3 70B).
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t-2 border-ink/10 text-xs font-semibold text-ink/75">
+            <span>Stored in browser memory for this session only (never sent to third-party tracking servers).</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pinecone Context & Vector DB Roadmap -->
+      <div class="bg-skyMint nb-card p-6 space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="font-display font-bold text-xl flex items-center gap-2">
+            <span>🌲</span> Pinecone Vector Storage (Roadmap Context)
+          </h3>
+          <span class="px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase">Staged</span>
+        </div>
+        <p class="text-xs sm:text-sm font-semibold text-ink/80 leading-relaxed">
+          Vector search index <code class="bg-white nb-border px-2 py-0.5 rounded-full text-[11px]">food-database-completeness</code> is pre-architected in the PRD. In the next stage, Pinecone dense embeddings will power semantic cross-allergen clustering and supplement similarity matching.
+        </p>
+      </div>
+
+      <!-- Data Integrity & Workspace Controls -->
+      <div class="bg-cream nb-card p-6 space-y-4">
+        <h3 class="font-display font-bold text-xl flex items-center gap-2">
+          <span>🛡️</span> Audit Guardrails &amp; Database Tools
+        </h3>
+
+        <div class="bg-matcha/40 nb-border rounded-2xl p-4 flex items-center justify-between gap-3">
+          <div>
+            <p class="font-display font-bold text-sm">Zero-Hallucination Guard (Always Enforced)</p>
+            <p class="text-xs font-semibold text-ink/75 mt-0.5">
+              Strictly prevents the app and GenAI from estimating or inventing missing ingredient, allergen, or nutrition values.
+            </p>
+          </div>
+          <span class="px-3 py-1 bg-ink text-matcha rounded-full text-[11px] font-extrabold uppercase shrink-0">LOCKED ON</span>
+        </div>
+
+        <div class="bg-lilac/35 nb-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p class="font-display font-bold text-sm">Re-Scan Entire Database</p>
+            <p class="text-xs font-semibold text-ink/75 mt-0.5">
+              Recalculate completeness percentages, missing fields, and safety speed dial scores across all records.
+            </p>
+          </div>
+          <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold shrink-0 self-start sm:self-center">
+            🔄 Re-Scan Now
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================================================================
+       TOP API KEY QUICK MODAL (POPUP ON CLICKING TOP HEADER API BUTTON)
+       ========================================================================= -->
+  <div id="api-key-modal" class="fixed inset-0 z-50 bg-ink/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-butter nb-card w-full max-w-lg p-5 sm:p-6 space-y-4 shadow-[8px_8px_0px_#18181B] animate-fadeIn">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🔑</span>
+          <h3 class="font-display font-bold text-xl">Connect GenAI API Key</h3>
+        </div>
+        <button onclick="closeApiKeyModal()" class="w-8 h-8 rounded-full bg-cream nb-border flex items-center justify-center font-extrabold hover:bg-peach">✕</button>
+      </div>
+
+      <p class="text-xs font-semibold text-ink/80 leading-relaxed">
+        Configure your <strong>Google Gemini API key</strong> (from Google AI Studio) or <strong>Groq API key</strong> to power deep AI completeness auditing.
+      </p>
+
+      <!-- Provider Selector Tabs -->
+      <div class="flex items-center gap-2 bg-cream nb-border rounded-full p-1">
+        <button
+          type="button"
+          id="modal-prov-gemini"
+          onclick="setActiveProvider('gemini')"
+          class="flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition"
+        >
+          ✨ Gemini (AI Studio)
+        </button>
+        <button
+          type="button"
+          id="modal-prov-groq"
+          onclick="setActiveProvider('groq')"
+          class="flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition"
+        >
+          ⚡ Groq Cloud
+        </button>
+      </div>
+
+      <!-- Quick Key Input Box -->
+      <div class="bg-cream nb-border rounded-2xl p-4 space-y-3">
+        <label id="modal-key-label" class="block text-[11px] font-extrabold uppercase text-ink/75">Google Gemini API Key (AI Studio)</label>
+        <div class="flex items-center bg-white nb-input px-3.5 py-2 gap-2">
+          <input
+            id="modal-api-key-input"
+            type="password"
+            placeholder="AIzaSy... or gsk_..."
+            class="w-full bg-transparent text-xs sm:text-sm font-bold text-ink placeholder:text-ink/40 focus:outline-none"
+          />
+          <button
+            type="button"
+            onclick="toggleKeyVisibility('modal-api-key-input', 'modal-eye-label')"
+            class="px-2 py-0.5 text-[11px] font-extrabold rounded-full hover:bg-butter/60 shrink-0"
+          >
+            <span id="modal-eye-label">Show</span>
+          </button>
+        </div>
+        <p id="modal-key-helper" class="text-[11px] font-bold text-ink/65">
+          Get your free key at <a href="https://aistudio.google.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">aistudio.google.com</a>
+        </p>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-1">
+        <button onclick="closeApiKeyModal()" class="nb-pill bg-cream px-4 py-2 text-xs font-extrabold">Close</button>
+        <button onclick="saveModalApiKey()" class="nb-pill bg-matcha px-5 py-2 text-xs font-extrabold">Save &amp; Activate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MOBILE FLOATING PILL NAVIGATION BAR (5 Tabs — Dribbble Style)
+       ========================================================================= -->
+  <nav class="lg:hidden fixed bottom-3 left-3 right-3 z-40 bg-ink nb-border rounded-full p-2 flex items-center justify-around shadow-[4px_4px_0px_rgba(24,24,27,0.4)]">
+    <button onclick="switchTab('home')" id="mob-tab-home" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
+      🏠 Home
+    </button>
+    <button onclick="switchTab('database')" id="mob-tab-database" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
+      🗄️ Database
+    </button>
+    <button onclick="switchTab('auditor')" id="mob-tab-auditor" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
+      ⚡ Auditor
+    </button>
+    <button onclick="switchTab('needs')" id="mob-tab-needs" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
+      🎯 Needs
+    </button>
+    <button onclick="switchTab('settings')" id="mob-tab-settings" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
+      ⚙️ Config
+    </button>
+  </nav>
+
+  <!-- =========================================================================
+       ADD RECORD MODAL (TESTING CUSTOM OR INCOMPLETE FOOD ITEMS)
+       ========================================================================= -->
+  <div id="add-modal" class="fixed inset-0 z-50 bg-ink/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-butter nb-card w-full max-w-xl max-h-[90vh] overflow-y-auto p-5 sm:p-7 space-y-4 shadow-[8px_8px_0px_#18181B]">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🥗</span>
+          <h3 class="font-display font-bold text-xl sm:text-2xl">Add Food Record to Audit</h3>
+        </div>
+        <button onclick="closeAddModal()" class="w-8 h-8 rounded-full bg-cream nb-border flex items-center justify-center font-extrabold hover:bg-peach">✕</button>
+      </div>
+
+      <p class="text-xs font-semibold text-ink/80 leading-relaxed">
+        Test the audit engine with your own records. Leave any field blank to simulate missing database values and test the <strong>Zero-Hallucination Guardrail</strong>!
+      </p>
+
+      <form id="add-product-form" onsubmit="handleAddProduct(event)" class="space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Product Name *</label>
+            <input id="new-name" required type="text" placeholder="e.g., Crispy Almond Crunch" class="w-full bg-white nb-input px-3.5 py-2 text-xs font-bold" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Brand / Manufacturer</label>
+            <input id="new-brand" type="text" placeholder="e.g., PureHarvest Co." class="w-full bg-white nb-input px-3.5 py-2 text-xs font-bold" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Protein (g)</label>
+            <input id="new-protein" type="number" step="any" placeholder="blank = missing" class="w-full bg-white nb-input px-3 py-1.5 text-xs font-bold" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Sugar (g)</label>
+            <input id="new-sugar" type="number" step="any" placeholder="blank = missing" class="w-full bg-white nb-input px-3 py-1.5 text-xs font-bold" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Sodium (mg)</label>
+            <input id="new-sodium" type="number" step="any" placeholder="blank = missing" class="w-full bg-white nb-input px-3 py-1.5 text-xs font-bold" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Carbs (g)</label>
+            <input id="new-carbs" type="number" step="any" placeholder="blank" class="w-full bg-white nb-input px-3 py-1.5 text-xs font-bold" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Total Fat (g)</label>
+            <input id="new-fat" type="number" step="any" placeholder="blank" class="w-full bg-white nb-input px-3 py-1.5 text-xs font-bold" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Fiber (g)</label>
+            <input id="new-fiber" type="number" step="any" placeholder="blank" class="w-full bg-white nb-input px-3 py-1.5 text-xs font-bold" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Serving Size</label>
+            <input id="new-serving" type="text" placeholder="e.g., 45g bar (or leave blank)" class="w-full bg-white nb-input px-3.5 py-2 text-xs font-bold" />
+          </div>
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Allergens (comma separated)</label>
+            <input id="new-allergens" type="text" placeholder="e.g., Milk, Soy (or leave blank)" class="w-full bg-white nb-input px-3.5 py-2 text-xs font-bold" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-extrabold uppercase mb-1">Ingredients (comma separated)</label>
+          <textarea id="new-ingredients" rows="2" placeholder="Leave blank to test critical missing ingredients audit..." class="w-full bg-white nb-border rounded-2xl px-3.5 py-2 text-xs font-bold focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeAddModal()" class="nb-pill bg-cream px-4 py-2 text-xs font-extrabold">Cancel</button>
+          <button type="submit" class="nb-pill bg-matcha px-5 py-2 text-xs font-extrabold">Add &amp; Audit Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       APPLICATION JAVASCRIPT LOGIC
+       ========================================================================= -->
+  <script>
+    /* =========================================================================
+       1. REQUIRED DATABASE SCHEMA & SEVERITY WEIGHTS
+       ========================================================================= */
+    const REQUIRED_FIELDS = [
+      { key: 'ingredients', label: 'Ingredients List', severity: 'CRITICAL', penalty: 28, reason: 'Mandatory for safety, allergen verification, and regulatory compliance.' },
+      { key: 'allergens', label: 'Allergen Declaration', severity: 'CRITICAL', penalty: 24, reason: 'Missing allergen info poses immediate health risk to sensitive consumers.' },
+      { key: 'serving_size', label: 'Serving Size', severity: 'HIGH', penalty: 10, reason: 'Nutrient values cannot be interpreted accurately without serving weight.' },
+      { key: 'calories', label: 'Calories (kcal)', severity: 'HIGH', penalty: 8, reason: 'Core energy metric required for dietary evaluation.' },
+      { key: 'protein_g', label: 'Protein (g)', severity: 'HIGH', penalty: 7, reason: 'Essential macronutrient for gym & daily health scoring.' },
+      { key: 'sugar_g', label: 'Total Sugars (g)', severity: 'HIGH', penalty: 7, reason: 'Critical for metabolic health and weight management checks.' },
+      { key: 'sodium_mg', label: 'Sodium (mg)', severity: 'HIGH', penalty: 7, reason: 'Important for blood pressure and cardiovascular safety.' },
+      { key: 'carbs_g', label: 'Carbohydrates (g)', severity: 'MEDIUM', penalty: 3, reason: 'Needed for macronutrient balance and keto/low-carb checks.' },
+      { key: 'fat_g', label: 'Total Fat (g)', severity: 'MEDIUM', penalty: 3, reason: 'Needed for complete caloric macro breakdown.' },
+      { key: 'fiber_g', label: 'Dietary Fiber (g)', severity: 'LOW', penalty: 3, reason: 'Helpful for gut health and glycemic impact evaluation.' }
+    ];
+
+    /* =========================================================================
+       2. INITIAL FOOD DATABASE (Mix of Critical Missing, Partial, & Complete)
+       ========================================================================= */
+    let foodDatabase = [
+      {
+        id: 'PROD-101',
+        name: 'NitroBlast Whey Crunch Bar',
+        brand: 'IronPulse Labs',
+        category: 'Protein Snack',
+        emoji: '🍫',
+        serving_size: '60g bar',
+        calories: 240,
+        protein_g: 22,
+        carbs_g: 21,
+        sugar_g: null,          // MISSING
+        fat_g: 8,
+        fiber_g: 4,
+        sodium_mg: null,        // MISSING
+        ingredients: null,      // CRITICAL MISSING
+        allergens: null         // CRITICAL MISSING
+      },
+      {
+        id: 'PROD-102',
+        name: 'Matcha Oat Energy Smoothie',
+        brand: 'GreenLeaf Co.',
+        category: 'Beverage',
+        emoji: '🍵',
+        serving_size: '330ml bottle',
+        calories: 175,
+        protein_g: 6,
+        carbs_g: 29,
+        sugar_g: 16,
+        fat_g: 4,
+        fiber_g: null,          // MISSING
+        sodium_mg: 120,
+        ingredients: ['Oat Milk', 'Organic Matcha Powder', 'Cane Sugar', 'Sunflower Lecithin'],
+        allergens: null         // CRITICAL MISSING
+      },
+      {
+        id: 'PROD-103',
+        name: 'PurePeak Unflavored Whey Isolate',
+        brand: 'CleanMacro',
+        category: 'Gym Supplement',
+        emoji: '🥤',
+        serving_size: '30g scoop',
+        calories: 115,
+        protein_g: 26,
+        carbs_g: 1,
+        sugar_g: 0.5,
+        fat_g: 0.5,
+        fiber_g: 0,
+        sodium_mg: 65,
+        ingredients: ['Whey Protein Isolate (Milk)', 'Sunflower Lecithin'],
+        allergens: ['Milk']
+      },
+      {
+        id: 'PROD-104',
+        name: 'Spicy Kimchi Instant Ramen',
+        brand: 'SeoulDash',
+        category: 'Instant Meal',
+        emoji: '🍜',
+        serving_size: null,     // MISSING
+        calories: 480,
+        protein_g: 9,
+        carbs_g: 68,
+        sugar_g: 7,
+        fat_g: 18,
+        fiber_g: null,          // MISSING
+        sodium_mg: 1420,
+        ingredients: ['Enriched Wheat Flour', 'Palm Oil', 'Salt', 'Chili Powder', 'Dried Kimchi Flakes'],
+        allergens: ['Wheat', 'Soy']
+      },
+      {
+        id: 'PROD-105',
+        name: 'Organic Sprouted Pea & Hemp Blend',
+        brand: 'TerraFit',
+        category: 'Plant Supplement',
+        emoji: '🌱',
+        serving_size: '35g scoop',
+        calories: 135,
+        protein_g: 24,
+        carbs_g: 4,
+        sugar_g: 1,
+        fat_g: 2.5,
+        fiber_g: 5,
+        sodium_mg: 180,
+        ingredients: ['Organic Pea Protein', 'Organic Hemp Seed Protein', 'Chia Seed Powder', 'Sea Salt'],
+        allergens: ['None (Top-9 Free)']
+      },
+      {
+        id: 'PROD-106',
+        name: 'Greek Berry Chia Yogurt Cup',
+        brand: 'MeadowFresh',
+        category: 'Daily Health',
+        emoji: '🫐',
+        serving_size: '150g cup',
+        calories: 140,
+        protein_g: 14,
+        carbs_g: 14,
+        sugar_g: 7,
+        fat_g: 3,
+        fiber_g: 4,
+        sodium_mg: 55,
+        ingredients: ['Cultured Grade A Milk', 'Blueberries', 'Chia Seeds', 'Live Active Cultures'],
+        allergens: ['Milk']
+      },
+      {
+        id: 'PROD-107',
+        name: 'Mystery Street-Style Sriracha Chips',
+        brand: 'CrunchHaus',
+        category: 'Snack',
+        emoji: '🌶️',
+        serving_size: '28g',
+        calories: null,         // MISSING
+        protein_g: null,        // MISSING
+        carbs_g: 18,
+        sugar_g: null,          // MISSING
+        fat_g: 10,
+        fiber_g: null,          // MISSING
+        sodium_mg: null,        // MISSING
+        ingredients: null,      // CRITICAL MISSING
+        allergens: null         // CRITICAL MISSING
+      }
+    ];
+
+    /* =========================================================================
+       3. APP STATE & LOCAL STORAGE SYNC
+       ========================================================================= */
+    let selectedProductId = foodDatabase[0].id;
+    let activeFilter = 'ALL';
+    let activeGoal = 'gym';
+    let activeProvider = localStorage.getItem('nutriaudit_provider') || 'gemini';
+    let userGeminiApiKey = localStorage.getItem('nutriaudit_gemini_key') || '';
+    let userGroqApiKey = localStorage.getItem('nutriaudit_groq_key') || '';
+    let activeTab = 'home';
+
+    const GOAL_PRESETS = {
+      gym: {
+        protein: 20,
+        sugar: 8,
+        sodium: 350,
+        note: 'High protein post-workout recovery, low sugar, avoid unverified allergens'
+      },
+      daily: {
+        protein: 10,
+        sugar: 12,
+        sodium: 450,
+        note: 'Balanced everyday nutrition with fiber and clean ingredients'
+      },
+      weightloss: {
+        protein: 15,
+        sugar: 5,
+        sodium: 400,
+        note: 'Calorie conscious, low sugar, high satiety'
+      },
+      clean: {
+        protein: 8,
+        sugar: 10,
+        sodium: 350,
+        note: '100% verified ingredient and allergen transparency required'
+      }
+    };
+
+    /* =========================================================================
+       4. CORE DETERMINISTIC AUDITOR ENGINE (NEVER INVENTS MISSING DATA)
+       ========================================================================= */
+    function isFieldMissing(val) {
+      if (val === null || val === undefined) return true;
+      if (typeof val === 'string' && val.trim() === '') return true;
+      if (Array.isArray(val) && val.length === 0) return true;
+      return false;
+    }
+
+    function auditProduct(product) {
+      const missingFields = [];
+      let totalPenalty = 0;
+
+      REQUIRED_FIELDS.forEach(field => {
+        if (isFieldMissing(product[field.key])) {
+          missingFields.push(field);
+          totalPenalty += field.penalty;
+        }
+      });
+
+      const filledCount = REQUIRED_FIELDS.length - missingFields.length;
+      const completenessPct = Math.round((filledCount / REQUIRED_FIELDS.length) * 100);
+      const safetyScore = Math.max(0, Math.min(100, 100 - totalPenalty));
+
+      const hasCritical = missingFields.some(f => f.severity === 'CRITICAL');
+      const hasHigh = missingFields.some(f => f.severity === 'HIGH');
+
+      let priority = 'COMPLETE';
+      if (hasCritical) priority = 'CRITICAL';
+      else if (hasHigh) priority = 'HIGH';
+      else if (missingFields.length > 0) priority = 'MEDIUM';
+
+      return {
+        product,
+        missingFields,
+        filledCount,
+        totalFields: REQUIRED_FIELDS.length,
+        completenessPct,
+        safetyScore,
+        priority,
+        hasCritical
+      };
+    }
+
+    function getPriorityStyle(priority) {
+      switch (priority) {
+        case 'CRITICAL':
+          return { bg: 'bg-peach/45', badge: 'bg-peach text-ink nb-border' };
+        case 'HIGH':
+          return { bg: 'bg-butter/55', badge: 'bg-butter text-ink nb-border' };
+        case 'MEDIUM':
+          return { bg: 'bg-lilac/45', badge: 'bg-lilac text-ink nb-border' };
+        default:
+          return { bg: 'bg-matcha/45', badge: 'bg-matcha text-ink nb-border' };
+      }
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    /* =========================================================================
+       5. DATABASE LIST, STATS & INSPECTOR RENDERING
+       ========================================================================= */
+    function updateGlobalStats() {
+      const audits = foodDatabase.map(auditProduct);
+      const total = audits.length;
+      const criticalCount = audits.filter(a => a.priority === 'CRITICAL').length;
+      const completeCount = audits.filter(a => a.priority === 'COMPLETE').length;
+      const avgCompleteness = total > 0
+        ? Math.round(audits.reduce((sum, a) => sum + a.completenessPct, 0) / total)
+        : 0;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-critical').textContent = criticalCount;
+      document.getElementById('stat-avg').textContent = `${avgCompleteness}%`;
+      document.getElementById('stat-complete').textContent = completeCount;
+    }
+
+    function setFilter(filter) {
+      activeFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isTarget = btn.getAttribute('data-filter') === filter;
+        if (isTarget) {
+          btn.classList.add('ring-2', 'ring-ink', 'ring-offset-2');
+        } else {
+          btn.classList.remove('ring-2', 'ring-ink', 'ring-offset-2');
+        }
+      });
+      renderProductList();
+    }
+
+    function renderProductList() {
+      const container = document.getElementById('product-list');
+      if (!container) return;
+      const query = (document.getElementById('db-search')?.value || '').trim().toLowerCase();
+
+      const filtered = foodDatabase.filter(p => {
+        const audit = auditProduct(p);
+        const matchesFilter = activeFilter === 'ALL' || audit.priority === activeFilter;
+        const matchesQuery =
+          !query ||
+          p.name.toLowerCase().includes(query) ||
+          (p.brand || '').toLowerCase().includes(query) ||
+          (p.category || '').toLowerCase().includes(query) ||
+          p.id.toLowerCase().includes(query);
+        return matchesFilter && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full bg-white nb-border rounded-3xl p-8 text-center">
+            <p class="font-display font-bold text-lg">No matching food records found</p>
+            <p class="text-xs font-semibold text-ink/70 mt-1">Try clearing your search or switching priority filters.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(p => {
+        const audit = auditProduct(p);
+        const style = getPriorityStyle(audit.priority);
+        const isSelected = p.id === selectedProductId;
+
+        return `
+          <button
+            onclick="selectProduct('${p.id}', true)"
+            class="w-full text-left p-4 rounded-[24px] nb-border transition-all ${isSelected ? `${style.bg} shadow-[4px_4px_0px_#18181B] -translate-y-0.5` : 'bg-white hover:bg-[#FFF9E6] shadow-[3px_3px_0px_#18181B]'}"
+          >
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl shrink-0">${p.emoji || '🍽️'}</span>
+                <div class="min-w-0">
+                  <p class="font-display font-bold text-sm leading-tight truncate">${escapeHtml(p.name)}</p>
+                  <p class="text-[11px] font-semibold text-ink/70 truncate">${escapeHtml(p.brand)} • ${escapeHtml(p.id)}</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase shrink-0 ${style.badge}">
+                ${audit.priority}
+              </span>
+            </div>
+
+            <!-- Completeness Progress Pill Bar -->
+            <div class="mt-3.5 flex items-center gap-2">
+              <div class="flex-1 h-2.5 bg-cream nb-border rounded-full overflow-hidden">
+                <div class="h-full ${audit.safetyScore < 45 ? 'bg-peach' : audit.safetyScore < 75 ? 'bg-butter' : 'bg-matcha'}" style="width: ${audit.completenessPct}%"></div>
+              </div>
+              <span class="text-[11px] font-extrabold shrink-0">${audit.missingFields.length === 0 ? '100% OK' : `${audit.missingFields.length} missing`}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function syncProductSelectors() {
+      const optionsHtml = foodDatabase.map(p => {
+        const audit = auditProduct(p);
+        return `<option value="${p.id}" ${p.id === selectedProductId ? 'selected' : ''}>${p.emoji || '🍽️'} ${escapeHtml(p.name)} — ${audit.priority} (${audit.safetyScore}/100)</option>`;
+      }).join('');
+
+      const audSel = document.getElementById('auditor-product-select');
+      const needsSel = document.getElementById('needs-product-select');
+      if (audSel) audSel.innerHTML = optionsHtml;
+      if (needsSel) needsSel.innerHTML = optionsHtml;
+    }
+
+    function selectProduct(id, navigateToAuditor = false) {
+      selectedProductId = id;
+      document.getElementById('gemini-output-card').classList.add('hidden');
+      syncProductSelectors();
+      renderProductList();
+      renderInspector();
+      evaluateUserNeeds();
+
+      if (navigateToAuditor) {
+        switchTab('auditor');
+      }
+    }
+
+    function renderInspector() {
+      const product = foodDatabase.find(p => p.id === selectedProductId) || foodDatabase[0];
+      if (!product) return;
+      const audit = auditProduct(product);
+
+      // Hero header
+      document.getElementById('selected-emoji').textContent = product.emoji || '🍽️';
+      document.getElementById('selected-category').textContent = product.category || 'Food Item';
+      document.getElementById('selected-name').textContent = product.name;
+      document.getElementById('selected-brand').textContent = `${product.brand || 'Unbranded'} • ${product.id}`;
+
+      const prioBadge = document.getElementById('selected-priority-badge');
+      prioBadge.textContent = `${audit.priority} PRIORITY`;
+      prioBadge.className = `px-2.5 py-0.5 text-[11px] font-extrabold rounded-full uppercase ${
+        audit.priority === 'CRITICAL'
+          ? 'bg-peach text-ink nb-border'
+          : audit.priority === 'HIGH'
+          ? 'bg-butter text-ink nb-border'
+          : 'bg-ink text-cream'
+      }`;
+
+      const heroCard = document.getElementById('inspector-hero');
+      heroCard.className = `${
+        audit.priority === 'CRITICAL'
+          ? 'bg-peach'
+          : audit.priority === 'HIGH'
+          ? 'bg-butter'
+          : 'bg-matcha'
+      } nb-card p-5`;
+
+      // Speed Dial Animation (-90deg = 0, +90deg = 100)
+      const angle = -90 + (audit.safetyScore / 100) * 180;
+      const needle = document.getElementById('dial-needle');
+      if (needle) {
+        needle.style.transform = `rotate(${angle}deg)`;
+      }
+      document.getElementById('dial-score-num').textContent = audit.safetyScore;
+
+      const gradePill = document.getElementById('safety-grade-pill');
+      const riskLabel = document.getElementById('metric-risk');
+      if (audit.safetyScore < 45) {
+        gradePill.textContent = 'UNSAFE / INCOMPLETE';
+        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-peach shrink-0';
+        riskLabel.textContent = 'HIGH RISK';
+      } else if (audit.safetyScore < 80) {
+        gradePill.textContent = 'CAUTION / PARTIAL';
+        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-butter shrink-0';
+        riskLabel.textContent = 'MODERATE';
+      } else {
+        gradePill.textContent = 'VERIFIED SAFE';
+        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-matcha shrink-0';
+        riskLabel.textContent = 'LOW RISK';
+      }
+
+      document.getElementById('metric-completeness').textContent = `${audit.filledCount}/${audit.totalFields}`;
+      document.getElementById('metric-missing').textContent = audit.missingFields.length;
+
+      // Raw Nutrition Ledger
+      const macroFields = [
+        { label: 'Serving', val: product.serving_size, unit: '' },
+        { label: 'Calories', val: product.calories, unit: ' kcal' },
+        { label: 'Protein', val: product.protein_g, unit: 'g' },
+        { label: 'Sugars', val: product.sugar_g, unit: 'g' },
+        { label: 'Sodium', val: product.sodium_mg, unit: 'mg' },
+        { label: 'Carbs', val: product.carbs_g, unit: 'g' },
+        { label: 'Total Fat', val: product.fat_g, unit: 'g' },
+        { label: 'Fiber', val: product.fiber_g, unit: 'g' }
+      ];
+
+      document.getElementById('nutrition-ledger').innerHTML = macroFields.map(m => {
+        const missing = isFieldMissing(m.val);
+        return `
+          <div class="${missing ? 'bg-peach/35 border-dashed' : 'bg-white'} nb-border rounded-2xl p-2.5">
+            <p class="text-[10px] font-extrabold uppercase text-ink/60">${m.label}</p>
+            <p class="font-display font-bold text-sm mt-0.5 ${missing ? 'text-red-700' : 'text-ink'}">
+              ${missing ? 'MISSING' : `${escapeHtml(m.val)}${m.unit}`}
+            </p>
+          </div>
+        `;
+      }).join('');
+
+      const ingEl = document.getElementById('ledger-ingredients');
+      if (isFieldMissing(product.ingredients)) {
+        ingEl.innerHTML = `<span class="inline-block px-2 py-0.5 bg-peach nb-border rounded-full text-[11px] font-extrabold">MISSING — DO NOT INVENT</span>`;
+      } else {
+        ingEl.textContent = Array.isArray(product.ingredients) ? product.ingredients.join(', ') : product.ingredients;
+      }
+
+      const algEl = document.getElementById('ledger-allergens');
+      if (isFieldMissing(product.allergens)) {
+        algEl.innerHTML = `<span class="inline-block px-2 py-0.5 bg-peach nb-border rounded-full text-[11px] font-extrabold">UNDECLARED / MISSING</span>`;
+      } else {
+        algEl.textContent = Array.isArray(product.allergens) ? product.allergens.join(', ') : product.allergens;
+      }
+
+      // Missing Fields & Review Priorities List
+      const missingCountPill = document.getElementById('missing-count-pill');
+      missingCountPill.textContent = `${audit.missingFields.length} Missing`;
+      missingCountPill.className = `px-3 py-0.5 text-xs font-extrabold nb-border rounded-full ${
+        audit.missingFields.length === 0 ? 'bg-matcha' : 'bg-peach'
+      }`;
+
+      const listEl = document.getElementById('missing-fields-list');
+      if (audit.missingFields.length === 0) {
+        listEl.innerHTML = `
+          <div class="bg-matcha/45 nb-border rounded-2xl p-4 flex items-center gap-3">
+            <span class="text-2xl">🎉</span>
+            <div>
+              <p class="font-display font-bold text-sm">100% Database Record Completeness!</p>
+              <p class="text-xs font-semibold text-ink/75 mt-0.5">All required nutrition, serving, ingredient, and allergen fields are verified present.</p>
+            </div>
+          </div>
+        `;
+      } else {
+        listEl.innerHTML = audit.missingFields.map((f, idx) => {
+          const sevBadge =
+            f.severity === 'CRITICAL'
+              ? 'bg-peach text-ink'
+              : f.severity === 'HIGH'
+              ? 'bg-butter text-ink'
+              : 'bg-lilac text-ink';
+          return `
+            <div class="bg-white nb-border rounded-2xl p-3.5 flex items-start justify-between gap-3">
+              <div class="flex items-start gap-2.5">
+                <span class="w-6 h-6 rounded-full bg-ink text-cream text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5">
+                  ${idx + 1}
+                </span>
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <p class="font-display font-bold text-sm">${escapeHtml(f.label)}</p>
+                    <code class="px-2 py-0.5 bg-cream nb-border rounded-full text-[10px] font-extrabold">${escapeHtml(f.key)}</code>
+                  </div>
+                  <p class="text-xs font-semibold text-ink/75 mt-1">${escapeHtml(f.reason)}</p>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase nb-border shrink-0 ${sevBadge}">
+                ${f.severity}
+              </span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    /* =========================================================================
+       6. PERSONAL HEALTH NEEDS, VISUAL VERDICT & DATABASE SUPPLEMENT MATCHER
+       ========================================================================= */
+    function selectGoalPreset(goalKey) {
+      activeGoal = goalKey;
+      const preset = GOAL_PRESETS[goalKey];
+      if (!preset) return;
+
+      document.getElementById('target-protein').value = preset.protein;
+      document.getElementById('target-sugar').value = preset.sugar;
+      document.getElementById('target-sodium').value = preset.sodium;
+      document.getElementById('custom-need-note').value = preset.note;
+
+      document.querySelectorAll('.goal-btn').forEach(btn => {
+        const isTarget = btn.getAttribute('data-goal') === goalKey;
+        if (isTarget) {
+          btn.className = 'goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold';
+        } else {
+          btn.className = 'goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold';
+        }
+      });
+
+      evaluateUserNeeds();
+    }
+
+    function evaluateUserNeeds() {
+      const product = foodDatabase.find(p => p.id === selectedProductId) || foodDatabase[0];
+      if (!product) return;
+      const audit = auditProduct(product);
+
+      const minProtein = parseFloat(document.getElementById('target-protein').value) || 0;
+      const maxSugar = parseFloat(document.getElementById('target-sugar').value);
+      const maxSodium = parseFloat(document.getElementById('target-sodium').value);
+      const customNote = (document.getElementById('custom-need-note').value || '').toLowerCase();
+
+      const checks = [];
+      let passCount = 0;
+      let failCount = 0;
+      let unknownCount = 0;
+
+      // 1. Safety & Ingredient Transparency Check
+      if (audit.hasCritical) {
+        failCount++;
+        checks.push({
+          status: 'FAIL',
+          text: `Critical data missing (${audit.missingFields.filter(f => f.severity === 'CRITICAL').map(f => f.label).join(', ')}) — cannot verify safety.`
+        });
+      } else {
+        passCount++;
+        checks.push({
+          status: 'PASS',
+          text: 'Ingredients and allergen declarations are present in the record.'
+        });
+      }
+
+      // 2. Protein Check
+      if (isFieldMissing(product.protein_g)) {
+        unknownCount++;
+        checks.push({
+          status: 'UNKNOWN',
+          text: `Protein is MISSING in database (target: >= ${minProtein}g). Never guessed.`
+        });
+      } else if (product.protein_g >= minProtein) {
+        passCount++;
+        checks.push({
+          status: 'PASS',
+          text: `Protein meets your goal: ${product.protein_g}g >= ${minProtein}g.`
+        });
+      } else {
+        failCount++;
+        checks.push({
+          status: 'FAIL',
+          text: `Protein is below target: ${product.protein_g}g (need >= ${minProtein}g).`
+        });
+      }
+
+      // 3. Sugar Check
+      if (!isNaN(maxSugar)) {
+        if (isFieldMissing(product.sugar_g)) {
+          unknownCount++;
+          checks.push({
+            status: 'UNKNOWN',
+            text: `Sugar is MISSING in database (limit: <= ${maxSugar}g).`
+          });
+        } else if (product.sugar_g <= maxSugar) {
+          passCount++;
+          checks.push({
+            status: 'PASS',
+            text: `Sugar is within limit: ${product.sugar_g}g <= ${maxSugar}g.`
+          });
+        } else {
+          failCount++;
+          checks.push({
+            status: 'FAIL',
+            text: `High sugar content: ${product.sugar_g}g exceeds ${maxSugar}g.`
+          });
+        }
+      }
+
+      // 4. Sodium Check
+      if (!isNaN(maxSodium)) {
+        if (isFieldMissing(product.sodium_mg)) {
+          unknownCount++;
+          checks.push({
+            status: 'UNKNOWN',
+            text: `Sodium is MISSING in database (limit: <= ${maxSodium}mg).`
+          });
+        } else if (product.sodium_mg <= maxSodium) {
+          passCount++;
+          checks.push({
+            status: 'PASS',
+            text: `Sodium is within limit: ${product.sodium_mg}mg <= ${maxSodium}mg.`
+          });
+        } else {
+          failCount++;
+          checks.push({
+            status: 'FAIL',
+            text: `High sodium: ${product.sodium_mg}mg exceeds ${maxSodium}mg.`
+          });
+        }
+      }
+
+      // 5. Custom Note / Allergen String Scan
+      if (customNote) {
+        const allergenText = (Array.isArray(product.allergens) ? product.allergens.join(' ') : (product.allergens || '')).toLowerCase();
+        const ingText = (Array.isArray(product.ingredients) ? product.ingredients.join(' ') : (product.ingredients || '')).toLowerCase();
+
+        if (customNote.includes('peanut') && (allergenText.includes('peanut') || ingText.includes('peanut'))) {
+          failCount++;
+          checks.push({
+            status: 'FAIL',
+            text: 'Contains PEANUT or derivatives matching your custom allergen restriction!'
+          });
+        } else if (customNote.includes('dairy') && (allergenText.includes('milk') || ingText.includes('whey') || ingText.includes('dairy'))) {
+          failCount++;
+          checks.push({
+            status: 'FAIL',
+            text: 'Contains DAIRY / Milk matching your custom dietary restriction!'
+          });
+        }
+      }
+
+      // Render Suitability Verdict Card
+      const verdictCard = document.getElementById('verdict-card');
+      const badge = document.getElementById('verdict-badge');
+      const headline = document.getElementById('verdict-headline');
+      const subtext = document.getElementById('verdict-subtext');
+      const mascot = document.getElementById('verdict-mascot');
+
+      if (failCount > 0) {
+        verdictCard.className = 'bg-peach nb-card p-5';
+        badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-peach rounded-full uppercase';
+        badge.textContent = 'NOT RECOMMENDED';
+        headline.textContent = 'Unsuitable for Your Stated Needs';
+        subtext.textContent = 'This product fails safety checks or misses your nutritional thresholds.';
+        mascot.innerHTML = `
+          <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
+            <circle cx="20" cy="20" r="16" fill="#FF9E7D" stroke="#18181B" stroke-width="2.5"/>
+            <path d="M14 16L18 20M18 16L14 20" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M22 16L26 20M26 16L22 20" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M14 28C16 25 24 25 26 28" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        `;
+      } else if (unknownCount > 0) {
+        verdictCard.className = 'bg-butter nb-card p-5';
+        badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-butter rounded-full uppercase';
+        badge.textContent = 'UNKNOWN / UNVERIFIED';
+        headline.textContent = 'Incomplete Data — Cannot Fully Verify';
+        subtext.textContent = 'Key values are missing in the database. In strict mode, we never guess.';
+        mascot.innerHTML = `
+          <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
+            <circle cx="20" cy="20" r="16" fill="#FFD97D" stroke="#18181B" stroke-width="2.5"/>
+            <circle cx="15" cy="18" r="2.5" fill="#18181B"/>
+            <circle cx="25" cy="18" r="2.5" fill="#18181B"/>
+            <line x1="15" y1="27" x2="25" y2="27" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        `;
+      } else {
+        verdictCard.className = 'bg-matcha nb-card p-5';
+        badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-matcha rounded-full uppercase';
+        badge.textContent = 'EXCELLENT MATCH';
+        headline.textContent = 'Verified Fit for Your Needs!';
+        subtext.textContent = 'All nutrition and safety criteria pass cleanly without any missing critical metrics.';
+        mascot.innerHTML = `
+          <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
+            <circle cx="20" cy="20" r="16" fill="#C7F464" stroke="#18181B" stroke-width="2.5"/>
+            <circle cx="14" cy="17" r="2.5" fill="#18181B"/>
+            <circle cx="26" cy="17" r="2.5" fill="#18181B"/>
+            <path d="M14 24C16 28 24 28 26 24" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        `;
+      }
+
+      // Render Checklist
+      document.getElementById('verdict-checklist').innerHTML = checks.map(c => {
+        const icon = c.status === 'PASS' ? '✅' : c.status === 'FAIL' ? '❌' : '⚠️';
+        const color = c.status === 'PASS' ? 'text-green-900 bg-matcha/40' : c.status === 'FAIL' ? 'text-red-900 bg-peach/40' : 'text-amber-900 bg-butter/40';
+        return `
+          <div class="flex items-center gap-2 p-2 rounded-xl nb-border ${color}">
+            <span class="text-sm shrink-0">${icon}</span>
+            <span class="text-xs font-bold leading-tight">${escapeHtml(c.text)}</span>
+          </div>
+        `;
+      }).join('');
+
+      // Database Supplement & Swap Matcher (Strictly Grounded in Local Database)
+      renderDatabaseSupplement(product, failCount > 0 || unknownCount > 0);
+    }
+
+    function renderDatabaseSupplement(currentProduct, needsAlternative) {
+      const resultsContainer = document.getElementById('supplement-results');
+      if (!resultsContainer) return;
+
+      // Find best verified matches from database (Complete or high safety score, excluding current product)
+      const candidates = foodDatabase
+        .filter(p => p.id !== currentProduct.id)
+        .map(p => ({ p, audit: auditProduct(p) }))
+        .filter(item => item.audit.safetyScore >= 80 && !item.audit.hasCritical)
+        .sort((a, b) => b.audit.safetyScore - a.audit.safetyScore);
+
+      if (candidates.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="bg-white nb-border rounded-2xl p-4 text-center">
+            <p class="font-display font-bold text-sm">No 100% Verified Supplements in Database</p>
+            <p class="text-xs font-semibold text-ink/70 mt-1">Add more complete records to enable verified database recommendations.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Pick top candidate
+      const best = candidates[0];
+      const second = candidates[1];
+
+      resultsContainer.innerHTML = `
+        <div class="bg-white nb-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <span class="w-12 h-12 rounded-full bg-cream nb-border flex items-center justify-center text-2xl shrink-0 shadow-[2px_2px_0px_#18181B]">${best.p.emoji || '🌱'}</span>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-matcha nb-border">TOP DATABASE MATCH</span>
+                <span class="text-[11px] font-bold text-ink/65">${escapeHtml(best.p.category)}</span>
+              </div>
+              <h4 class="font-display font-bold text-base mt-0.5">${escapeHtml(best.p.name)}</h4>
+              <p class="text-xs font-semibold text-ink/75">
+                ${best.p.protein_g !== null ? `${best.p.protein_g}g Protein • ` : ''}${best.p.sugar_g !== null ? `${best.p.sugar_g}g Sugar • ` : ''}100% Ingredients Disclosed
+              </p>
+            </div>
+          </div>
+          <button onclick="selectProduct('${best.p.id}', true)" class="nb-pill bg-matcha px-4 py-2 text-xs font-extrabold shrink-0 self-start sm:self-center">
+            Inspect Swap →
+          </button>
+        </div>
+
+        ${second ? `
+          <div class="bg-cream/80 nb-border rounded-2xl p-3 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <span class="text-lg">${second.p.emoji || '🥛'}</span>
+              <div>
+                <p class="font-display font-bold text-xs">${escapeHtml(second.p.name)}</p>
+                <p class="text-[10px] font-semibold text-ink/70">Safety Score: ${second.audit.safetyScore}/100 • Clean Record</p>
+              </div>
+            </div>
+            <button onclick="selectProduct('${second.p.id}', true)" class="nb-pill bg-white px-3 py-1 text-[11px] font-extrabold shrink-0">
+              View
+            </button>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    /* =========================================================================
+       7. GENAI DEEP REVIEW ENGINE (GOOGLE GEMINI & GROQ CLOUD SUPPORT)
+       ========================================================================= */
+    function setActiveProvider(provider) {
+      activeProvider = provider;
+      localStorage.setItem('nutriaudit_provider', provider);
+
+      // Update Settings UI
+      const geminiBtn = document.getElementById('provider-btn-gemini');
+      const groqBtn = document.getElementById('provider-btn-groq');
+      const geminiGroup = document.getElementById('gemini-input-group');
+      const groqGroup = document.getElementById('groq-input-group');
+
+      if (provider === 'gemini') {
+        if (geminiBtn) geminiBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition';
+        if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition';
+        if (geminiGroup) geminiGroup.classList.remove('hidden');
+        if (groqGroup) groqGroup.classList.add('hidden');
+      } else {
+        if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition';
+        if (geminiBtn) geminiBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition';
+        if (groqGroup) groqGroup.classList.remove('hidden');
+        if (geminiGroup) geminiGroup.classList.add('hidden');
+      }
+
+      // Update Modal UI
+      const modalGemini = document.getElementById('modal-prov-gemini');
+      const modalGroq = document.getElementById('modal-prov-groq');
+      const modalLabel = document.getElementById('modal-key-label');
+      const modalInput = document.getElementById('modal-api-key-input');
+      const modalHelper = document.getElementById('modal-key-helper');
+
+      if (modalGemini && modalGroq) {
+        if (provider === 'gemini') {
+          modalGemini.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition';
+          modalGroq.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition';
+          if (modalLabel) modalLabel.textContent = 'Google Gemini API Key (AI Studio)';
+          if (modalInput) {
+            modalInput.placeholder = 'AIzaSy...';
+            modalInput.value = userGeminiApiKey;
+          }
+          if (modalHelper) modalHelper.innerHTML = 'Get your free key at <a href="https://aistudio.google.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">aistudio.google.com</a>';
+        } else {
+          modalGroq.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition';
+          modalGemini.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition';
+          if (modalLabel) modalLabel.textContent = 'Groq Cloud API Key';
+          if (modalInput) {
+            modalInput.placeholder = 'gsk_...';
+            modalInput.value = userGroqApiKey;
+          }
+          if (modalHelper) modalHelper.innerHTML = 'Get an ultra-fast key at <a href="https://console.groq.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">console.groq.com</a>';
+        }
+      }
+
+      updateApiStatusUI();
+    }
+
+    function toggleKeyVisibility(inputId, labelId) {
+      const input = document.getElementById(inputId);
+      const label = document.getElementById(labelId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (label) label.textContent = 'Hide';
+      } else {
+        input.type = 'password';
+        if (label) label.textContent = 'Show';
+      }
+    }
+
+    function saveGeminiKey() {
+      const key = document.getElementById('gemini-api-key').value.trim();
+      userGeminiApiKey = key;
+      localStorage.setItem('nutriaudit_gemini_key', key);
+      updateApiStatusUI();
+      showToast(key ? 'Gemini API Key saved!' : 'Gemini Key cleared.', 'bg-matcha');
+    }
+
+    function clearGeminiKey() {
+      userGeminiApiKey = '';
+      localStorage.removeItem('nutriaudit_gemini_key');
+      const input = document.getElementById('gemini-api-key');
+      if (input) input.value = '';
+      updateApiStatusUI();
+      showToast('Gemini API Key removed.', 'bg-peach');
+    }
+
+    function saveGroqKey() {
+      const key = document.getElementById('groq-api-key').value.trim();
+      userGroqApiKey = key;
+      localStorage.setItem('nutriaudit_groq_key', key);
+      updateApiStatusUI();
+      showToast(key ? 'Groq API Key saved!' : 'Groq Key cleared.', 'bg-matcha');
+    }
+
+    function clearGroqKey() {
+      userGroqApiKey = '';
+      localStorage.removeItem('nutriaudit_groq_key');
+      const input = document.getElementById('groq-api-key');
+      if (input) input.value = '';
+      updateApiStatusUI();
+      showToast('Groq API Key removed.', 'bg-peach');
+    }
+
+    function updateApiStatusUI() {
+      const hasGemini = Boolean(userGeminiApiKey);
+      const hasGroq = Boolean(userGroqApiKey);
+      const activeKeyPresent = activeProvider === 'gemini' ? hasGemini : hasGroq;
+
+      // Update Header Dot
+      const topDot = document.getElementById('top-api-dot');
+      const topLabel = document.getElementById('top-api-label');
+      if (topDot) {
+        topDot.className = `w-2.5 h-2.5 rounded-full ${activeKeyPresent ? 'bg-[#22c55e]' : 'bg-butter'} border border-ink inline-block`;
+      }
+      if (topLabel) {
+        topLabel.textContent = activeKeyPresent
+          ? (activeProvider === 'gemini' ? 'Gemini Active' : 'Groq Active')
+          : 'API Key';
+      }
+
+      // Update Settings Dots & Badges
+      const gemDot = document.getElementById('gemini-status-dot');
+      const groqDot = document.getElementById('groq-status-dot');
+      if (gemDot) gemDot.className = `w-3 h-3 rounded-full ${hasGemini ? 'bg-[#22c55e]' : 'bg-butter'} border-2 border-ink shrink-0`;
+      if (groqDot) groqDot.className = `w-3 h-3 rounded-full ${hasGroq ? 'bg-[#22c55e]' : 'bg-butter'} border-2 border-ink shrink-0`;
+
+      const settingsBadge = document.getElementById('settings-api-badge');
+      if (settingsBadge) {
+        settingsBadge.textContent = activeKeyPresent
+          ? `${activeProvider.toUpperCase()} CONNECTED`
+          : 'KEY NOT CONFIGURED';
+        settingsBadge.className = `px-3.5 py-1 text-xs font-extrabold nb-border rounded-full ${activeKeyPresent ? 'bg-matcha' : 'bg-cream'}`;
+      }
+
+      // Sync settings input values
+      const gemInput = document.getElementById('gemini-api-key');
+      const groqInput = document.getElementById('groq-api-key');
+      if (gemInput && !gemInput.value) gemInput.value = userGeminiApiKey;
+      if (groqInput && !groqInput.value) groqInput.value = userGroqApiKey;
+    }
+
+    function openApiKeyModal() {
+      const modal = document.getElementById('api-key-modal');
+      const input = document.getElementById('modal-api-key-input');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setActiveProvider(activeProvider);
+      if (input) input.focus();
+    }
+
+    function closeApiKeyModal() {
+      const modal = document.getElementById('api-key-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function saveModalApiKey() {
+      const input = document.getElementById('modal-api-key-input');
+      const val = (input?.value || '').trim();
+      if (activeProvider === 'gemini') {
+        userGeminiApiKey = val;
+        localStorage.setItem('nutriaudit_gemini_key', val);
+      } else {
+        userGroqApiKey = val;
+        localStorage.setItem('nutriaudit_groq_key', val);
+      }
+      updateApiStatusUI();
+      closeApiKeyModal();
+      showToast(`${activeProvider === 'gemini' ? 'Gemini' : 'Groq'} API key saved successfully!`, 'bg-matcha');
+    }
+
+    // Google Gemini API caller with backoff
+    async function callGeminiWithBackoff(promptText) {
+      const activeKey = userGeminiApiKey;
+      if (!activeKey) {
+        throw new Error('Google Gemini API Key is missing. Click the 🔑 API Key button at the top to add your key from Google AI Studio.');
+      }
+
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(activeKey)}`;
+      const payload = {
+        contents: [{ parts: [{ text: promptText }] }],
+        generationConfig: {
+          temperature: 0.1
+        }
+      };
+
+      const delays = [1000, 2000, 4000];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errBody = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errBody.slice(0, 140)}`);
+          }
+
+          const data = await response.json();
+          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!text) throw new Error('Empty response received from Gemini.');
+          return text;
+        } catch (error) {
+          if (attempt === delays.length) throw error;
+          await new Promise(res => setTimeout(res, delays[attempt]));
+        }
+      }
+    }
+
+    // Groq Cloud API caller with backoff
+    async function callGroqWithBackoff(promptText) {
+      const activeKey = userGroqApiKey;
+      if (!activeKey) {
+        throw new Error('Groq Cloud API Key is missing. Click the 🔑 API Key button at the top to configure your Groq key.');
+      }
+
+      const endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+      const payload = {
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a strict Food Database Completeness & Safety Auditor. NEVER invent, guess, or estimate missing ingredient or nutrient values.'
+          },
+          {
+            role: 'user',
+            content: promptText
+          }
+        ],
+        temperature: 0.1
+      };
+
+      const delays = [1000, 2000, 4000];
+      for (let attempt = 0; attempt <= delays.length; attempt++) {
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${activeKey}`
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errBody = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errBody.slice(0, 140)}`);
+          }
+
+          const data = await response.json();
+          const text = data?.choices?.[0]?.message?.content;
+          if (!text) throw new Error('Empty response received from Groq.');
+          return text;
+        } catch (error) {
+          if (attempt === delays.length) throw error;
+          await new Promise(res => setTimeout(res, delays[attempt]));
+        }
+      }
+    }
+
+    async function runAIDeepReview() {
+      const product = foodDatabase.find(p => p.id === selectedProductId) || foodDatabase[0];
+      if (!product) return;
+      const audit = auditProduct(product);
+
+      const btn = document.getElementById('btn-gemini-audit');
+      const btnText = document.getElementById('gemini-btn-text');
+      const outputCard = document.getElementById('gemini-output-card');
+      const outputContent = document.getElementById('gemini-output-content');
+      const modelBadge = document.getElementById('ai-model-badge');
+
+      btn.disabled = true;
+      btnText.textContent = `Auditing with ${activeProvider === 'gemini' ? 'Gemini' : 'Groq'}...`;
+      outputCard.classList.remove('hidden');
+      if (modelBadge) {
+        modelBadge.textContent = activeProvider === 'gemini' ? 'gemini-2.5-flash' : 'groq/llama-3.3-70b';
+      }
+      outputContent.innerHTML = `<p class="animate-pulse font-bold">Auditing database fields with strict zero-hallucination protocols (${activeProvider.toUpperCase()})...</p>`;
+
+      const userNeedNote = document.getElementById('custom-need-note')?.value || 'General health';
+
+      const prompt = `You are a strict Food Database Completeness & Safety Auditor.
+CRITICAL MANDATE: NEVER invent, guess, or estimate any missing ingredient, allergen, or nutrition value. Any null/empty field MUST be explicitly reported as MISSING / UNVERIFIED.
+
+Product JSON Record:
+${JSON.stringify(product, null, 2)}
+
+Deterministic Audit Metrics:
+- Completeness: ${audit.completenessPct}% (${audit.filledCount}/${audit.totalFields})
+- Safety Speed Dial Score: ${audit.safetyScore}/100
+- Review Priority: ${audit.priority}
+- Missing Fields: ${audit.missingFields.map(f => `${f.key} (${f.severity})`).join(', ') || 'None'}
+- User Health Target: "${userNeedNote}"
+
+Deliver a concise, structured audit report with:
+1. Missing Fields & Review Priority Action Plan (what QA must inspect first, without guessing values).
+2. Safety & Allergen Risk Assessment based strictly on recorded data.
+3. Fit & Suitability assessment for the user's stated health goal.`;
+
+      try {
+        const aiText = activeProvider === 'gemini'
+          ? await callGeminiWithBackoff(prompt)
+          : await callGroqWithBackoff(prompt);
+
+        const formattedHtml = escapeHtml(aiText)
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n/g, '<br/>');
+
+        outputContent.innerHTML = `<div class="leading-relaxed">${formattedHtml}</div>`;
+        showToast(`${activeProvider === 'gemini' ? 'Gemini' : 'Groq'} Deep Audit complete!`, 'bg-lilac');
+      } catch (err) {
+        outputContent.innerHTML = `
+          <div class="bg-peach/40 nb-border rounded-xl p-3">
+            <p class="font-extrabold text-sm">Could not complete AI audit</p>
+            <p class="text-xs mt-1 font-semibold">${escapeHtml(err.message)}</p>
+            <div class="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
+              <p class="text-[11px] text-ink/80">Tip: Click the 🔑 API Key button at the top header to enter your key.</p>
+              <button onclick="openApiKeyModal()" class="nb-pill bg-butter px-3 py-1 text-[11px] font-extrabold">Open API Modal →</button>
+            </div>
+          </div>
+        `;
+        showToast('AI call failed — configure your API key at the top.', 'bg-peach');
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'GenAI Deep Audit';
+      }
+    }
+
+    /* =========================================================================
+       8. MODAL, NAVIGATION & TOAST HELPERS
+       ========================================================================= */
+    function openAddModal() {
+      const modal = document.getElementById('add-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAddModal() {
+      const modal = document.getElementById('add-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function parseNullableNumber(id) {
+      const raw = document.getElementById(id).value.trim();
+      if (raw === '') return null;
+      const num = parseFloat(raw);
+      return isNaN(num) ? null : num;
+    }
+
+    function parseNullableList(id) {
+      const raw = document.getElementById(id).value.trim();
+      if (raw === '') return null;
+      const items = raw.split(',').map(s => s.trim()).filter(Boolean);
+      return items.length > 0 ? items : null;
+    }
+
+    function handleAddProduct(event) {
+      event.preventDefault();
+      const name = document.getElementById('new-name').value.trim();
+      if (!name) return;
+
+      const newId = `PROD-${100 + foodDatabase.length + 1}`;
+      const newRecord = {
+        id: newId,
+        name,
+        brand: document.getElementById('new-brand').value.trim() || 'Custom Entry',
+        category: 'Custom Audit',
+        emoji: '🥗',
+        serving_size: document.getElementById('new-serving').value.trim() || null,
+        calories: parseNullableNumber('new-calories'),
+        protein_g: parseNullableNumber('new-protein'),
+        sugar_g: parseNullableNumber('new-sugar'),
+        sodium_mg: parseNullableNumber('new-sodium'),
+        carbs_g: parseNullableNumber('new-carbs'),
+        fat_g: parseNullableNumber('new-fat'),
+        fiber_g: parseNullableNumber('new-fiber'),
+        ingredients: parseNullableList('new-ingredients'),
+        allergens: parseNullableList('new-allergens')
+      };
+
+      foodDatabase.unshift(newRecord);
+      document.getElementById('add-product-form').reset();
+      closeAddModal();
+      updateGlobalStats();
+      selectProduct(newId, true);
+      showToast(`Added "${newRecord.name}" & audited missing fields!`, 'bg-matcha');
+    }
+
+    function auditAllDatabase() {
+      updateGlobalStats();
+      syncProductSelectors();
+      renderProductList();
+      renderInspector();
+      evaluateUserNeeds();
+      showToast(`Re-scanned all ${foodDatabase.length} food database records.`, 'bg-skyMint');
+    }
+
+    function switchTab(tabName) {
+      activeTab = tabName;
+
+      // Toggle visible view
+      document.querySelectorAll('.tab-view').forEach(view => {
+        view.classList.remove('active');
+      });
+      const targetView = document.getElementById(`view-${tabName}`);
+      if (targetView) targetView.classList.add('active');
+
+      // Update Desktop Tab Pill Styles
+      document.querySelectorAll('.desk-tab-btn').forEach(btn => {
+        btn.classList.remove('bg-ink', 'text-cream');
+        btn.classList.add('text-ink', 'hover:bg-butter/60');
+      });
+      const activeDesk = document.getElementById(`desk-tab-${tabName}`);
+      if (activeDesk) {
+        activeDesk.classList.add('bg-ink', 'text-cream');
+        activeDesk.classList.remove('text-ink', 'hover:bg-butter/60');
+      }
+
+      // Update Mobile Bottom Pill Nav Styles
+      document.querySelectorAll('.mob-tab-btn').forEach(btn => {
+        btn.classList.remove('bg-cream', 'text-ink');
+        btn.classList.add('text-cream/80');
+      });
+      const activeMob = document.getElementById(`mob-tab-${tabName}`);
+      if (activeMob) {
+        activeMob.classList.add('bg-cream', 'text-ink');
+        activeMob.classList.remove('text-cream/80');
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showToast(message, bgClass = 'bg-butter') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = `${bgClass} nb-card-sm px-4 py-2.5 text-xs font-extrabold text-ink pointer-events-auto transition-all`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-6px)';
+        setTimeout(() => toast.remove(), 220);
+      }, 3000);
+    }
+
+    /* =========================================================================
+       9. INITIALIZE APP ON WINDOW LOAD
+       ========================================================================= */
+    window.addEventListener('DOMContentLoaded', () => {
+      updateGlobalStats();
+      syncProductSelectors();
+      renderProductList();
+      renderInspector();
+      evaluateUserNeeds();
+      setActiveProvider(activeProvider);
+      switchTab('home');
+    });
+  </script>
+</body>
+</html>
