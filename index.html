@@ -224,7 +224,68 @@
   <!-- =========================================================================
        MULTI-TAB MAIN CONTAINER
        ========================================================================= -->
-  <main class="max-w-[1320px] mx-auto px-3 sm:px-6 mt-5">
+  <main class="max-w-[1320px] mx-auto px-3 sm:px-6 mt-4 space-y-4">
+
+    <!-- =======================================================================
+         PROMINENT DATASET TOGGLE BAR (PS 134 Requirement)
+         Smoothly toggle between Demo Subset, Full Catalog & Synthetic 2000
+         ======================================================================= -->
+    <div class="bg-cream nb-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="w-9 h-9 rounded-full bg-butter nb-border flex items-center justify-center text-lg">📊</span>
+          <div>
+            <p class="text-[10px] font-extrabold uppercase text-ink/70 leading-none">Active Dataset</p>
+            <p id="active-dataset-name-label" class="font-display font-bold text-sm sm:text-base leading-tight mt-0.5">Demo Subset (552 rows)</p>
+          </div>
+        </div>
+
+        <div id="dataset-toggle-buttons" class="flex flex-wrap items-center gap-2">
+          <button
+            id="btn-ds-demo"
+            onclick="switchDataset('demo')"
+            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-ink text-cream transition"
+            title="Default Open Food Facts benchmark (552 items)"
+          >
+            ⚡ Demo Subset (552 rows)
+          </button>
+          <button
+            id="btn-ds-full"
+            onclick="switchDataset('full')"
+            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-white text-ink hover:bg-cream transition flex items-center gap-1.5"
+            title="Full Preprocessed Catalog (16,091 rows)"
+          >
+            <span>📦 Full Catalog (16,091 rows)</span>
+            <span id="badge-ds-full" class="px-1.5 py-0.2 rounded-full text-[9px] bg-peach/40 uppercase">Workspace Check</span>
+          </button>
+          <button
+            id="btn-ds-synthetic"
+            onclick="switchDataset('synthetic')"
+            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-white text-ink hover:bg-cream transition flex items-center gap-1.5"
+            title="Synthetic 2,000 Dataset (food_completeness_dataset_2000.xlsx)"
+          >
+            <span>🧪 Synthetic (2,000 rows)</span>
+            <span id="badge-ds-synthetic" class="px-1.5 py-0.2 rounded-full text-[9px] bg-peach/40 uppercase">Workspace Check</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 self-start md:self-auto flex-wrap">
+        <span id="backend-conn-badge" class="nb-pill bg-matcha px-3 py-1.5 text-[11px] font-extrabold flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-ink inline-block"></span>
+          <span id="backend-conn-text">Backend: Connecting...</span>
+        </span>
+        <button
+          onclick="triggerFileUploadModal()"
+          class="nb-pill bg-skyMint px-3 py-1.5 text-[11px] font-extrabold flex items-center gap-1"
+          title="Upload full or synthetic dataset file directly"
+        >
+          <span>📁</span>
+          <span>Upload File</span>
+        </button>
+        <input type="file" id="direct-file-input" onchange="handleDirectFileUpload(event)" accept=".csv,.xlsx" class="hidden" />
+      </div>
+    </div>
 
     <!-- =======================================================================
          TAB 1: SIMPLE LANDING PAGE (HOME)
@@ -275,35 +336,49 @@
         </div>
       </div>
 
-      <!-- Global Database Health Strip -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-        <button onclick="switchTab('database'); setFilter('ALL');" class="text-left bg-cream nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
-          <div>
-            <p class="text-[11px] font-extrabold uppercase text-ink/60">Total Records</p>
-            <p id="stat-total" class="font-display font-bold text-3xl leading-tight">0</p>
+      <!-- Global Database Health Strip (6 Key Metrics: Total, Critical, Complete, Avg, Anomalies, Duplicates) -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <button onclick="switchTab('database'); setFilter('ALL');" class="text-left bg-cream nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-extrabold uppercase text-ink/60">Total Items</span>
+            <span class="text-base">📦</span>
           </div>
-          <span class="w-11 h-11 rounded-full bg-butter nb-border flex items-center justify-center text-xl">📦</span>
+          <p id="stat-total" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
-        <button onclick="switchTab('database'); setFilter('CRITICAL');" class="text-left bg-peach nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
-          <div>
-            <p class="text-[11px] font-extrabold uppercase text-ink/80">Critical Priority</p>
-            <p id="stat-critical" class="font-display font-bold text-3xl leading-tight">0</p>
+        <button onclick="switchTab('database'); setFilter('CRITICAL');" class="text-left bg-peach nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-extrabold uppercase text-ink/80">Critical Review</span>
+            <span class="text-base">🚨</span>
           </div>
-          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl">🚨</span>
+          <p id="stat-critical" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
-        <button onclick="switchTab('auditor')" class="text-left bg-skyMint nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
-          <div>
-            <p class="text-[11px] font-extrabold uppercase text-ink/80">Avg Completeness</p>
-            <p id="stat-avg" class="font-display font-bold text-3xl leading-tight">0%</p>
+        <button onclick="switchTab('database'); setFilter('COMPLETE');" class="text-left bg-matcha nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-extrabold uppercase text-ink/80">100% Complete</span>
+            <span class="text-base">✅</span>
           </div>
-          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl">📊</span>
+          <p id="stat-complete" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
-        <button onclick="switchTab('database'); setFilter('COMPLETE');" class="text-left bg-matcha nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
-          <div>
-            <p class="text-[11px] font-extrabold uppercase text-ink/80">Verified Complete</p>
-            <p id="stat-complete" class="font-display font-bold text-3xl leading-tight">0</p>
+        <button onclick="switchTab('auditor')" class="text-left bg-skyMint nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-extrabold uppercase text-ink/80">Avg Completeness</span>
+            <span class="text-base">📊</span>
           </div>
-          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl">✅</span>
+          <p id="stat-avg" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0%</p>
+        </button>
+        <button onclick="switchTab('database'); setFilter('ANOMALIES');" class="text-left bg-butter nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-extrabold uppercase text-ink/80">Math Anomalies</span>
+            <span class="text-base">⚠️</span>
+          </div>
+          <p id="stat-anomalies" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
+        </button>
+        <button onclick="switchTab('database'); setFilter('DUPLICATES');" class="text-left bg-lilac nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-extrabold uppercase text-ink/80">Duplicate SKUs</span>
+            <span class="text-base">🔁</span>
+          </div>
+          <p id="stat-duplicates" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
       </div>
 
@@ -382,6 +457,8 @@
             <button data-filter="CRITICAL" onclick="setFilter('CRITICAL')" class="filter-btn nb-pill bg-peach px-3.5 py-2 text-xs font-extrabold">Critical</button>
             <button data-filter="HIGH" onclick="setFilter('HIGH')" class="filter-btn nb-pill bg-butter px-3.5 py-2 text-xs font-extrabold">High</button>
             <button data-filter="COMPLETE" onclick="setFilter('COMPLETE')" class="filter-btn nb-pill bg-matcha px-3.5 py-2 text-xs font-extrabold">Complete</button>
+            <button data-filter="ANOMALIES" onclick="setFilter('ANOMALIES')" class="filter-btn nb-pill bg-white text-ink hover:bg-cream px-3.5 py-2 text-xs font-extrabold">⚠️ Math Anomalies (<span id="filter-anomalies-count">0</span>)</button>
+            <button data-filter="DUPLICATES" onclick="setFilter('DUPLICATES')" class="filter-btn nb-pill bg-white text-ink hover:bg-cream px-3.5 py-2 text-xs font-extrabold">🔁 Duplicates (<span id="filter-duplicates-count">0</span>)</button>
           </div>
         </div>
 
@@ -538,6 +615,30 @@
             </div>
             <div id="gemini-output-content" class="bg-cream nb-border rounded-2xl p-4 text-xs sm:text-sm font-semibold space-y-3">
               <!-- Populated by Gemini / Groq API -->
+            </div>
+          </div>
+
+          <!-- CROSS-FIELD MATH ANOMALIES & DUPLICATE WARNING CARD -->
+          <div id="anomalies-card" class="bg-peach/30 nb-card p-5 hidden">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-display font-bold text-lg flex items-center gap-2">
+                <span>⚠️</span> Cross-Field Math &amp; Chemistry Contradictions
+              </h3>
+              <span id="anomaly-count-badge" class="px-2.5 py-0.5 text-[10px] font-extrabold bg-peach text-ink nb-border rounded-full uppercase">0 Issues</span>
+            </div>
+            <div id="anomalies-list" class="space-y-2 text-xs font-bold text-ink">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- ZERO-HALLUCINATION GUARANTEE CARD -->
+          <div class="bg-matcha/40 nb-card p-4 flex items-center gap-3">
+            <span class="w-10 h-10 rounded-full bg-cream nb-border flex items-center justify-center text-xl shrink-0">🛡️</span>
+            <div>
+              <p class="font-display font-bold text-xs uppercase tracking-wide">Strict Zero-Hallucination Contract Active</p>
+              <p class="text-[11px] font-semibold text-ink/80 mt-0.5">
+                No missing nutrients, ingredients, or allergens were imputed, estimated, or guessed. Missing fields remain strictly preserved as <code>MISSING</code>.
+              </p>
             </div>
           </div>
 
@@ -953,7 +1054,11 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-2.5">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div>
+            <label class="block text-[10px] font-extrabold uppercase mb-1">Calories (kcal)</label>
+            <input id="new-calories" type="number" step="any" placeholder="blank = missing" class="w-full bg-white nb-input px-3 py-1.5 text-xs font-bold" />
+          </div>
           <div>
             <label class="block text-[10px] font-extrabold uppercase mb-1">Protein (g)</label>
             <input id="new-protein" type="number" step="any" placeholder="blank = missing" class="w-full bg-white nb-input px-3 py-1.5 text-xs font-bold" />
@@ -1028,140 +1133,46 @@
     ];
 
     /* =========================================================================
-       2. INITIAL FOOD DATABASE (Mix of Critical Missing, Partial, & Complete)
+       2. INITIAL BENCHMARK DATASET & STATE
        ========================================================================= */
     let foodDatabase = [
       {
-        id: 'PROD-101',
-        name: 'NitroBlast Whey Crunch Bar',
-        brand: 'IronPulse Labs',
-        category: 'Protein Snack',
+        id: '8908010900056',
+        name: 'Peanut butter',
+        brand: 'Pistols',
+        category: 'Butters, Peanut butters',
         emoji: '🍫',
-        serving_size: '60g bar',
-        calories: 240,
-        protein_g: 22,
-        carbs_g: 21,
-        sugar_g: null,          // MISSING
-        fat_g: 8,
-        fiber_g: 4,
-        sodium_mg: null,        // MISSING
-        ingredients: null,      // CRITICAL MISSING
-        allergens: null         // CRITICAL MISSING
-      },
-      {
-        id: 'PROD-102',
-        name: 'Matcha Oat Energy Smoothie',
-        brand: 'GreenLeaf Co.',
-        category: 'Beverage',
-        emoji: '🍵',
-        serving_size: '330ml bottle',
-        calories: 175,
-        protein_g: 6,
-        carbs_g: 29,
-        sugar_g: 16,
-        fat_g: 4,
-        fiber_g: null,          // MISSING
-        sodium_mg: 120,
-        ingredients: ['Oat Milk', 'Organic Matcha Powder', 'Cane Sugar', 'Sunflower Lecithin'],
-        allergens: null         // CRITICAL MISSING
-      },
-      {
-        id: 'PROD-103',
-        name: 'PurePeak Unflavored Whey Isolate',
-        brand: 'CleanMacro',
-        category: 'Gym Supplement',
-        emoji: '🥤',
-        serving_size: '30g scoop',
-        calories: 115,
-        protein_g: 26,
-        carbs_g: 1,
-        sugar_g: 0.5,
-        fat_g: 0.5,
-        fiber_g: 0,
-        sodium_mg: 65,
-        ingredients: ['Whey Protein Isolate (Milk)', 'Sunflower Lecithin'],
-        allergens: ['Milk']
-      },
-      {
-        id: 'PROD-104',
-        name: 'Spicy Kimchi Instant Ramen',
-        brand: 'SeoulDash',
-        category: 'Instant Meal',
-        emoji: '🍜',
-        serving_size: null,     // MISSING
-        calories: 480,
-        protein_g: 9,
-        carbs_g: 68,
-        sugar_g: 7,
-        fat_g: 18,
-        fiber_g: null,          // MISSING
-        sodium_mg: 1420,
-        ingredients: ['Enriched Wheat Flour', 'Palm Oil', 'Salt', 'Chili Powder', 'Dried Kimchi Flakes'],
-        allergens: ['Wheat', 'Soy']
-      },
-      {
-        id: 'PROD-105',
-        name: 'Organic Sprouted Pea & Hemp Blend',
-        brand: 'TerraFit',
-        category: 'Plant Supplement',
-        emoji: '🌱',
-        serving_size: '35g scoop',
-        calories: 135,
-        protein_g: 24,
-        carbs_g: 4,
-        sugar_g: 1,
-        fat_g: 2.5,
-        fiber_g: 5,
-        sodium_mg: 180,
-        ingredients: ['Organic Pea Protein', 'Organic Hemp Seed Protein', 'Chia Seed Powder', 'Sea Salt'],
-        allergens: ['None (Top-9 Free)']
-      },
-      {
-        id: 'PROD-106',
-        name: 'Greek Berry Chia Yogurt Cup',
-        brand: 'MeadowFresh',
-        category: 'Daily Health',
-        emoji: '🫐',
-        serving_size: '150g cup',
-        calories: 140,
-        protein_g: 14,
-        carbs_g: 14,
-        sugar_g: 7,
-        fat_g: 3,
-        fiber_g: 4,
-        sodium_mg: 55,
-        ingredients: ['Cultured Grade A Milk', 'Blueberries', 'Chia Seeds', 'Live Active Cultures'],
-        allergens: ['Milk']
-      },
-      {
-        id: 'PROD-107',
-        name: 'Mystery Street-Style Sriracha Chips',
-        brand: 'CrunchHaus',
-        category: 'Snack',
-        emoji: '🌶️',
-        serving_size: '28g',
-        calories: null,         // MISSING
-        protein_g: null,        // MISSING
-        carbs_g: 18,
-        sugar_g: null,          // MISSING
-        fat_g: 10,
-        fiber_g: null,          // MISSING
-        sodium_mg: null,        // MISSING
-        ingredients: null,      // CRITICAL MISSING
-        allergens: null         // CRITICAL MISSING
+        serving_size: '1 portion (100 g)',
+        calories: 639.0,
+        protein_g: 30.0,
+        carbs_g: 18.0,
+        sugar_g: 3.0,
+        added_sugars_g: 0.0,
+        fat_g: 49.0,
+        saturated_fat_g: 7.0,
+        fiber_g: 9.0,
+        sodium_mg: 19.0,
+        salt_g: 0.0475,
+        ingredients: null,
+        ingredients_text: null,
+        allergens: null,
+        allergens_text: null,
+        dataset_key: 'demo'
       }
     ];
 
-    /* =========================================================================
-       3. APP STATE & LOCAL STORAGE SYNC
-       ========================================================================= */
-    let selectedProductId = foodDatabase[0].id;
+    let selectedProductId = '8908010900056';
     let activeFilter = 'ALL';
     let activeGoal = 'gym';
-    let activeProvider = localStorage.getItem('nutriaudit_provider') || 'gemini';
+    let activeProvider = localStorage.getItem('nutriaudit_provider') || 'groq';
     let userGeminiApiKey = localStorage.getItem('nutriaudit_gemini_key') || '';
     let userGroqApiKey = localStorage.getItem('nutriaudit_groq_key') || '';
     let activeTab = 'home';
+    let activeDataset = 'demo';
+    let availableDatasets = [];
+    let isBackendConnected = false;
+    let apiBaseUrl = (window.location.port === '8000') ? '' : 'http://localhost:8000';
+    let duplicatesLookup = {};
 
     const GOAL_PRESETS = {
       gym: {
@@ -1191,16 +1202,135 @@
     };
 
     /* =========================================================================
-       4. CORE DETERMINISTIC AUDITOR ENGINE (NEVER INVENTS MISSING DATA)
+       3. CORE DETERMINISTIC AUDITOR & ANOMALY ENGINE (ZERO-HALLUCINATION)
        ========================================================================= */
     function isFieldMissing(val) {
       if (val === null || val === undefined) return true;
-      if (typeof val === 'string' && val.trim() === '') return true;
+      if (typeof val === 'string') {
+        const cleaned = val.trim().toLowerCase();
+        return cleaned === '' || cleaned === 'null' || cleaned === 'none' || cleaned === 'nan' || cleaned === 'undefined';
+      }
       if (Array.isArray(val) && val.length === 0) return true;
+      if (typeof val === 'number' && isNaN(val)) return true;
       return false;
     }
 
+    function computeCrossFieldAnomalies(p) {
+      const anomalies = [];
+      const cal = p.calories;
+      const fat = p.fat_g;
+      const satFat = p.saturated_fat_g;
+      const carbs = p.carbs_g;
+      const sugar = p.sugar_g;
+      const addSugar = p.added_sugars_g;
+      const prot = p.protein_g;
+      const fiber = p.fiber_g;
+      const sodMg = p.sodium_mg;
+      const salt = p.salt_g;
+
+      // 1. Negative values
+      const fields = { calories: cal, fat: fat, saturated_fat: satFat, carbs: carbs, sugar: sugar, added_sugars: addSugar, protein: prot, fiber: fiber, sodium: sodMg, salt: salt };
+      for (const [k, v] of Object.entries(fields)) {
+        if (v !== null && v !== undefined && v < 0) {
+          anomalies.push({ type: 'negative_value', field: k, severity: 'CRITICAL', message: `Negative value detected for ${k}: ${v}. Nutrition values cannot be negative.` });
+        }
+      }
+
+      // 2. >100g concentration per 100g
+      const macro100 = { fat: fat, saturated_fat: satFat, carbs: carbs, sugar: sugar, added_sugars: addSugar, protein: prot, fiber: fiber, salt: salt };
+      for (const [k, v] of Object.entries(macro100)) {
+        if (v !== null && v !== undefined && v > 100.0) {
+          anomalies.push({ type: 'macro_exceeds_100g', field: k, severity: 'CRITICAL', message: `Impossible concentration: ${k} declared as ${v}g per 100g (exceeds 100g ceiling).` });
+        }
+      }
+
+      // 3. Energy > 900 kcal
+      if (cal !== null && cal !== undefined && cal > 900.0) {
+        anomalies.push({ type: 'excessive_calories', field: 'calories', severity: 'CRITICAL', message: `Implausible energy density: ${cal} kcal/100g exceeds maximum theoretical limit (~900 kcal/100g for pure fat).` });
+      }
+
+      // 4. Added sugars > Sugars
+      if (addSugar !== null && sugar !== null && addSugar > sugar + 0.05) {
+        anomalies.push({ type: 'added_sugars_exceed_sugars', field: 'added_sugars', severity: 'HIGH', message: `Mathematical contradiction: Added sugars (${addSugar}g) cannot exceed total sugars (${sugar}g).` });
+      }
+
+      // 5. Sugars > Carbs
+      if (sugar !== null && carbs !== null && sugar > carbs + 0.05) {
+        anomalies.push({ type: 'sugars_exceed_carbs', field: 'sugar', severity: 'HIGH', message: `Mathematical contradiction: Total sugars (${sugar}g) cannot exceed total carbohydrates (${carbs}g).` });
+      }
+
+      // 6. Saturated fat > Fat
+      if (satFat !== null && fat !== null && satFat > fat + 0.05) {
+        anomalies.push({ type: 'saturated_fat_exceeds_fat', field: 'saturated_fat', severity: 'HIGH', message: `Mathematical contradiction: Saturated fat (${satFat}g) cannot exceed total fat (${fat}g).` });
+      }
+
+      // 7. Salt vs Sodium contradictions
+      const sodG = (sodMg !== null && sodMg !== undefined) ? (sodMg / 1000.0) : null;
+      if (sodG !== null && salt !== null && salt !== undefined) {
+        if (sodG > salt + 0.01) {
+          anomalies.push({ type: 'sodium_exceeds_salt', field: 'sodium', severity: 'CRITICAL', message: `Chemical impossibility: Sodium (${sodG.toFixed(3)}g) exceeds declared total salt (${salt.toFixed(3)}g). Sodium is only a component of salt.` });
+        } else if (salt > 0.05) {
+          const expectedSalt = sodG * 2.54;
+          const diff = Math.abs(salt - expectedSalt);
+          if (diff > 0.2 && (diff / Math.max(salt, 0.01)) > 0.35) {
+            anomalies.push({ type: 'salt_sodium_mismatch', field: 'salt', severity: 'MEDIUM', message: `Chemical ratio mismatch: Declared salt is ${salt.toFixed(2)}g, but sodium corresponds to ~${expectedSalt.toFixed(2)}g salt.` });
+          }
+        }
+      }
+
+      return anomalies;
+    }
+
+    function computeDatasetDuplicates(records) {
+      const groups = {};
+      records.forEach(r => {
+        const name = (r.name || '').trim().toLowerCase();
+        const brand = (r.brand || '').trim().toLowerCase();
+        if (name) {
+          const key = `${name}:::${brand}`;
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(String(r.id));
+        }
+      });
+
+      const lookup = {};
+      let totalDuplicates = 0;
+      Object.entries(groups).forEach(([key, ids]) => {
+        if (ids.length > 1) {
+          totalDuplicates += ids.length;
+          const [n, b] = key.split(':::');
+          ids.forEach(id => {
+            lookup[id] = {
+              isDuplicate: true,
+              count: ids.length,
+              otherIds: ids.filter(i => i !== id),
+              name: n,
+              brand: b
+            };
+          });
+        }
+      });
+
+      return { lookup, totalDuplicates };
+    }
+
     function auditProduct(product) {
+      if (!product) {
+        return {
+          product: {},
+          missingFields: [],
+          filledCount: 0,
+          totalFields: 10,
+          completenessPct: 0,
+          safetyScore: 0,
+          priority: 'CRITICAL',
+          hasCritical: true,
+          anomalies: [],
+          isDuplicate: false,
+          duplicateInfo: null
+        };
+      }
+
       const missingFields = [];
       let totalPenalty = 0;
 
@@ -1221,7 +1351,11 @@
       let priority = 'COMPLETE';
       if (hasCritical) priority = 'CRITICAL';
       else if (hasHigh) priority = 'HIGH';
-      else if (missingFields.length > 0) priority = 'MEDIUM';
+      else if (missingFields.length > 0) priority = 'LOW';
+
+      // Check anomalies
+      const anomalies = product.anomalies || computeCrossFieldAnomalies(product);
+      const dupInfo = duplicatesLookup[String(product.id)] || null;
 
       return {
         product,
@@ -1231,7 +1365,10 @@
         completenessPct,
         safetyScore,
         priority,
-        hasCritical
+        hasCritical,
+        anomalies,
+        isDuplicate: Boolean(dupInfo),
+        duplicateInfo: dupInfo
       };
     }
 
@@ -1241,6 +1378,7 @@
           return { bg: 'bg-peach/45', badge: 'bg-peach text-ink nb-border' };
         case 'HIGH':
           return { bg: 'bg-butter/55', badge: 'bg-butter text-ink nb-border' };
+        case 'LOW':
         case 'MEDIUM':
           return { bg: 'bg-lilac/45', badge: 'bg-lilac text-ink nb-border' };
         default:
@@ -1259,7 +1397,7 @@
     }
 
     /* =========================================================================
-       5. DATABASE LIST, STATS & INSPECTOR RENDERING
+       4. DATABASE LIST, STATS & INSPECTOR RENDERING
        ========================================================================= */
     function updateGlobalStats() {
       const audits = foodDatabase.map(auditProduct);
@@ -1270,10 +1408,26 @@
         ? Math.round(audits.reduce((sum, a) => sum + a.completenessPct, 0) / total)
         : 0;
 
+      const anomaliesCount = audits.filter(a => a.anomalies && a.anomalies.length > 0).length;
+      const duplicatesCount = audits.filter(a => a.isDuplicate).length;
+
       document.getElementById('stat-total').textContent = total;
       document.getElementById('stat-critical').textContent = criticalCount;
       document.getElementById('stat-avg').textContent = `${avgCompleteness}%`;
       document.getElementById('stat-complete').textContent = completeCount;
+
+      const statAnom = document.getElementById('stat-anomalies');
+      if (statAnom) statAnom.textContent = anomaliesCount;
+      const statDups = document.getElementById('stat-duplicates');
+      if (statDups) statDups.textContent = duplicatesCount;
+
+      const filAnom = document.getElementById('filter-anomalies-count');
+      if (filAnom) filAnom.textContent = anomaliesCount;
+      const filDups = document.getElementById('filter-duplicates-count');
+      if (filDups) filDups.textContent = duplicatesCount;
+
+      const countBadge = document.getElementById('dataset-count-badge');
+      if (countBadge) countBadge.textContent = `${total} Records Active`;
     }
 
     function setFilter(filter) {
@@ -1281,9 +1435,11 @@
       document.querySelectorAll('.filter-btn').forEach(btn => {
         const isTarget = btn.getAttribute('data-filter') === filter;
         if (isTarget) {
-          btn.classList.add('ring-2', 'ring-ink', 'ring-offset-2');
+          btn.classList.add('ring-2', 'ring-ink', 'ring-offset-2', 'bg-ink', 'text-cream');
+          btn.classList.remove('bg-white', 'text-ink');
         } else {
-          btn.classList.remove('ring-2', 'ring-ink', 'ring-offset-2');
+          btn.classList.remove('ring-2', 'ring-ink', 'ring-offset-2', 'bg-ink', 'text-cream');
+          btn.classList.add('bg-white', 'text-ink');
         }
       });
       renderProductList();
@@ -1296,13 +1452,24 @@
 
       const filtered = foodDatabase.filter(p => {
         const audit = auditProduct(p);
-        const matchesFilter = activeFilter === 'ALL' || audit.priority === activeFilter;
+        let matchesFilter = true;
+        if (activeFilter === 'ALL') {
+          matchesFilter = true;
+        } else if (activeFilter === 'CRITICAL' || activeFilter === 'HIGH' || activeFilter === 'COMPLETE') {
+          matchesFilter = (audit.priority === activeFilter);
+        } else if (activeFilter === 'ANOMALIES') {
+          matchesFilter = Boolean(audit.anomalies && audit.anomalies.length > 0);
+        } else if (activeFilter === 'DUPLICATES') {
+          matchesFilter = Boolean(audit.isDuplicate);
+        }
+
         const matchesQuery =
           !query ||
-          p.name.toLowerCase().includes(query) ||
+          (p.name || '').toLowerCase().includes(query) ||
           (p.brand || '').toLowerCase().includes(query) ||
           (p.category || '').toLowerCase().includes(query) ||
-          p.id.toLowerCase().includes(query);
+          String(p.id || '').toLowerCase().includes(query);
+
         return matchesFilter && matchesQuery;
       });
 
@@ -1310,16 +1477,22 @@
         container.innerHTML = `
           <div class="col-span-full bg-white nb-border rounded-3xl p-8 text-center">
             <p class="font-display font-bold text-lg">No matching food records found</p>
-            <p class="text-xs font-semibold text-ink/70 mt-1">Try clearing your search or switching priority filters.</p>
+            <p class="text-xs font-semibold text-ink/70 mt-1">Try clearing your search or switching priority / anomaly filters.</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = filtered.map(p => {
+      // Smooth render subset (120 cards per view)
+      const displaySubset = filtered.slice(0, 120);
+
+      container.innerHTML = displaySubset.map(p => {
         const audit = auditProduct(p);
         const style = getPriorityStyle(audit.priority);
-        const isSelected = p.id === selectedProductId;
+        const isSelected = String(p.id) === String(selectedProductId);
+
+        const hasAnomalies = audit.anomalies && audit.anomalies.length > 0;
+        const isDup = audit.isDuplicate;
 
         return `
           <button
@@ -1334,9 +1507,13 @@
                   <p class="text-[11px] font-semibold text-ink/70 truncate">${escapeHtml(p.brand)} • ${escapeHtml(p.id)}</p>
                 </div>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase shrink-0 ${style.badge}">
-                ${audit.priority}
-              </span>
+              <div class="flex flex-col items-end gap-1 shrink-0">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${style.badge}">
+                  ${audit.priority}
+                </span>
+                ${hasAnomalies ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-peach text-ink nb-border" title="${audit.anomalies.length} math contradictions">⚠️ Math</span>` : ''}
+                ${isDup ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-lilac text-ink nb-border" title="Duplicate product entry">🔁 Dup</span>` : ''}
+              </div>
             </div>
 
             <!-- Completeness Progress Pill Bar -->
@@ -1352,9 +1529,9 @@
     }
 
     function syncProductSelectors() {
-      const optionsHtml = foodDatabase.map(p => {
+      const optionsHtml = foodDatabase.slice(0, 300).map(p => {
         const audit = auditProduct(p);
-        return `<option value="${p.id}" ${p.id === selectedProductId ? 'selected' : ''}>${p.emoji || '🍽️'} ${escapeHtml(p.name)} — ${audit.priority} (${audit.safetyScore}/100)</option>`;
+        return `<option value="${p.id}" ${String(p.id) === String(selectedProductId) ? 'selected' : ''}>${p.emoji || '🍽️'} ${escapeHtml(p.name)} — ${audit.priority} (${audit.safetyScore}/100)</option>`;
       }).join('');
 
       const audSel = document.getElementById('auditor-product-select');
@@ -1364,8 +1541,11 @@
     }
 
     function selectProduct(id, navigateToAuditor = false) {
-      selectedProductId = id;
-      document.getElementById('gemini-output-card').classList.add('hidden');
+      selectedProductId = String(id);
+      // Clear stale AI output on selection change
+      const outputCard = document.getElementById('gemini-output-card');
+      if (outputCard) outputCard.classList.add('hidden');
+
       syncProductSelectors();
       renderProductList();
       renderInspector();
@@ -1377,7 +1557,7 @@
     }
 
     function renderInspector() {
-      const product = foodDatabase.find(p => p.id === selectedProductId) || foodDatabase[0];
+      const product = foodDatabase.find(p => String(p.id) === String(selectedProductId)) || foodDatabase[0];
       if (!product) return;
       const audit = auditProduct(product);
 
@@ -1433,7 +1613,7 @@
       document.getElementById('metric-completeness').textContent = `${audit.filledCount}/${audit.totalFields}`;
       document.getElementById('metric-missing').textContent = audit.missingFields.length;
 
-      // Raw Nutrition Ledger
+      // Raw Nutrition Ledger (Never render image_url per strict directive)
       const macroFields = [
         { label: 'Serving', val: product.serving_size, unit: '' },
         { label: 'Calories', val: product.calories, unit: ' kcal' },
@@ -1458,17 +1638,19 @@
       }).join('');
 
       const ingEl = document.getElementById('ledger-ingredients');
-      if (isFieldMissing(product.ingredients)) {
-        ingEl.innerHTML = `<span class="inline-block px-2 py-0.5 bg-peach nb-border rounded-full text-[11px] font-extrabold">MISSING — DO NOT INVENT</span>`;
+      if (isFieldMissing(product.ingredients) && isFieldMissing(product.ingredients_text)) {
+        ingEl.innerHTML = `<span class="inline-block px-2 py-0.5 bg-peach nb-border rounded-full text-[11px] font-extrabold">MISSING — ZERO-HALLUCINATION GUARDRAIL ACTIVE</span>`;
       } else {
-        ingEl.textContent = Array.isArray(product.ingredients) ? product.ingredients.join(', ') : product.ingredients;
+        const ingText = product.ingredients_text || (Array.isArray(product.ingredients) ? product.ingredients.join(', ') : product.ingredients);
+        ingEl.textContent = ingText;
       }
 
       const algEl = document.getElementById('ledger-allergens');
-      if (isFieldMissing(product.allergens)) {
-        algEl.innerHTML = `<span class="inline-block px-2 py-0.5 bg-peach nb-border rounded-full text-[11px] font-extrabold">UNDECLARED / MISSING</span>`;
+      if (isFieldMissing(product.allergens) && isFieldMissing(product.allergens_text)) {
+        algEl.innerHTML = `<span class="inline-block px-2 py-0.5 bg-peach nb-border rounded-full text-[11px] font-extrabold">UNDECLARED / MISSING — DO NOT GUESS</span>`;
       } else {
-        algEl.textContent = Array.isArray(product.allergens) ? product.allergens.join(', ') : product.allergens;
+        const algText = product.allergens_text || (Array.isArray(product.allergens) ? product.allergens.join(', ') : product.allergens);
+        algEl.textContent = algText;
       }
 
       // Missing Fields & Review Priorities List
@@ -1485,7 +1667,7 @@
             <span class="text-2xl">🎉</span>
             <div>
               <p class="font-display font-bold text-sm">100% Database Record Completeness!</p>
-              <p class="text-xs font-semibold text-ink/75 mt-0.5">All required nutrition, serving, ingredient, and allergen fields are verified present.</p>
+              <p class="text-xs font-semibold text-ink/75 mt-0.5">All required nutrition, serving, ingredient, and allergen fields are verified present in the database.</p>
             </div>
           </div>
         `;
@@ -1518,10 +1700,170 @@
           `;
         }).join('');
       }
+
+      // Render Cross-Field Math Anomalies & Duplicate Alert
+      const anomCard = document.getElementById('anomalies-card');
+      const anomBadge = document.getElementById('anomaly-count-badge');
+      const anomList = document.getElementById('anomalies-list');
+
+      const anomalies = audit.anomalies || [];
+      const dupInfo = audit.duplicateInfo;
+
+      if (anomalies.length > 0 || dupInfo) {
+        if (anomCard) anomCard.classList.remove('hidden');
+        if (anomBadge) anomBadge.textContent = `${anomalies.length + (dupInfo ? 1 : 0)} Issues`;
+        if (anomList) {
+          let html = '';
+          if (dupInfo) {
+            html += `
+              <div class="bg-lilac/45 nb-border rounded-xl p-3 flex items-start gap-2">
+                <span class="text-base">🔁</span>
+                <div>
+                  <p class="font-extrabold text-xs">Duplicate SKU Identified</p>
+                  <p class="text-[11px] font-semibold mt-0.5">Shares identical product name and brand with ${dupInfo.count - 1} other item(s) in this dataset (${dupInfo.otherIds.join(', ')}).</p>
+                </div>
+              </div>
+            `;
+          }
+          anomalies.forEach(a => {
+            html += `
+              <div class="bg-peach/50 nb-border rounded-xl p-3 flex items-start gap-2">
+                <span class="text-base">⚠️</span>
+                <div>
+                  <p class="font-extrabold text-xs">[${escapeHtml(a.severity)}] ${escapeHtml(a.type.replace(/_/g, ' ').toUpperCase())}</p>
+                  <p class="text-[11px] font-semibold mt-0.5 leading-relaxed">${escapeHtml(a.message)}</p>
+                </div>
+              </div>
+            `;
+          });
+          anomList.innerHTML = html;
+        }
+      } else {
+        if (anomCard) anomCard.classList.add('hidden');
+      }
     }
 
     /* =========================================================================
-       6. PERSONAL HEALTH NEEDS, VISUAL VERDICT & DATABASE SUPPLEMENT MATCHER
+       5. DATASET TOGGLE CONTROLLER (PS 134 Requirement)
+       ========================================================================= */
+    async function switchDataset(datasetKey) {
+      if (datasetKey === activeDataset && foodDatabase.length > 1) {
+        return;
+      }
+
+      // Clear stale AI output on dataset switch
+      const outputCard = document.getElementById('gemini-output-card');
+      if (outputCard) outputCard.classList.add('hidden');
+      const outputContent = document.getElementById('gemini-output-content');
+      if (outputContent) outputContent.innerHTML = '';
+
+      const targetMeta = availableDatasets.find(d => d.key === datasetKey);
+      if (targetMeta && !targetMeta.available && isBackendConnected) {
+        showToast(targetMeta.missing_hint || `File for ${targetMeta.name} is not in workspace. Upload it to enable!`, 'bg-peach');
+        return;
+      }
+
+      activeDataset = datasetKey;
+
+      // Update button styling
+      document.querySelectorAll('.ds-pill').forEach(btn => {
+        btn.classList.remove('bg-ink', 'text-cream');
+        btn.classList.add('bg-white', 'text-ink');
+      });
+      const activeBtn = document.getElementById(`btn-ds-${datasetKey}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-white', 'text-ink');
+        activeBtn.classList.add('bg-ink', 'text-cream');
+      }
+
+      const activeLabel = document.getElementById('active-dataset-name-label');
+      if (activeLabel) {
+        const nameMap = {
+          demo: 'Demo Subset (552 rows)',
+          full: 'Full Preprocessed Catalog (16,091 rows)',
+          synthetic: 'Synthetic 2,000 Dataset'
+        };
+        activeLabel.textContent = nameMap[datasetKey] || datasetKey;
+      }
+
+      showToast(`Loading dataset '${datasetKey}'...`, 'bg-skyMint');
+
+      if (isBackendConnected) {
+        try {
+          await fetch(`${apiBaseUrl}/api/datasets/active`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dataset_key: datasetKey })
+          });
+
+          const resp = await fetch(`${apiBaseUrl}/api/records?dataset=${datasetKey}`);
+          if (resp.ok) {
+            const data = await resp.json();
+            foodDatabase = data.records;
+            const dupRes = computeDatasetDuplicates(foodDatabase);
+            duplicatesLookup = dupRes.lookup;
+            selectedProductId = foodDatabase.length > 0 ? String(foodDatabase[0].id) : '';
+
+            updateGlobalStats();
+            syncProductSelectors();
+            renderProductList();
+            renderInspector();
+            evaluateUserNeeds();
+
+            showToast(`Switched to ${activeLabel?.textContent || datasetKey} (${foodDatabase.length} records)!`, 'bg-matcha');
+            return;
+          }
+        } catch (e) {
+          console.warn('Backend dataset fetch error, trying client fallback:', e);
+        }
+      }
+
+      // Standalone Fallback
+      if (datasetKey === 'demo') {
+        await loadDemoCsvClientSide();
+      } else {
+        showToast(`Dataset file not found locally. Upload ${datasetKey === 'full' ? 'preprocessed_full(1).csv' : 'food_completeness_dataset_2000.xlsx'} to load.`, 'bg-butter');
+      }
+    }
+
+    function triggerFileUploadModal() {
+      const fileInput = document.getElementById('direct-file-input');
+      if (fileInput) fileInput.click();
+    }
+
+    async function handleDirectFileUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      showToast(`Uploading ${file.name}...`, 'bg-skyMint');
+
+      if (isBackendConnected) {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          const resp = await fetch(`${apiBaseUrl}/api/datasets/upload`, {
+            method: 'POST',
+            body: formData
+          });
+          if (resp.ok) {
+            const result = await resp.json();
+            showToast(`Uploaded ${file.name}! Reloading dataset...`, 'bg-matcha');
+            await checkBackendHealth();
+            if (result.matched_dataset) {
+              await switchDataset(result.matched_dataset);
+            }
+            return;
+          }
+        } catch (e) {
+          console.warn('Upload error:', e);
+        }
+      }
+
+      showToast(`Uploaded ${file.name}. Start backend server (python run_server.py) to parse full files.`, 'bg-butter');
+    }
+
+    /* =========================================================================
+       6. PERSONAL HEALTH NEEDS & DATABASE SUPPLEMENT MATCHER
        ========================================================================= */
     function selectGoalPreset(goalKey) {
       activeGoal = goalKey;
@@ -1546,14 +1888,14 @@
     }
 
     function evaluateUserNeeds() {
-      const product = foodDatabase.find(p => p.id === selectedProductId) || foodDatabase[0];
+      const product = foodDatabase.find(p => String(p.id) === String(selectedProductId)) || foodDatabase[0];
       if (!product) return;
       const audit = auditProduct(product);
 
-      const minProtein = parseFloat(document.getElementById('target-protein').value) || 0;
-      const maxSugar = parseFloat(document.getElementById('target-sugar').value);
-      const maxSodium = parseFloat(document.getElementById('target-sodium').value);
-      const customNote = (document.getElementById('custom-need-note').value || '').toLowerCase();
+      const minProtein = parseFloat(document.getElementById('target-protein')?.value) || 0;
+      const maxSugar = parseFloat(document.getElementById('target-sugar')?.value);
+      const maxSodium = parseFloat(document.getElementById('target-sodium')?.value);
+      const customNote = (document.getElementById('custom-need-note')?.value || '').toLowerCase();
 
       const checks = [];
       let passCount = 0;
@@ -1644,8 +1986,8 @@
 
       // 5. Custom Note / Allergen String Scan
       if (customNote) {
-        const allergenText = (Array.isArray(product.allergens) ? product.allergens.join(' ') : (product.allergens || '')).toLowerCase();
-        const ingText = (Array.isArray(product.ingredients) ? product.ingredients.join(' ') : (product.ingredients || '')).toLowerCase();
+        const allergenText = (product.allergens_text || (Array.isArray(product.allergens) ? product.allergens.join(' ') : (product.allergens || ''))).toLowerCase();
+        const ingText = (product.ingredients_text || (Array.isArray(product.ingredients) ? product.ingredients.join(' ') : (product.ingredients || ''))).toLowerCase();
 
         if (customNote.includes('peanut') && (allergenText.includes('peanut') || ingText.includes('peanut'))) {
           failCount++;
@@ -1669,63 +2011,66 @@
       const subtext = document.getElementById('verdict-subtext');
       const mascot = document.getElementById('verdict-mascot');
 
-      if (failCount > 0) {
-        verdictCard.className = 'bg-peach nb-card p-5';
-        badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-peach rounded-full uppercase';
-        badge.textContent = 'NOT RECOMMENDED';
-        headline.textContent = 'Unsuitable for Your Stated Needs';
-        subtext.textContent = 'This product fails safety checks or misses your nutritional thresholds.';
-        mascot.innerHTML = `
-          <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
-            <circle cx="20" cy="20" r="16" fill="#FF9E7D" stroke="#18181B" stroke-width="2.5"/>
-            <path d="M14 16L18 20M18 16L14 20" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M22 16L26 20M26 16L22 20" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M14 28C16 25 24 25 26 28" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
-        `;
-      } else if (unknownCount > 0) {
-        verdictCard.className = 'bg-butter nb-card p-5';
-        badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-butter rounded-full uppercase';
-        badge.textContent = 'UNKNOWN / UNVERIFIED';
-        headline.textContent = 'Incomplete Data — Cannot Fully Verify';
-        subtext.textContent = 'Key values are missing in the database. In strict mode, we never guess.';
-        mascot.innerHTML = `
-          <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
-            <circle cx="20" cy="20" r="16" fill="#FFD97D" stroke="#18181B" stroke-width="2.5"/>
-            <circle cx="15" cy="18" r="2.5" fill="#18181B"/>
-            <circle cx="25" cy="18" r="2.5" fill="#18181B"/>
-            <line x1="15" y1="27" x2="25" y2="27" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
-        `;
-      } else {
-        verdictCard.className = 'bg-matcha nb-card p-5';
-        badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-matcha rounded-full uppercase';
-        badge.textContent = 'EXCELLENT MATCH';
-        headline.textContent = 'Verified Fit for Your Needs!';
-        subtext.textContent = 'All nutrition and safety criteria pass cleanly without any missing critical metrics.';
-        mascot.innerHTML = `
-          <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
-            <circle cx="20" cy="20" r="16" fill="#C7F464" stroke="#18181B" stroke-width="2.5"/>
-            <circle cx="14" cy="17" r="2.5" fill="#18181B"/>
-            <circle cx="26" cy="17" r="2.5" fill="#18181B"/>
-            <path d="M14 24C16 28 24 28 26 24" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
-        `;
+      if (verdictCard && badge && headline && subtext && mascot) {
+        if (failCount > 0) {
+          verdictCard.className = 'bg-peach nb-card p-5';
+          badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-peach rounded-full uppercase';
+          badge.textContent = 'NOT RECOMMENDED';
+          headline.textContent = 'Unsuitable for Your Stated Needs';
+          subtext.textContent = 'This product fails safety checks or misses your nutritional thresholds.';
+          mascot.innerHTML = `
+            <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
+              <circle cx="20" cy="20" r="16" fill="#FF9E7D" stroke="#18181B" stroke-width="2.5"/>
+              <path d="M14 16L18 20M18 16L14 20" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M22 16L26 20M26 16L22 20" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M14 28C16 25 24 25 26 28" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          `;
+        } else if (unknownCount > 0) {
+          verdictCard.className = 'bg-butter nb-card p-5';
+          badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-butter rounded-full uppercase';
+          badge.textContent = 'UNKNOWN / UNVERIFIED';
+          headline.textContent = 'Incomplete Data — Cannot Fully Verify';
+          subtext.textContent = 'Key values are missing in the database. In strict mode, we never guess.';
+          mascot.innerHTML = `
+            <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
+              <circle cx="20" cy="20" r="16" fill="#FFD97D" stroke="#18181B" stroke-width="2.5"/>
+              <circle cx="15" cy="18" r="2.5" fill="#18181B"/>
+              <circle cx="25" cy="18" r="2.5" fill="#18181B"/>
+              <line x1="15" y1="27" x2="25" y2="27" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          `;
+        } else {
+          verdictCard.className = 'bg-matcha nb-card p-5';
+          badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-matcha rounded-full uppercase';
+          badge.textContent = 'EXCELLENT MATCH';
+          headline.textContent = 'Verified Fit for Your Needs!';
+          subtext.textContent = 'All nutrition and safety criteria pass cleanly without any missing critical metrics.';
+          mascot.innerHTML = `
+            <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
+              <circle cx="20" cy="20" r="16" fill="#C7F464" stroke="#18181B" stroke-width="2.5"/>
+              <circle cx="14" cy="17" r="2.5" fill="#18181B"/>
+              <circle cx="26" cy="17" r="2.5" fill="#18181B"/>
+              <path d="M14 24C16 28 24 28 26 24" stroke="#18181B" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          `;
+        }
       }
 
-      // Render Checklist
-      document.getElementById('verdict-checklist').innerHTML = checks.map(c => {
-        const icon = c.status === 'PASS' ? '✅' : c.status === 'FAIL' ? '❌' : '⚠️';
-        const color = c.status === 'PASS' ? 'text-green-900 bg-matcha/40' : c.status === 'FAIL' ? 'text-red-900 bg-peach/40' : 'text-amber-900 bg-butter/40';
-        return `
-          <div class="flex items-center gap-2 p-2 rounded-xl nb-border ${color}">
-            <span class="text-sm shrink-0">${icon}</span>
-            <span class="text-xs font-bold leading-tight">${escapeHtml(c.text)}</span>
-          </div>
-        `;
-      }).join('');
+      const checklistEl = document.getElementById('verdict-checklist');
+      if (checklistEl) {
+        checklistEl.innerHTML = checks.map(c => {
+          const icon = c.status === 'PASS' ? '✅' : c.status === 'FAIL' ? '❌' : '⚠️';
+          const color = c.status === 'PASS' ? 'text-green-900 bg-matcha/40' : c.status === 'FAIL' ? 'text-red-900 bg-peach/40' : 'text-amber-900 bg-butter/40';
+          return `
+            <div class="flex items-center gap-2 p-2 rounded-xl nb-border ${color}">
+              <span class="text-sm shrink-0">${icon}</span>
+              <span class="text-xs font-bold leading-tight">${escapeHtml(c.text)}</span>
+            </div>
+          `;
+        }).join('');
+      }
 
-      // Database Supplement & Swap Matcher (Strictly Grounded in Local Database)
       renderDatabaseSupplement(product, failCount > 0 || unknownCount > 0);
     }
 
@@ -1733,9 +2078,9 @@
       const resultsContainer = document.getElementById('supplement-results');
       if (!resultsContainer) return;
 
-      // Find best verified matches from database (Complete or high safety score, excluding current product)
+      // Find best verified matches from database (Complete or high safety score, strictly from active database)
       const candidates = foodDatabase
-        .filter(p => p.id !== currentProduct.id)
+        .filter(p => String(p.id) !== String(currentProduct.id))
         .map(p => ({ p, audit: auditProduct(p) }))
         .filter(item => item.audit.safetyScore >= 80 && !item.audit.hasCritical)
         .sort((a, b) => b.audit.safetyScore - a.audit.safetyScore);
@@ -1743,17 +2088,14 @@
       if (candidates.length === 0) {
         resultsContainer.innerHTML = `
           <div class="bg-white nb-border rounded-2xl p-4 text-center">
-            <p class="font-display font-bold text-sm">No 100% Verified Supplements in Database</p>
-            <p class="text-xs font-semibold text-ink/70 mt-1">Add more complete records to enable verified database recommendations.</p>
+            <p class="font-display font-bold text-sm">No 100% Verified Supplements in Active Dataset</p>
+            <p class="text-xs font-semibold text-ink/70 mt-1">Add complete records or switch dataset to view verified database matches.</p>
           </div>
         `;
         return;
       }
 
-      // Pick top candidate
       const best = candidates[0];
-      const second = candidates[1];
-
       resultsContainer.innerHTML = `
         <div class="bg-white nb-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-start gap-3">
@@ -1765,58 +2107,178 @@
               </div>
               <h4 class="font-display font-bold text-base mt-0.5">${escapeHtml(best.p.name)}</h4>
               <p class="text-xs font-semibold text-ink/75">
-                ${best.p.protein_g !== null ? `${best.p.protein_g}g Protein • ` : ''}${best.p.sugar_g !== null ? `${best.p.sugar_g}g Sugar • ` : ''}100% Ingredients Disclosed
+                ${best.p.protein_g !== null ? `${best.p.protein_g}g Protein • ` : ''}${best.p.sugar_g !== null ? `${best.p.sugar_g}g Sugar • ` : ''}100% Ingredients & Allergens Declared
               </p>
             </div>
           </div>
-          <button onclick="selectProduct('${best.p.id}', true)" class="nb-pill bg-matcha px-4 py-2 text-xs font-extrabold shrink-0 self-start sm:self-center">
-            Inspect Swap →
+          <button onclick="selectProduct('${best.p.id}', true)" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold shrink-0">
+            Inspect Match →
           </button>
         </div>
-
-        ${second ? `
-          <div class="bg-cream/80 nb-border rounded-2xl p-3 flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5">
-              <span class="text-lg">${second.p.emoji || '🥛'}</span>
-              <div>
-                <p class="font-display font-bold text-xs">${escapeHtml(second.p.name)}</p>
-                <p class="text-[10px] font-semibold text-ink/70">Safety Score: ${second.audit.safetyScore}/100 • Clean Record</p>
-              </div>
-            </div>
-            <button onclick="selectProduct('${second.p.id}', true)" class="nb-pill bg-white px-3 py-1 text-[11px] font-extrabold shrink-0">
-              View
-            </button>
-          </div>
-        ` : ''}
       `;
     }
 
     /* =========================================================================
-       7. GENAI DEEP REVIEW ENGINE (GOOGLE GEMINI & GROQ CLOUD SUPPORT)
+       7. GENAI DEEP AUDIT TRIAGE (GROQ / GEMINI / ZERO-HALLUCINATION)
        ========================================================================= */
+    async function runAIDeepReview() {
+      const product = foodDatabase.find(p => String(p.id) === String(selectedProductId)) || foodDatabase[0];
+      if (!product) return;
+      const audit = auditProduct(product);
+
+      const btn = document.getElementById('btn-gemini-audit');
+      const btnText = document.getElementById('gemini-btn-text');
+      const outputCard = document.getElementById('gemini-output-card');
+      const outputContent = document.getElementById('gemini-output-content');
+      const modelBadge = document.getElementById('ai-model-badge');
+
+      btn.disabled = true;
+      btnText.textContent = `Auditing with Zero-Hallucination Guardrail...`;
+      outputCard.classList.remove('hidden');
+
+      if (modelBadge) {
+        modelBadge.textContent = isBackendConnected ? 'groq / qwen3.8-27b' : (activeProvider === 'gemini' ? 'gemini-2.5-flash' : 'groq/qwen3.8-27b');
+      }
+
+      outputContent.innerHTML = `<p class="animate-pulse font-bold">Connecting to Zero-Hallucination Audit Engine (${isBackendConnected ? 'Groq Backend (.env)' : activeProvider.toUpperCase()})...</p>`;
+
+      try {
+        let aiText = '';
+
+        if (isBackendConnected) {
+          // Direct backend call using GROQ_API_KEY from .env
+          const resp = await fetch(`${apiBaseUrl}/api/audit/${encodeURIComponent(product.id)}?dataset=${activeDataset}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              groq_api_key: userGroqApiKey || null,
+              gemini_api_key: userGeminiApiKey || null
+            })
+          });
+
+          if (!resp.ok) {
+            const errBody = await resp.text();
+            throw new Error(`Server returned ${resp.status}: ${errBody.slice(0, 100)}`);
+          }
+
+          const data = await resp.json();
+          aiText = data.content || '';
+          if (modelBadge && data.model) {
+            modelBadge.textContent = `${(data.provider || 'GROQ').toUpperCase()} / ${(data.model || '').toUpperCase()}`;
+          }
+        } else {
+          // Standalone browser fallback: use client API key if entered, otherwise deterministic report
+          const userNeedNote = document.getElementById('custom-need-note')?.value || 'General health';
+          const clientPrompt = `You are NutriAudit AI, an expert food safety and database auditor.\nCRITICAL DIRECTIVE: NEVER invent, guess, or estimate missing ingredients, allergens, or nutrients.\nRecord: ${JSON.stringify(product)}\nMissing fields: ${audit.missingFields.map(f => f.key).join(', ') || 'None'}\nUser Goal: ${userNeedNote}`;
+          if (activeProvider === 'gemini' && userGeminiApiKey) {
+            aiText = await callGeminiWithBackoff(clientPrompt);
+          } else if (activeProvider === 'groq' && userGroqApiKey) {
+            aiText = await callGroqWithBackoff(clientPrompt);
+          } else {
+            aiText = buildClientDeterministicAudit(product, audit);
+          }
+        }
+
+        const formattedHtml = escapeHtml(aiText)
+          .replace(/### (.*?)(<br\/>|\n|$)/g, '<h4 class="font-display font-bold text-sm text-ink mt-3 mb-1">$1</h4>')
+          .replace(/## (.*?)(<br\/>|\n|$)/g, '<h3 class="font-display font-bold text-base text-ink mt-3 mb-1.5">$1</h3>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\n/g, '<br/>');
+
+        outputContent.innerHTML = `<div class="leading-relaxed space-y-2">${formattedHtml}</div>`;
+        showToast(`Zero-Hallucination Deep Audit complete!`, 'bg-lilac');
+      } catch (err) {
+        outputContent.innerHTML = `
+          <div class="bg-peach/40 nb-border rounded-xl p-3">
+            <p class="font-extrabold text-sm">Could not complete AI audit</p>
+            <p class="text-xs mt-1 font-semibold">${escapeHtml(err.message)}</p>
+            <div class="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
+              <p class="text-[11px] text-ink/80">Tip: Make sure the backend is running with 'python run_server.py'.</p>
+              <button onclick="checkBackendHealth()" class="nb-pill bg-butter px-3 py-1 text-[11px] font-extrabold">Retry Backend Connect →</button>
+            </div>
+          </div>
+        `;
+        showToast('AI audit failed — check backend server.', 'bg-peach');
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'GenAI Deep Audit';
+      }
+    }
+
+    function buildClientDeterministicAudit(product, audit) {
+      const riskPoints = [];
+      const missingCrit = audit.missingFields.filter(f => f.severity === 'CRITICAL').map(f => f.label);
+      const missingHigh = audit.missingFields.filter(f => f.severity === 'HIGH').map(f => f.label);
+
+      if (missingCrit.includes('Allergen Declaration')) {
+        riskPoints.push('• CRITICAL ALLERGEN HAZARD: Undeclared allergen data creates direct anaphylactic health hazard for allergic consumers.');
+      }
+      if (missingCrit.includes('Ingredients List')) {
+        riskPoints.push('• REGULATORY NON-COMPLIANCE: Complete ingredients list missing, preventing verification of artificial additives or binders.');
+      }
+      if (missingHigh.length > 0) {
+        riskPoints.push(`• NUTRITIONAL OMISSIONS: Missing high-priority metrics: ${missingHigh.join(', ')}.`);
+      }
+      if (riskPoints.length === 0) {
+        riskPoints.push('• All primary safety and nutritional metrics are declared.');
+      }
+
+      const anomPoints = (audit.anomalies || []).map(a => `• [${a.severity}] ${a.message}`);
+      if (anomPoints.length === 0) anomPoints.push('• No mathematical or chemical contradictions detected.');
+
+      return `### 🛡️ Zero-Hallucination Verification Guarantee
+**ACTIVE GUARDRAIL:** No missing data points were inferred, estimated, or imputed for **${product.name}**. All missing fields are strictly preserved as \`MISSING\`.
+
+### 🚨 Triage Priority: ${audit.priority} (${audit.completenessPct}% Complete)
+**Risk Assessment:**
+${riskPoints.join('\n')}
+
+### ⚠️ Detected Cross-Field Anomalies & Contradictions
+${anomPoints.join('\n')}
+
+### 📋 Actionable QA Verification Guidance
+1. Cross-check manufacturer official technical specification sheet for '${product.brand}'.
+2. Inspect physical package label for mandatory nutrition facts and allergen declaration.
+3. If formula is disputed, mandate third-party certified chemical lab assay.`;
+    }
+
+    /* =========================================================================
+       8. API KEY MODAL & PROVIDER TOGGLE
+       ========================================================================= */
+    function openApiKeyModal() {
+      const modal = document.getElementById('api-key-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeApiKeyModal() {
+      const modal = document.getElementById('api-key-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
     function setActiveProvider(provider) {
       activeProvider = provider;
       localStorage.setItem('nutriaudit_provider', provider);
 
-      // Update Settings UI
-      const geminiBtn = document.getElementById('provider-btn-gemini');
+      const gemBtn = document.getElementById('provider-btn-gemini');
       const groqBtn = document.getElementById('provider-btn-groq');
-      const geminiGroup = document.getElementById('gemini-input-group');
+      const gemGroup = document.getElementById('gemini-input-group');
       const groqGroup = document.getElementById('groq-input-group');
 
       if (provider === 'gemini') {
-        if (geminiBtn) geminiBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition';
+        if (gemBtn) gemBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition';
         if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition';
-        if (geminiGroup) geminiGroup.classList.remove('hidden');
+        if (gemGroup) gemGroup.classList.remove('hidden');
         if (groqGroup) groqGroup.classList.add('hidden');
       } else {
         if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition';
-        if (geminiBtn) geminiBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition';
+        if (gemBtn) gemBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition';
         if (groqGroup) groqGroup.classList.remove('hidden');
-        if (geminiGroup) geminiGroup.classList.add('hidden');
+        if (gemGroup) gemGroup.classList.add('hidden');
       }
 
-      // Update Modal UI
+      // Sync API Key Modal UI
       const modalGemini = document.getElementById('modal-prov-gemini');
       const modalGroq = document.getElementById('modal-prov-groq');
       const modalLabel = document.getElementById('modal-key-label');
@@ -1848,104 +2310,33 @@
       updateApiStatusUI();
     }
 
-    function toggleKeyVisibility(inputId, labelId) {
-      const input = document.getElementById(inputId);
-      const label = document.getElementById(labelId);
-      if (!input) return;
-      if (input.type === 'password') {
-        input.type = 'text';
-        if (label) label.textContent = 'Hide';
-      } else {
-        input.type = 'password';
-        if (label) label.textContent = 'Show';
-      }
-    }
-
-    function saveGeminiKey() {
-      const key = document.getElementById('gemini-api-key').value.trim();
-      userGeminiApiKey = key;
-      localStorage.setItem('nutriaudit_gemini_key', key);
-      updateApiStatusUI();
-      showToast(key ? 'Gemini API Key saved!' : 'Gemini Key cleared.', 'bg-matcha');
-    }
-
-    function clearGeminiKey() {
-      userGeminiApiKey = '';
-      localStorage.removeItem('nutriaudit_gemini_key');
-      const input = document.getElementById('gemini-api-key');
-      if (input) input.value = '';
-      updateApiStatusUI();
-      showToast('Gemini API Key removed.', 'bg-peach');
-    }
-
-    function saveGroqKey() {
-      const key = document.getElementById('groq-api-key').value.trim();
-      userGroqApiKey = key;
-      localStorage.setItem('nutriaudit_groq_key', key);
-      updateApiStatusUI();
-      showToast(key ? 'Groq API Key saved!' : 'Groq Key cleared.', 'bg-matcha');
-    }
-
-    function clearGroqKey() {
-      userGroqApiKey = '';
-      localStorage.removeItem('nutriaudit_groq_key');
-      const input = document.getElementById('groq-api-key');
-      if (input) input.value = '';
-      updateApiStatusUI();
-      showToast('Groq API Key removed.', 'bg-peach');
-    }
-
     function updateApiStatusUI() {
-      const hasGemini = Boolean(userGeminiApiKey);
-      const hasGroq = Boolean(userGroqApiKey);
-      const activeKeyPresent = activeProvider === 'gemini' ? hasGemini : hasGroq;
+      const hasGemini = Boolean(userGeminiApiKey && userGeminiApiKey.trim());
+      const hasGroq = Boolean(userGroqApiKey && userGroqApiKey.trim()) || isBackendConnected;
 
-      // Update Header Dot
       const topDot = document.getElementById('top-api-dot');
       const topLabel = document.getElementById('top-api-label');
       if (topDot) {
-        topDot.className = `w-2.5 h-2.5 rounded-full ${activeKeyPresent ? 'bg-[#22c55e]' : 'bg-butter'} border border-ink inline-block`;
+        topDot.className = `w-2.5 h-2.5 rounded-full ${hasGroq || hasGemini ? 'bg-[#22c55e]' : 'bg-butter'} border border-ink inline-block`;
       }
       if (topLabel) {
-        topLabel.textContent = activeKeyPresent
-          ? (activeProvider === 'gemini' ? 'Gemini Active' : 'Groq Active')
-          : 'API Key';
+        topLabel.textContent = isBackendConnected ? 'Groq (.env)' : (hasGroq ? 'Groq Active' : (hasGemini ? 'Gemini Active' : 'API Key'));
       }
 
-      // Update Settings Dots & Badges
       const gemDot = document.getElementById('gemini-status-dot');
       const groqDot = document.getElementById('groq-status-dot');
       if (gemDot) gemDot.className = `w-3 h-3 rounded-full ${hasGemini ? 'bg-[#22c55e]' : 'bg-butter'} border-2 border-ink shrink-0`;
       if (groqDot) groqDot.className = `w-3 h-3 rounded-full ${hasGroq ? 'bg-[#22c55e]' : 'bg-butter'} border-2 border-ink shrink-0`;
 
-      const settingsBadge = document.getElementById('settings-api-badge');
-      if (settingsBadge) {
-        settingsBadge.textContent = activeKeyPresent
-          ? `${activeProvider.toUpperCase()} CONNECTED`
-          : 'KEY NOT CONFIGURED';
-        settingsBadge.className = `px-3.5 py-1 text-xs font-extrabold nb-border rounded-full ${activeKeyPresent ? 'bg-matcha' : 'bg-cream'}`;
-      }
-
-      // Sync settings input values
       const gemInput = document.getElementById('gemini-api-key');
       const groqInput = document.getElementById('groq-api-key');
       if (gemInput && !gemInput.value) gemInput.value = userGeminiApiKey;
       if (groqInput && !groqInput.value) groqInput.value = userGroqApiKey;
-    }
 
-    function openApiKeyModal() {
-      const modal = document.getElementById('api-key-modal');
-      const input = document.getElementById('modal-api-key-input');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      setActiveProvider(activeProvider);
-      if (input) input.focus();
-    }
-
-    function closeApiKeyModal() {
-      const modal = document.getElementById('api-key-modal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+      const settingsBadge = document.getElementById('settings-api-badge');
+      if (settingsBadge) {
+        settingsBadge.textContent = isBackendConnected ? 'Groq Active (.env)' : (hasGroq ? 'Groq Ready' : (hasGemini ? 'Gemini Ready' : 'Ready'));
+      }
     }
 
     function saveModalApiKey() {
@@ -1963,167 +2354,84 @@
       showToast(`${activeProvider === 'gemini' ? 'Gemini' : 'Groq'} API key saved successfully!`, 'bg-matcha');
     }
 
-    // Google Gemini API caller with backoff
     async function callGeminiWithBackoff(promptText) {
-      const activeKey = userGeminiApiKey;
-      if (!activeKey) {
-        throw new Error('Google Gemini API Key is missing. Click the 🔑 API Key button at the top to add your key from Google AI Studio.');
-      }
-
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(activeKey)}`;
-      const payload = {
-        contents: [{ parts: [{ text: promptText }] }],
-        generationConfig: {
-          temperature: 0.1
-        }
-      };
-
-      const delays = [1000, 2000, 4000];
-      for (let attempt = 0; attempt <= delays.length; attempt++) {
-        try {
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-
-          if (!response.ok) {
-            const errBody = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errBody.slice(0, 140)}`);
-          }
-
-          const data = await response.json();
-          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!text) throw new Error('Empty response received from Gemini.');
-          return text;
-        } catch (error) {
-          if (attempt === delays.length) throw error;
-          await new Promise(res => setTimeout(res, delays[attempt]));
-        }
-      }
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(userGeminiApiKey)}`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }], generationConfig: { temperature: 0.1 } })
+      });
+      if (!response.ok) throw new Error(`Gemini HTTP ${response.status}`);
+      const data = await response.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
     }
 
-    // Groq Cloud API caller with backoff
     async function callGroqWithBackoff(promptText) {
-      const activeKey = userGroqApiKey;
-      if (!activeKey) {
-        throw new Error('Groq Cloud API Key is missing. Click the 🔑 API Key button at the top to configure your Groq key.');
-      }
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${userGroqApiKey}` },
+        body: JSON.stringify({
+          model: 'qwen/qwen3.8-27b',
+          messages: [
+            { role: 'system', content: 'You are NutriAudit AI. Never invent or guess missing food data.' },
+            { role: 'user', content: promptText }
+          ],
+          temperature: 0.1
+        })
+      });
+      if (!response.ok) throw new Error(`Groq HTTP ${response.status}`);
+      const data = await response.json();
+      return data?.choices?.[0]?.message?.content || 'No response';
+    }
 
-      const endpoint = 'https://api.groq.com/openai/v1/chat/completions';
-      const payload = {
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a strict Food Database Completeness & Safety Auditor. NEVER invent, guess, or estimate missing ingredient or nutrient values.'
-          },
-          {
-            role: 'user',
-            content: promptText
-          }
-        ],
-        temperature: 0.1
-      };
-
-      const delays = [1000, 2000, 4000];
-      for (let attempt = 0; attempt <= delays.length; attempt++) {
-        try {
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${activeKey}`
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (!response.ok) {
-            const errBody = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errBody.slice(0, 140)}`);
-          }
-
-          const data = await response.json();
-          const text = data?.choices?.[0]?.message?.content;
-          if (!text) throw new Error('Empty response received from Groq.');
-          return text;
-        } catch (error) {
-          if (attempt === delays.length) throw error;
-          await new Promise(res => setTimeout(res, delays[attempt]));
-        }
+    function toggleKeyVisibility(inputId, labelId) {
+      const input = document.getElementById(inputId);
+      const label = document.getElementById(labelId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        label.textContent = 'Hide';
+      } else {
+        input.type = 'password';
+        label.textContent = 'Show';
       }
     }
 
-    async function runAIDeepReview() {
-      const product = foodDatabase.find(p => p.id === selectedProductId) || foodDatabase[0];
-      if (!product) return;
-      const audit = auditProduct(product);
+    function saveGeminiKey() {
+      const val = document.getElementById('gemini-api-key').value.trim();
+      userGeminiApiKey = val;
+      localStorage.setItem('nutriaudit_gemini_key', val);
+      updateApiStatusUI();
+      closeApiKeyModal();
+      showToast('Gemini API key saved!', 'bg-matcha');
+    }
 
-      const btn = document.getElementById('btn-gemini-audit');
-      const btnText = document.getElementById('gemini-btn-text');
-      const outputCard = document.getElementById('gemini-output-card');
-      const outputContent = document.getElementById('gemini-output-content');
-      const modelBadge = document.getElementById('ai-model-badge');
+    function clearGeminiKey() {
+      userGeminiApiKey = '';
+      localStorage.removeItem('nutriaudit_gemini_key');
+      document.getElementById('gemini-api-key').value = '';
+      updateApiStatusUI();
+      showToast('Gemini API key cleared.', 'bg-peach');
+    }
 
-      btn.disabled = true;
-      btnText.textContent = `Auditing with ${activeProvider === 'gemini' ? 'Gemini' : 'Groq'}...`;
-      outputCard.classList.remove('hidden');
-      if (modelBadge) {
-        modelBadge.textContent = activeProvider === 'gemini' ? 'gemini-2.5-flash' : 'groq/llama-3.3-70b';
-      }
-      outputContent.innerHTML = `<p class="animate-pulse font-bold">Auditing database fields with strict zero-hallucination protocols (${activeProvider.toUpperCase()})...</p>`;
+    function saveGroqKey() {
+      const val = document.getElementById('groq-api-key').value.trim();
+      userGroqApiKey = val;
+      localStorage.setItem('nutriaudit_groq_key', val);
+      updateApiStatusUI();
+      closeApiKeyModal();
+      showToast('Groq API key saved!', 'bg-matcha');
+    }
 
-      const userNeedNote = document.getElementById('custom-need-note')?.value || 'General health';
-
-      const prompt = `You are a strict Food Database Completeness & Safety Auditor.
-CRITICAL MANDATE: NEVER invent, guess, or estimate any missing ingredient, allergen, or nutrition value. Any null/empty field MUST be explicitly reported as MISSING / UNVERIFIED.
-
-Product JSON Record:
-${JSON.stringify(product, null, 2)}
-
-Deterministic Audit Metrics:
-- Completeness: ${audit.completenessPct}% (${audit.filledCount}/${audit.totalFields})
-- Safety Speed Dial Score: ${audit.safetyScore}/100
-- Review Priority: ${audit.priority}
-- Missing Fields: ${audit.missingFields.map(f => `${f.key} (${f.severity})`).join(', ') || 'None'}
-- User Health Target: "${userNeedNote}"
-
-Deliver a concise, structured audit report with:
-1. Missing Fields & Review Priority Action Plan (what QA must inspect first, without guessing values).
-2. Safety & Allergen Risk Assessment based strictly on recorded data.
-3. Fit & Suitability assessment for the user's stated health goal.`;
-
-      try {
-        const aiText = activeProvider === 'gemini'
-          ? await callGeminiWithBackoff(prompt)
-          : await callGroqWithBackoff(prompt);
-
-        const formattedHtml = escapeHtml(aiText)
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\n/g, '<br/>');
-
-        outputContent.innerHTML = `<div class="leading-relaxed">${formattedHtml}</div>`;
-        showToast(`${activeProvider === 'gemini' ? 'Gemini' : 'Groq'} Deep Audit complete!`, 'bg-lilac');
-      } catch (err) {
-        outputContent.innerHTML = `
-          <div class="bg-peach/40 nb-border rounded-xl p-3">
-            <p class="font-extrabold text-sm">Could not complete AI audit</p>
-            <p class="text-xs mt-1 font-semibold">${escapeHtml(err.message)}</p>
-            <div class="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
-              <p class="text-[11px] text-ink/80">Tip: Click the 🔑 API Key button at the top header to enter your key.</p>
-              <button onclick="openApiKeyModal()" class="nb-pill bg-butter px-3 py-1 text-[11px] font-extrabold">Open API Modal →</button>
-            </div>
-          </div>
-        `;
-        showToast('AI call failed — configure your API key at the top.', 'bg-peach');
-      } finally {
-        btn.disabled = false;
-        btnText.textContent = 'GenAI Deep Audit';
-      }
+    function clearGroqKey() {
+      userGroqApiKey = '';
+      localStorage.removeItem('nutriaudit_groq_key');
+      document.getElementById('groq-api-key').value = '';
+      updateApiStatusUI();
+      showToast('Groq API key cleared.', 'bg-peach');
     }
 
     /* =========================================================================
-       8. MODAL, NAVIGATION & TOAST HELPERS
+       9. ADD PRODUCT MODAL (WITH new-calories FIX)
        ========================================================================= */
     function openAddModal() {
       const modal = document.getElementById('add-modal');
@@ -2138,25 +2446,29 @@ Deliver a concise, structured audit report with:
     }
 
     function parseNullableNumber(id) {
-      const raw = document.getElementById(id).value.trim();
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const raw = el.value.trim();
       if (raw === '') return null;
       const num = parseFloat(raw);
       return isNaN(num) ? null : num;
     }
 
     function parseNullableList(id) {
-      const raw = document.getElementById(id).value.trim();
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const raw = el.value.trim();
       if (raw === '') return null;
       const items = raw.split(',').map(s => s.trim()).filter(Boolean);
       return items.length > 0 ? items : null;
     }
 
-    function handleAddProduct(event) {
+    async function handleAddProduct(event) {
       event.preventDefault();
       const name = document.getElementById('new-name').value.trim();
       if (!name) return;
 
-      const newId = `PROD-${100 + foodDatabase.length + 1}`;
+      const newId = `USER-${Date.now().toString().slice(-4)}`;
       const newRecord = {
         id: newId,
         name,
@@ -2172,10 +2484,28 @@ Deliver a concise, structured audit report with:
         fat_g: parseNullableNumber('new-fat'),
         fiber_g: parseNullableNumber('new-fiber'),
         ingredients: parseNullableList('new-ingredients'),
-        allergens: parseNullableList('new-allergens')
+        ingredients_text: document.getElementById('new-ingredients').value.trim() || null,
+        allergens: parseNullableList('new-allergens'),
+        allergens_text: document.getElementById('new-allergens').value.trim() || null,
+        dataset_key: activeDataset
       };
 
+      if (isBackendConnected) {
+        try {
+          await fetch(`${apiBaseUrl}/api/records?dataset=${activeDataset}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newRecord)
+          });
+        } catch (e) {
+          console.warn('Backend sync failed, adding locally:', e);
+        }
+      }
+
       foodDatabase.unshift(newRecord);
+      const dupRes = computeDatasetDuplicates(foodDatabase);
+      duplicatesLookup = dupRes.lookup;
+
       document.getElementById('add-product-form').reset();
       closeAddModal();
       updateGlobalStats();
@@ -2195,14 +2525,12 @@ Deliver a concise, structured audit report with:
     function switchTab(tabName) {
       activeTab = tabName;
 
-      // Toggle visible view
       document.querySelectorAll('.tab-view').forEach(view => {
         view.classList.remove('active');
       });
       const targetView = document.getElementById(`view-${tabName}`);
       if (targetView) targetView.classList.add('active');
 
-      // Update Desktop Tab Pill Styles
       document.querySelectorAll('.desk-tab-btn').forEach(btn => {
         btn.classList.remove('bg-ink', 'text-cream');
         btn.classList.add('text-ink', 'hover:bg-butter/60');
@@ -2213,7 +2541,6 @@ Deliver a concise, structured audit report with:
         activeDesk.classList.remove('text-ink', 'hover:bg-butter/60');
       }
 
-      // Update Mobile Bottom Pill Nav Styles
       document.querySelectorAll('.mob-tab-btn').forEach(btn => {
         btn.classList.remove('bg-cream', 'text-ink');
         btn.classList.add('text-cream/80');
@@ -2244,9 +2571,203 @@ Deliver a concise, structured audit report with:
     }
 
     /* =========================================================================
-       9. INITIALIZE APP ON WINDOW LOAD
+       10. INITIALIZATION & BACKEND CONNECTION SYNC
        ========================================================================= */
-    window.addEventListener('DOMContentLoaded', () => {
+    async function checkBackendHealth() {
+      const badge = document.getElementById('backend-conn-badge');
+      const text = document.getElementById('backend-conn-text');
+
+      try {
+        const resp = await fetch(`${apiBaseUrl}/api/health`, { signal: AbortSignal.timeout(2000) });
+        if (resp.ok) {
+          const data = await resp.json();
+          isBackendConnected = true;
+
+          if (badge) badge.className = 'nb-pill bg-matcha px-3 py-1.5 text-[11px] font-extrabold flex items-center gap-1.5';
+          if (text) text.textContent = `Backend: Online (${data.groq_configured ? 'Groq Active' : 'Local'})`;
+
+          const dsResp = await fetch(`${apiBaseUrl}/api/datasets`);
+          if (dsResp.ok) {
+            const dsData = await dsResp.json();
+            availableDatasets = dsData.datasets || [];
+            updateDatasetBadgesUI(availableDatasets);
+          }
+          updateApiStatusUI();
+          return true;
+        }
+      } catch (e) {
+        isBackendConnected = false;
+        if (badge) badge.className = 'nb-pill bg-butter px-3 py-1.5 text-[11px] font-extrabold flex items-center gap-1.5';
+        if (text) text.textContent = 'Backend: Standalone UI';
+      }
+      return false;
+    }
+
+    function updateDatasetBadgesUI(datasets) {
+      datasets.forEach(ds => {
+        const badge = document.getElementById(`badge-ds-${ds.key}`);
+        if (badge) {
+          if (ds.available) {
+            badge.className = 'px-1.5 py-0.2 rounded-full text-[9px] bg-matcha/80 text-ink uppercase';
+            badge.textContent = `${ds.row_count} rows (Ready)`;
+          } else {
+            badge.className = 'px-1.5 py-0.2 rounded-full text-[9px] bg-peach/40 text-ink uppercase';
+            badge.textContent = 'Not in workspace';
+          }
+        }
+      });
+    }
+
+    function parseCsvRows(csvText) {
+      const rows = [];
+      let currentRow = [];
+      let currentVal = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < csvText.length; i++) {
+        const ch = csvText[i];
+        const next = csvText[i + 1];
+
+        if (inQuotes) {
+          if (ch === '"' && next === '"') {
+            currentVal += '"';
+            i++;
+          } else if (ch === '"') {
+            inQuotes = false;
+          } else {
+            currentVal += ch;
+          }
+        } else {
+          if (ch === '"') {
+            inQuotes = true;
+          } else if (ch === ',') {
+            currentRow.push(currentVal);
+            currentVal = '';
+          } else if (ch === '\r' && next === '\n') {
+            currentRow.push(currentVal);
+            rows.push(currentRow);
+            currentRow = [];
+            currentVal = '';
+            i++;
+          } else if (ch === '\n' || ch === '\r') {
+            currentRow.push(currentVal);
+            rows.push(currentRow);
+            currentRow = [];
+            currentVal = '';
+          } else {
+            currentVal += ch;
+          }
+        }
+      }
+      if (currentVal.length > 0 || currentRow.length > 0) {
+        currentRow.push(currentVal);
+        rows.push(currentRow);
+      }
+      return rows;
+    }
+
+    async function loadDemoCsvClientSide() {
+      try {
+        const resp = await fetch('./demo_subset(1).csv');
+        if (!resp.ok) return;
+        const csvText = await resp.text();
+        const rows = parseCsvRows(csvText);
+        if (rows.length < 2) return;
+
+        const header = rows[0].map(h => h.trim());
+        const idx = (colName) => header.indexOf(colName);
+        const records = [];
+
+        for (let i = 1; i < rows.length; i++) {
+          const cols = rows[i];
+          if (cols.length < 5) continue;
+
+          const getStr = (name) => {
+            const pos = idx(name);
+            if (pos === -1 || pos >= cols.length) return null;
+            const v = (cols[pos] || '').trim();
+            return v === '' ? null : v;
+          };
+          const getNum = (name) => {
+            const s = getStr(name);
+            if (s === null) return null;
+            const n = parseFloat(s);
+            return isNaN(n) ? null : n;
+          };
+
+          const code = getStr('code') || `ITEM-${i}`;
+          const name = getStr('product_name') || `Product ${code}`;
+          const brand = getStr('brands') || 'Unbranded';
+          const cat = getStr('categories') || 'General';
+          const ingText = getStr('ingredients_text');
+          const algText = getStr('allergens');
+          const sodG = getNum('sodium_100g');
+
+          // NOTE: image_url is intentionally ignored
+          records.push({
+            id: code,
+            name,
+            brand,
+            category: cat,
+            emoji: '🥗',
+            serving_size: getStr('serving_size'),
+            calories: getNum('energy_kcal_100g'),
+            protein_g: getNum('proteins_100g'),
+            carbs_g: getNum('carbohydrates_100g'),
+            sugar_g: getNum('sugars_100g'),
+            added_sugars_g: getNum('added_sugars_100g'),
+            fat_g: getNum('fat_100g'),
+            saturated_fat_g: getNum('saturated_fat_100g'),
+            fiber_g: getNum('fiber_100g'),
+            sodium_mg: sodG !== null ? Math.round(sodG * 1000.0 * 10) / 10 : null,
+            salt_g: getNum('salt_100g'),
+            ingredients: ingText ? ingText.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean) : null,
+            ingredients_text: ingText,
+            allergens: algText ? algText.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean) : null,
+            allergens_text: algText,
+            dataset_key: 'demo'
+          });
+        }
+
+        if (records.length > 0) {
+          foodDatabase = records;
+          const dupRes = computeDatasetDuplicates(foodDatabase);
+          duplicatesLookup = dupRes.lookup;
+          selectedProductId = String(foodDatabase[0].id);
+          updateGlobalStats();
+          syncProductSelectors();
+          renderProductList();
+          renderInspector();
+          evaluateUserNeeds();
+        }
+      } catch (e) {
+        console.warn('Client CSV parse error:', e);
+      }
+    }
+
+    async function initNutriAuditApp() {
+      // 1. Check backend status
+      const hasBackend = await checkBackendHealth();
+
+      // 2. Load default dataset (demo_subset(1).csv)
+      if (hasBackend) {
+        try {
+          const resp = await fetch(`${apiBaseUrl}/api/records?dataset=demo`);
+          if (resp.ok) {
+            const data = await resp.json();
+            foodDatabase = data.records;
+            const dupRes = computeDatasetDuplicates(foodDatabase);
+            duplicatesLookup = dupRes.lookup;
+            selectedProductId = foodDatabase.length > 0 ? String(foodDatabase[0].id) : '';
+          }
+        } catch (e) {
+          console.warn('Failed to fetch records from backend:', e);
+        }
+      } else {
+        await loadDemoCsvClientSide();
+      }
+
+      // 3. Render initial state
       updateGlobalStats();
       syncProductSelectors();
       renderProductList();
@@ -2254,6 +2775,12 @@ Deliver a concise, structured audit report with:
       evaluateUserNeeds();
       setActiveProvider(activeProvider);
       switchTab('home');
+
+      showToast(`Loaded ${foodDatabase.length} records (${activeDataset === 'demo' ? 'demo_subset(1).csv' : activeDataset})!`, 'bg-matcha');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initNutriAuditApp();
     });
   </script>
 </body>
