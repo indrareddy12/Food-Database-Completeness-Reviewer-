@@ -507,7 +507,36 @@
           </div>
         </div>
 
-        <div class="mt-4 bg-cream/95 nb-border rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5">
+        <!-- Contextual Audit Chat Input (Food Quality & Score Impact Only) -->
+        <div class="mt-4 bg-cream/95 nb-border rounded-2xl p-3 space-y-2.5">
+          <div class="flex flex-col sm:flex-row gap-2">
+            <div class="relative flex-1">
+              <input
+                id="auditor-chat-input"
+                type="text"
+                onkeydown="if (event.key === 'Enter') { event.preventDefault(); runAIDeepReview(); }"
+                placeholder="Ask about declared ingredients, missing fields, or how omissions affect the safety score..."
+                class="w-full bg-white nb-input px-4 py-2 text-xs sm:text-sm font-bold placeholder:text-ink/45"
+              />
+            </div>
+            <button
+              type="button"
+              onclick="runAIDeepReview()"
+              class="nb-pill bg-butter px-4 py-2 text-xs font-extrabold shrink-0 inline-flex items-center justify-center gap-1.5"
+            >
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              <span>Ask &amp; Score</span>
+            </button>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
+            <span class="text-ink/60 uppercase text-[10px] font-extrabold mr-1">Quick Audit Prompts:</span>
+            <button type="button" onclick="setAuditPromptAndRun('Which missing fields impact the safety score most, and which have minimal effect?')" class="px-2.5 py-0.5 rounded-full bg-white nb-border hover:bg-matcha transition">Safety score impact?</button>
+            <button type="button" onclick="setAuditPromptAndRun('Audit the declared ingredients and check if any missing allergen data creates risk.')" class="px-2.5 py-0.5 rounded-full bg-white nb-border hover:bg-butter transition">Ingredients &amp; allergens</button>
+            <button type="button" onclick="setAuditPromptAndRun('Explain any cross-field math or calorie anomalies in this record.')" class="px-2.5 py-0.5 rounded-full bg-white nb-border hover:bg-skyMint transition">Explain anomalies</button>
+          </div>
+        </div>
+
+        <div class="mt-3 bg-cream/95 nb-border rounded-2xl px-3.5 py-2 flex items-center gap-2.5">
           <i data-lucide="lock" class="w-4 h-4 text-emerald-700 shrink-0"></i>
           <p class="text-[11px] sm:text-xs font-bold leading-snug">
             <span class="uppercase font-extrabold">Strict Integrity Mode:</span> Missing ingredients, allergens, or nutrient metrics are flagged as <span class="underline decoration-2">UNVERIFIED / MISSING</span> and are never estimated or invented.
@@ -525,9 +554,9 @@
             <div class="flex items-center justify-between mb-2 gap-2">
               <div>
                 <h3 class="font-display font-bold text-lg">Safety Speed Dial</h3>
-                <p class="text-xs font-semibold text-ink/65">Penalized by missing safety-critical fields</p>
+                <p id="dial-subtitle" class="text-xs font-semibold text-ink/65">Click GenAI Deep Audit to compute final safety score</p>
               </div>
-              <span id="safety-grade-pill" class="px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-butter shrink-0">CHECKING</span>
+              <span id="safety-grade-pill" class="px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-cream shrink-0">PENDING AI AUDIT</span>
             </div>
 
             <div class="flex flex-col items-center justify-center my-2">
@@ -551,7 +580,7 @@
 
               <div class="flex items-center gap-3 -mt-2">
                 <div class="nb-pill bg-ink text-cream px-5 py-1.5 flex items-baseline gap-1.5">
-                  <span id="dial-score-num" class="font-display font-bold text-2xl">0</span>
+                  <span id="dial-score-num" class="font-display font-bold text-2xl">--</span>
                   <span class="text-xs font-bold text-cream/75">/ 100 SAFETY SCORE</span>
                 </div>
               </div>
@@ -568,7 +597,7 @@
               </div>
               <div class="bg-skyMint/50 nb-border rounded-2xl p-2.5 text-center">
                 <p class="text-[10px] font-extrabold uppercase text-ink/70">Safety Risk</p>
-                <p id="metric-risk" class="font-display font-bold text-sm mt-1">LOW</p>
+                <p id="metric-risk" class="font-display font-bold text-sm mt-1">PENDING</p>
               </div>
             </div>
           </div>
@@ -659,34 +688,74 @@
     <!-- =======================================================================
          TAB 4: PERSONAL NEEDS, VISUAL VERDICT & DATABASE SUPPLEMENTS
          ======================================================================= -->
-    <section id="view-needs" class="tab-view space-y-5">
-      <!-- Quick Product Switcher Bar -->
-      <div class="bg-cream nb-card-sm px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5 flex-1">
-          <span class="text-xs font-extrabold uppercase text-ink/70 shrink-0">Evaluating Product:</span>
-          <select id="needs-product-select" onchange="selectProduct(this.value, false)" class="w-full sm:max-w-md bg-white nb-input px-4 py-2 text-xs sm:text-sm font-extrabold cursor-pointer">
-            <!-- Populated dynamically -->
-          </select>
-        </div>
-        <button onclick="switchTab('auditor')" class="nb-pill bg-matcha px-4 py-2 text-xs font-extrabold shrink-0 inline-flex items-center gap-1.5">
-          <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
-          <span>View Safety Speed Dial</span>
-        </button>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        <!-- Left: Manual User Needs & Targets -->
-        <div class="lg:col-span-5 bg-berry nb-card p-5">
-          <div class="mb-3">
-            <h2 class="font-display font-bold text-xl flex items-center gap-2">
-              <i data-lucide="target" class="w-5 h-5 text-ink"></i>
-              <span>Your Health &amp; Nutrition Needs</span>
-            </h2>
-            <p class="text-xs font-bold text-ink/75 mt-0.5">Pick a preset or enter manual nutrient goals</p>
+    <section id="view-needs" class="tab-view space-y-6">
+      <!-- Centered Gemini-Style Prompt & Health Needs Setup -->
+      <div class="max-w-3xl mx-auto space-y-5">
+        <!-- Centered Chat Window -->
+        <div class="bg-lilac nb-card p-6 sm:p-8 space-y-4">
+          <div class="text-center space-y-1.5">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cream nb-border text-[11px] font-extrabold uppercase">
+              <i data-lucide="trees" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span id="needs-chat-source-badge">Pinecone RAG Needs Assistant</span>
+            </div>
+            <h2 class="font-display font-bold text-2xl sm:text-3xl tracking-tight">Where should we start?</h2>
+            <p class="text-xs sm:text-sm font-semibold text-ink/75">
+              Select presets or enter targets below, or mention a product name / ID (e.g., <code class="bg-white px-1.5 py-0.5 rounded nb-border">3267460030306</code>) directly in chat.
+            </p>
           </div>
 
-          <div class="flex flex-wrap gap-2 mb-4" id="goal-presets">
-            <button data-goal="gym" onclick="selectGoalPreset('gym')" class="goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+          <div id="needs-chat-messages" class="hidden bg-cream nb-border rounded-2xl p-4 max-h-80 overflow-y-auto space-y-3 text-xs sm:text-sm font-semibold">
+            <!-- Populated after first user prompt -->
+          </div>
+
+          <!-- Gemini-Style Pill Chat Input -->
+          <div class="bg-white nb-border rounded-full p-2 pl-4 flex items-center gap-2 shadow-[4px_4px_0px_#18181B]">
+            <i data-lucide="sparkles" class="w-4 h-4 text-ink/70 shrink-0"></i>
+            <input
+              id="needs-chat-input"
+              type="text"
+              oninput="onNeedsChatTyping()"
+              onkeydown="if (event.key === 'Enter') { event.preventDefault(); runNeedsChat(); }"
+              placeholder="Ask for foods matching your needs, or mention a product name / barcode ID..."
+              class="flex-1 bg-transparent border-0 outline-none text-xs sm:text-sm font-bold placeholder:text-ink/45"
+            />
+            <button
+              id="btn-needs-chat"
+              type="button"
+              onclick="runNeedsChat()"
+              class="nb-pill bg-matcha px-5 py-2 text-xs font-extrabold shrink-0 inline-flex items-center gap-1.5"
+            >
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              <span id="needs-chat-btn-text">Ask AI</span>
+            </button>
+          </div>
+
+          <!-- Predefined Quick Prompt Pills -->
+          <div class="flex flex-wrap items-center justify-center gap-2 text-[11px] font-bold">
+            <button type="button" onclick="setNeedsPromptAndRun('Find high protein low sugar foods safe for my goals')" class="px-3 py-1 rounded-full bg-white nb-border hover:bg-matcha transition">High-protein matches</button>
+            <button type="button" onclick="setNeedsPromptAndRun('Check Peanut butter 8908010900056 against my needs')" class="px-3 py-1 rounded-full bg-white nb-border hover:bg-butter transition">Check Peanut butter</button>
+            <button type="button" onclick="setNeedsPromptAndRun('Check Torsades Pois Chiche 3267460030306 for allergen safety')" class="px-3 py-1 rounded-full bg-white nb-border hover:bg-skyMint transition">Check 3267460030306</button>
+            <button type="button" onclick="setNeedsPromptAndRun('Find allergen-safe clean options with declared ingredients')" class="px-3 py-1 rounded-full bg-white nb-border hover:bg-berry transition">Allergen-safe options</button>
+          </div>
+        </div>
+
+        <!-- Your Health & Nutrition Needs Box Directly Below Chat Box (Starts Empty & Unchecked) -->
+        <div class="bg-berry nb-card p-5 space-y-4">
+          <div class="flex items-start justify-between gap-2 flex-wrap">
+            <div>
+              <h3 class="font-display font-bold text-lg sm:text-xl flex items-center gap-2">
+                <i data-lucide="target" class="w-5 h-5 text-ink"></i>
+                <span>Your Health &amp; Nutrition Needs</span>
+              </h3>
+              <p class="text-xs font-bold text-ink/75 mt-0.5">Optional filters — picking a preset or entering numbers adds them directly into the chat prompt above</p>
+            </div>
+            <button type="button" onclick="clearNeedsInputs()" class="px-3 py-1 rounded-full bg-cream nb-border text-[11px] font-extrabold hover:bg-white transition">
+              Reset Empty
+            </button>
+          </div>
+
+          <div class="flex flex-wrap gap-2" id="goal-presets">
+            <button data-goal="gym" onclick="selectGoalPreset('gym')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
               <i data-lucide="dumbbell" class="w-3.5 h-3.5"></i>
               <span>Gym / High Protein</span>
             </button>
@@ -705,19 +774,19 @@
           </div>
 
           <div class="bg-cream nb-border rounded-2xl p-4 space-y-3">
-            <p class="text-[11px] font-extrabold uppercase tracking-wide text-ink/70">Manual Nutrient Targets (per serving)</p>
+            <p class="text-[11px] font-extrabold uppercase tracking-wide text-ink/70">Manual Nutrient Targets (per 100g / serving)</p>
             <div class="grid grid-cols-3 gap-2.5">
               <div>
                 <label for="target-protein" class="block text-[10px] font-extrabold uppercase mb-1">Min Protein (g)</label>
-                <input id="target-protein" type="number" min="0" value="15" oninput="evaluateUserNeeds()" class="w-full bg-white nb-input px-3 py-2 text-xs font-extrabold text-center" />
+                <input id="target-protein" type="number" min="0" value="" placeholder="e.g., 15" oninput="onNeedsInputChanged()" class="w-full bg-white nb-input px-3 py-2 text-xs font-extrabold text-center placeholder:text-ink/40" />
               </div>
               <div>
                 <label for="target-sugar" class="block text-[10px] font-extrabold uppercase mb-1">Max Sugar (g)</label>
-                <input id="target-sugar" type="number" min="0" value="10" oninput="evaluateUserNeeds()" class="w-full bg-white nb-input px-3 py-2 text-xs font-extrabold text-center" />
+                <input id="target-sugar" type="number" min="0" value="" placeholder="e.g., 10" oninput="onNeedsInputChanged()" class="w-full bg-white nb-input px-3 py-2 text-xs font-extrabold text-center placeholder:text-ink/40" />
               </div>
               <div>
                 <label for="target-sodium" class="block text-[10px] font-extrabold uppercase mb-1">Max Sodium (mg)</label>
-                <input id="target-sodium" type="number" min="0" value="400" oninput="evaluateUserNeeds()" class="w-full bg-white nb-input px-3 py-2 text-xs font-extrabold text-center" />
+                <input id="target-sodium" type="number" min="0" value="" placeholder="e.g., 400" oninput="onNeedsInputChanged()" class="w-full bg-white nb-input px-3 py-2 text-xs font-extrabold text-center placeholder:text-ink/40" />
               </div>
             </div>
 
@@ -726,49 +795,96 @@
               <input
                 id="custom-need-note"
                 type="text"
-                value="Post-workout muscle recovery, avoid peanuts"
-                oninput="evaluateUserNeeds()"
-                placeholder="e.g., High fiber, dairy-free, diabetic friendly..."
+                value=""
+                oninput="onNeedsInputChanged()"
+                placeholder="e.g., Avoid peanuts, dairy-free, high fiber..."
                 class="w-full bg-white nb-input px-3.5 py-2 text-xs font-bold placeholder:text-ink/40"
               />
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Right: Visual Suitability Verdict + Database Supplement Match -->
-        <div class="lg:col-span-7 flex flex-col gap-5">
-          <div id="verdict-card" class="bg-butter nb-card p-5">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="font-display font-bold text-lg">Visual Suitability Verdict</h3>
-              <span id="verdict-badge" class="px-3 py-1 text-[11px] font-extrabold bg-ink text-cream rounded-full uppercase">ANALYZING</span>
-            </div>
-
-            <div class="bg-cream nb-border rounded-2xl p-4 flex items-center gap-4">
-              <div id="verdict-mascot" class="w-16 h-16 rounded-full bg-matcha nb-border flex items-center justify-center shrink-0 shadow-[3px_3px_0px_#18181B]">
-                <!-- Dynamically rendered SVG -->
+      <!-- Post-Prompt Verification Results (Hidden Initially Until Chat Prompt Sent) -->
+      <div id="needs-results-section" class="hidden space-y-5">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div class="lg:col-span-7 flex flex-col gap-5">
+            <div id="verdict-card" class="bg-butter nb-card p-5">
+              <div class="flex items-center justify-between mb-3 gap-2 flex-wrap">
+                <div>
+                  <h3 class="font-display font-bold text-lg">Visual Suitability Verdict</h3>
+                  <p id="verdict-product-label" class="text-[11px] font-bold text-ink/70">Matched from database for your prompt</p>
+                </div>
+                <span id="verdict-badge" class="px-3 py-1 text-[11px] font-extrabold bg-ink text-cream rounded-full uppercase">ANALYZING</span>
               </div>
-              <div class="flex-1">
-                <h4 id="verdict-headline" class="font-display font-bold text-lg leading-tight">Evaluating...</h4>
-                <p id="verdict-subtext" class="text-xs font-semibold text-ink/80 mt-1 leading-snug"></p>
-              </div>
-            </div>
 
-            <div id="verdict-checklist" class="mt-3 flex flex-col gap-2">
-              <!-- Populated dynamically -->
+              <div class="bg-cream nb-border rounded-2xl p-4 flex items-center gap-4">
+                <div id="verdict-mascot" class="w-16 h-16 rounded-full bg-matcha nb-border flex items-center justify-center shrink-0 shadow-[3px_3px_0px_#18181B]">
+                  <!-- Dynamically rendered SVG -->
+                </div>
+                <div class="flex-1">
+                  <h4 id="verdict-headline" class="font-display font-bold text-lg leading-tight">Evaluating...</h4>
+                  <p id="verdict-subtext" class="text-xs font-semibold text-ink/80 mt-1 leading-snug"></p>
+                </div>
+              </div>
+
+              <div id="verdict-checklist" class="mt-3 flex flex-col gap-2">
+                <!-- Populated dynamically -->
+              </div>
             </div>
           </div>
 
-          <div class="bg-skyMint nb-card p-5">
-            <div class="mb-2">
-              <h3 class="font-display font-bold text-lg flex items-center gap-2">
-                <i data-lucide="pill" class="w-5 h-5 text-ink"></i>
-                <span>Database Supplement Match</span>
-              </h3>
-              <p class="text-xs font-bold text-ink/75">Best verified complement or swap strictly from this database</p>
+          <div class="lg:col-span-5">
+            <!-- Safety Speed Dial Score inside My Needs -->
+            <div class="bg-cream nb-card p-5">
+              <div class="flex items-center justify-between mb-2 gap-2">
+                <div>
+                  <h3 class="font-display font-bold text-lg">Matched Product Safety Speed Dial</h3>
+                  <p id="needs-dial-subtitle" class="text-xs font-semibold text-ink/65">Safety score for the product verified in chat</p>
+                </div>
+                <span id="needs-safety-grade-pill" class="px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-butter shrink-0">CHECKING</span>
+              </div>
+
+              <div class="flex flex-col items-center justify-center my-1">
+                <svg viewBox="0 0 300 170" class="w-full max-w-[280px] overflow-visible" aria-label="My Needs Safety Score Speed Dial">
+                  <path d="M 35 145 A 115 115 0 0 1 114 36" fill="none" stroke="#FF9E7D" stroke-width="26" stroke-linecap="butt" />
+                  <path d="M 114 36 A 115 115 0 0 1 231 64" fill="none" stroke="#FFD97D" stroke-width="26" stroke-linecap="butt" />
+                  <path d="M 231 64 A 115 115 0 0 1 265 145" fill="none" stroke="#C7F464" stroke-width="26" stroke-linecap="butt" />
+                  <path d="M 22 145 A 128 128 0 0 1 278 145" fill="none" stroke="#18181B" stroke-width="3" />
+                  <path d="M 48 145 A 102 102 0 0 1 252 145" fill="none" stroke="#18181B" stroke-width="3" />
+                  <line x1="22" y1="145" x2="48" y2="145" stroke="#18181B" stroke-width="3" />
+                  <line x1="252" y1="145" x2="278" y2="145" stroke="#18181B" stroke-width="3" />
+                  <text x="16" y="164" font-size="11" font-weight="800" fill="#18181B">0</text>
+                  <text x="142" y="18" font-size="11" font-weight="800" fill="#18181B">50</text>
+                  <text x="268" y="164" font-size="11" font-weight="800" fill="#18181B">100</text>
+                  <g id="needs-dial-needle" style="transform: rotate(-90deg); transform-origin: 150px 145px; transition: transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);">
+                    <polygon points="145,145 155,145 150,42" fill="#18181B" stroke="#18181B" stroke-width="2" stroke-linejoin="round" />
+                    <circle cx="150" cy="145" r="14" fill="#FFFDF5" stroke="#18181B" stroke-width="3.5" />
+                    <circle cx="150" cy="145" r="5" fill="#18181B" />
+                  </g>
+                </svg>
+
+                <div class="flex items-center gap-3 -mt-2">
+                  <div class="nb-pill bg-ink text-cream px-5 py-1.5 flex items-baseline gap-1.5">
+                    <span id="needs-dial-score-num" class="font-display font-bold text-2xl">--</span>
+                    <span class="text-xs font-bold text-cream/75">/ 100 SAFETY SCORE</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div id="supplement-results" class="mt-3 flex flex-col gap-3">
-              <!-- Dynamically populated -->
-            </div>
+          </div>
+        </div>
+
+        <div class="bg-skyMint nb-card p-5">
+          <div class="mb-2">
+            <h3 class="font-display font-bold text-lg flex items-center gap-2">
+              <i data-lucide="pill" class="w-5 h-5 text-ink"></i>
+              <span>Database &amp; Pinecone Recommendations</span>
+            </h3>
+            <p class="text-xs font-bold text-ink/75">Verified foods retrieved from Pinecone &amp; the active database matching your prompt</p>
+          </div>
+          <div id="supplement-results" class="mt-3 flex flex-col gap-3">
+            <!-- Dynamically populated -->
           </div>
         </div>
       </div>
@@ -1235,7 +1351,9 @@
     let activeFilter = 'CRITICAL';
     let currentPage = 1;
     const PAGE_SIZE = 12;
-    let activeGoal = 'gym';
+    let activeGoal = null;
+    let needsChatHasSubmitted = false;
+    let lastNeedsSyncedClause = '';
     let activeProvider = localStorage.getItem('nutriaudit_provider') || 'groq';
     let userGeminiApiKey = localStorage.getItem('nutriaudit_gemini_key') || '';
     let userGroqApiKey = localStorage.getItem('nutriaudit_groq_key') || '';
@@ -1244,6 +1362,9 @@
     let availableDatasets = [];
     let isBackendConnected = false;
     let duplicatesLookup = {};
+    let aiAuditResults = {};
+    let needsEvaluatedProduct = null;
+    let needsRecommendationsCache = [];
     const apiBaseUrl = window.location.protocol === 'file:' ? 'http://localhost:8000' : '';
 
     const GOAL_PRESETS = {
@@ -1717,7 +1838,18 @@
     function selectProduct(id, navigateToAuditor = false) {
       selectedProductId = String(id);
       const outputCard = document.getElementById('gemini-output-card');
-      if (outputCard) outputCard.classList.add('hidden');
+      const cachedAudit = aiAuditResults[selectedProductId];
+      if (outputCard) {
+        if (cachedAudit) {
+          outputCard.classList.remove('hidden');
+          const outputContent = document.getElementById('gemini-output-content');
+          const modelBadge = document.getElementById('ai-model-badge');
+          if (outputContent) outputContent.innerHTML = cachedAudit.renderedHtml;
+          if (modelBadge && cachedAudit.badgeText) modelBadge.textContent = cachedAudit.badgeText;
+        } else {
+          outputCard.classList.add('hidden');
+        }
+      }
 
       syncProductSelectors();
       renderProductList();
@@ -1726,6 +1858,47 @@
 
       if (navigateToAuditor) {
         switchTab('auditor');
+      }
+    }
+
+    function renderSafetySpeedDial(productId, audit) {
+      const needle = document.getElementById('dial-needle');
+      const scoreEl = document.getElementById('dial-score-num');
+      const gradePill = document.getElementById('safety-grade-pill');
+      const riskLabel = document.getElementById('metric-risk');
+      const subtitleEl = document.getElementById('dial-subtitle');
+
+      const aiResult = aiAuditResults[String(productId)];
+      if (!aiResult) {
+        if (needle) needle.style.transform = 'rotate(-90deg)';
+        if (scoreEl) scoreEl.textContent = '--';
+        if (gradePill) {
+          gradePill.textContent = 'PENDING AI AUDIT';
+          gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-cream shrink-0';
+        }
+        if (riskLabel) riskLabel.textContent = 'PENDING';
+        if (subtitleEl) subtitleEl.textContent = 'Run GenAI Deep Audit to compute final safety score';
+        return;
+      }
+
+      const finalScore = Number.isFinite(aiResult.safetyScore) ? aiResult.safetyScore : audit.safetyScore;
+      const angle = -90 + (finalScore / 100) * 180;
+      if (needle) needle.style.transform = `rotate(${angle}deg)`;
+      if (scoreEl) scoreEl.textContent = finalScore;
+      if (subtitleEl) subtitleEl.textContent = 'Post-AI Safety Score (completeness + anomaly verification)';
+
+      if (finalScore < 45) {
+        gradePill.textContent = 'UNSAFE / INCOMPLETE';
+        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-peach shrink-0';
+        riskLabel.textContent = 'HIGH RISK';
+      } else if (finalScore < 80) {
+        gradePill.textContent = 'CAUTION / PARTIAL';
+        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-butter shrink-0';
+        riskLabel.textContent = 'MODERATE';
+      } else {
+        gradePill.textContent = 'VERIFIED SAFE';
+        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-matcha shrink-0';
+        riskLabel.textContent = 'LOW RISK';
       }
     }
 
@@ -1760,28 +1933,7 @@
           : 'bg-matcha'
       } nb-card p-5`;
 
-      const angle = -90 + (audit.safetyScore / 100) * 180;
-      const needle = document.getElementById('dial-needle');
-      if (needle) {
-        needle.style.transform = `rotate(${angle}deg)`;
-      }
-      document.getElementById('dial-score-num').textContent = audit.safetyScore;
-
-      const gradePill = document.getElementById('safety-grade-pill');
-      const riskLabel = document.getElementById('metric-risk');
-      if (audit.safetyScore < 45) {
-        gradePill.textContent = 'UNSAFE / INCOMPLETE';
-        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-peach shrink-0';
-        riskLabel.textContent = 'HIGH RISK';
-      } else if (audit.safetyScore < 80) {
-        gradePill.textContent = 'CAUTION / PARTIAL';
-        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-butter shrink-0';
-        riskLabel.textContent = 'MODERATE';
-      } else {
-        gradePill.textContent = 'VERIFIED SAFE';
-        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-matcha shrink-0';
-        riskLabel.textContent = 'LOW RISK';
-      }
+      renderSafetySpeedDial(product.id, audit);
 
       document.getElementById('metric-completeness').textContent = `${audit.filledCount}/${audit.totalFields}`;
       document.getElementById('metric-missing').textContent = audit.missingFields.length;
@@ -1811,7 +1963,7 @@
 
       const ingEl = document.getElementById('ledger-ingredients');
       if (isFieldMissing(product.ingredients) && isFieldMissing(product.ingredients_text)) {
-        ingEl.innerHTML = `<span class="inline-block px-2 py-0.5 bg-peach nb-border rounded-full text-[11px] font-extrabold">MISSING — ZERO-HALLUCINATION GUARDRAIL ACTIVE</span>`;
+        ingEl.innerHTML = `<span class="inline-block px-2 py-0.5 bg-peach nb-border rounded-full text-[11px] font-extrabold">MISSING</span>`;
       } else {
         const ingText = product.ingredients_text || (Array.isArray(product.ingredients) ? product.ingredients.join(', ') : product.ingredients);
         ingEl.textContent = ingText;
@@ -1819,7 +1971,7 @@
 
       const algEl = document.getElementById('ledger-allergens');
       if (isFieldMissing(product.allergens) && isFieldMissing(product.allergens_text)) {
-        algEl.innerHTML = `<span class="inline-block px-2 py-0.5 bg-peach nb-border rounded-full text-[11px] font-extrabold">UNDECLARED / MISSING — DO NOT GUESS</span>`;
+        algEl.innerHTML = `<span class="inline-block px-2 py-0.5 bg-peach nb-border rounded-full text-[11px] font-extrabold">UNDECLARED / MISSING</span>`;
       } else {
         const algText = product.allergens_text || (Array.isArray(product.allergens) ? product.allergens.join(', ') : product.allergens);
         algEl.textContent = algText;
@@ -2007,9 +2159,80 @@
     }
 
     /* =========================================================================
-       6. PERSONAL HEALTH NEEDS & DATABASE SUPPLEMENT MATCHER
+       6. PERSONAL HEALTH NEEDS, PINECONE CHATBOT & DATABASE RECOMMENDATIONS
        ========================================================================= */
+    function formatNeedsSummaryClause() {
+      const parts = [];
+      const goalLabels = {
+        gym: 'Gym / High Protein',
+        daily: 'Daily Basic Health',
+        weightloss: 'Low Sugar / Lean',
+        clean: 'Allergen-Safe Clean'
+      };
+      if (activeGoal && goalLabels[activeGoal]) {
+        parts.push(`Goal: ${goalLabels[activeGoal]}`);
+      }
+      const p = document.getElementById('target-protein')?.value?.trim();
+      const s = document.getElementById('target-sugar')?.value?.trim();
+      const na = document.getElementById('target-sodium')?.value?.trim();
+      const note = document.getElementById('custom-need-note')?.value?.trim();
+      if (p) parts.push(`Min Protein ${p}g`);
+      if (s) parts.push(`Max Sugar ${s}g`);
+      if (na) parts.push(`Max Sodium ${na}mg`);
+      if (note) parts.push(`Note: ${note}`);
+      return parts.join(', ');
+    }
+
+    function syncNeedsToChatInput() {
+      const inputEl = document.getElementById('needs-chat-input');
+      if (!inputEl) return;
+
+      const clause = formatNeedsSummaryClause();
+      let current = inputEl.value || '';
+
+      // Strip previous auto-synced needs clause if present
+      if (lastNeedsSyncedClause) {
+        current = current.replace(lastNeedsSyncedClause, '').replace(/^[\s|]+|[\s|]+$/g, '').trim();
+      }
+
+      if (clause && current) {
+        inputEl.value = `${current} | ${clause}`;
+      } else if (clause) {
+        inputEl.value = clause;
+      } else {
+        inputEl.value = current;
+      }
+      lastNeedsSyncedClause = clause;
+    }
+
+    function onNeedsChatTyping() {
+      const inputEl = document.getElementById('needs-chat-input');
+      if (inputEl && lastNeedsSyncedClause && !inputEl.value.includes(lastNeedsSyncedClause)) {
+        lastNeedsSyncedClause = '';
+      }
+    }
+
+    function clearNeedsInputs() {
+      activeGoal = null;
+      document.querySelectorAll('.goal-btn').forEach(btn => {
+        btn.className = 'goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5';
+      });
+      const pEl = document.getElementById('target-protein');
+      const sEl = document.getElementById('target-sugar');
+      const naEl = document.getElementById('target-sodium');
+      const noteEl = document.getElementById('custom-need-note');
+      if (pEl) pEl.value = '';
+      if (sEl) sEl.value = '';
+      if (naEl) naEl.value = '';
+      if (noteEl) noteEl.value = '';
+      syncNeedsToChatInput();
+    }
+
     function selectGoalPreset(goalKey) {
+      if (activeGoal === goalKey) {
+        clearNeedsInputs();
+        return;
+      }
       activeGoal = goalKey;
       const preset = GOAL_PRESETS[goalKey];
       if (!preset) return;
@@ -2028,13 +2251,80 @@
         }
       });
 
-      evaluateUserNeeds();
+      syncNeedsToChatInput();
+    }
+
+    function onNeedsInputChanged() {
+      syncNeedsToChatInput();
+    }
+
+    function renderNeedsSpeedDial(product, audit) {
+      const needle = document.getElementById('needs-dial-needle');
+      const scoreEl = document.getElementById('needs-dial-score-num');
+      const gradePill = document.getElementById('needs-safety-grade-pill');
+      const subtitleEl = document.getElementById('needs-dial-subtitle');
+      if (!needle || !scoreEl || !gradePill) return;
+
+      if (!product || !audit) {
+        needle.style.transform = 'rotate(-90deg)';
+        scoreEl.textContent = '--';
+        gradePill.textContent = 'WAITING';
+        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-cream shrink-0';
+        return;
+      }
+
+      const finalScore = Number.isFinite(product.safety_score) ? product.safety_score : computeLocalPostAuditSafetyScore(audit);
+      const angle = -90 + (finalScore / 100) * 180;
+      needle.style.transform = `rotate(${angle}deg)`;
+      scoreEl.textContent = finalScore;
+      if (subtitleEl) {
+        subtitleEl.textContent = `Safety score for ${product.name || product.id}`;
+      }
+
+      if (finalScore < 45) {
+        gradePill.textContent = 'UNSAFE / INCOMPLETE';
+        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-peach shrink-0';
+      } else if (finalScore < 80) {
+        gradePill.textContent = 'CAUTION / PARTIAL';
+        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-butter shrink-0';
+      } else {
+        gradePill.textContent = 'VERIFIED SAFE';
+        gradePill.className = 'px-3 py-1 text-[11px] font-extrabold nb-border rounded-full bg-matcha shrink-0';
+      }
+    }
+
+    function pickBestProductForCurrentNeeds() {
+      const minProtein = parseFloat(document.getElementById('target-protein')?.value) || 0;
+      const maxSugar = parseFloat(document.getElementById('target-sugar')?.value);
+      const maxSodium = parseFloat(document.getElementById('target-sodium')?.value);
+      const customNote = (document.getElementById('custom-need-note')?.value || '').toLowerCase();
+
+      const scored = foodDatabase.map(p => {
+        const audit = auditProduct(p);
+        let fitScore = audit.safetyScore;
+        if (!audit.hasCritical) fitScore += 30;
+        if (!isFieldMissing(p.protein_g) && p.protein_g >= minProtein) fitScore += 20;
+        if (!isNaN(maxSugar) && !isFieldMissing(p.sugar_g) && p.sugar_g <= maxSugar) fitScore += 15;
+        if (!isNaN(maxSodium) && !isFieldMissing(p.sodium_mg) && p.sodium_mg <= maxSodium) fitScore += 15;
+        if (customNote.includes('peanut') && (p.allergens_text || '').toLowerCase().includes('peanut')) fitScore -= 50;
+        return { p, audit, fitScore };
+      });
+      scored.sort((a, b) => b.fitScore - a.fitScore);
+      return scored.length > 0 ? scored[0].p : null;
     }
 
     function evaluateUserNeeds() {
-      const product = foodDatabase.find(p => String(p.id) === String(selectedProductId)) || foodDatabase[0];
+      if (!needsChatHasSubmitted && !needsEvaluatedProduct) {
+        return;
+      }
+      const product = needsEvaluatedProduct || pickBestProductForCurrentNeeds();
       if (!product) return;
       const audit = auditProduct(product);
+
+      const labelEl = document.getElementById('verdict-product-label');
+      if (labelEl) {
+        labelEl.textContent = `Evaluating: ${product.name || 'Unnamed Product'} (${product.id})`;
+      }
 
       const minProtein = parseFloat(document.getElementById('target-protein')?.value) || 0;
       const maxSugar = parseFloat(document.getElementById('target-sugar')?.value);
@@ -2064,7 +2354,7 @@
         unknownCount++;
         checks.push({
           status: 'UNKNOWN',
-          text: `Protein is MISSING in database (target: >= ${minProtein}g). Never guessed.`
+          text: `Protein is MISSING in database (target: >= ${minProtein}g).`
         });
       } else if (product.protein_g >= minProtein) {
         passCount++;
@@ -2154,7 +2444,7 @@
           verdictCard.className = 'bg-peach nb-card p-5';
           badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-peach rounded-full uppercase';
           badge.textContent = 'NOT RECOMMENDED';
-          headline.textContent = 'Unsuitable for Your Stated Needs';
+          headline.textContent = `${product.name || product.id}: Unsuitable for Your Stated Needs`;
           subtext.textContent = 'This product fails safety checks or misses your nutritional thresholds.';
           mascot.innerHTML = `
             <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
@@ -2168,8 +2458,8 @@
           verdictCard.className = 'bg-butter nb-card p-5';
           badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-butter rounded-full uppercase';
           badge.textContent = 'UNKNOWN / UNVERIFIED';
-          headline.textContent = 'Incomplete Data — Cannot Fully Verify';
-          subtext.textContent = 'Key values are missing in the database. In strict mode, we never guess.';
+          headline.textContent = `${product.name || product.id}: Incomplete Data — Cannot Fully Verify`;
+          subtext.textContent = 'Key values required for your targets are missing in the database.';
           mascot.innerHTML = `
             <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
               <circle cx="20" cy="20" r="16" fill="#FFD97D" stroke="#18181B" stroke-width="2.5"/>
@@ -2182,7 +2472,7 @@
           verdictCard.className = 'bg-matcha nb-card p-5';
           badge.className = 'px-3 py-1 text-[11px] font-extrabold bg-ink text-matcha rounded-full uppercase';
           badge.textContent = 'EXCELLENT MATCH';
-          headline.textContent = 'Verified Fit for Your Needs!';
+          headline.textContent = `${product.name || product.id}: Verified Fit for Your Needs!`;
           subtext.textContent = 'All nutrition and safety criteria pass cleanly without any missing critical metrics.';
           mascot.innerHTML = `
             <svg viewBox="0 0 40 40" class="w-10 h-10" fill="none">
@@ -2210,8 +2500,140 @@
         }).join('');
       }
 
+      renderNeedsSpeedDial(product, audit);
       renderDatabaseSupplement(product, failCount > 0 || unknownCount > 0);
       refreshIcons();
+    }
+
+    function setNeedsPromptAndRun(text) {
+      const input = document.getElementById('needs-chat-input');
+      if (input) input.value = text;
+      runNeedsChat();
+    }
+
+    async function runNeedsChat(explicitMessage = null) {
+      const inputEl = document.getElementById('needs-chat-input');
+      const messagesEl = document.getElementById('needs-chat-messages');
+      const sourceBadge = document.getElementById('needs-chat-source-badge');
+      const btn = document.getElementById('btn-needs-chat');
+      const btnText = document.getElementById('needs-chat-btn-text');
+
+      const userMessage = explicitMessage !== null ? String(explicitMessage).trim() : (inputEl?.value || '').trim();
+      if (!userMessage) {
+        showToast('Enter your nutrition needs or pick a preset first!', 'bg-butter');
+        return;
+      }
+      if (explicitMessage === null && inputEl) {
+        inputEl.value = '';
+        lastNeedsSyncedClause = '';
+      }
+
+      const minProtRaw = document.getElementById('target-protein')?.value;
+      const maxSugRaw = document.getElementById('target-sugar')?.value;
+      const maxSodRaw = document.getElementById('target-sodium')?.value;
+      const customNote = (document.getElementById('custom-need-note')?.value || '').trim();
+      const needsPayload = {
+        goal: activeGoal || 'general',
+        min_protein_g: minProtRaw !== '' && minProtRaw !== undefined ? Number(minProtRaw) : null,
+        max_sugar_g: maxSugRaw !== '' && maxSugRaw !== undefined ? Number(maxSugRaw) : null,
+        max_sodium_mg: maxSodRaw !== '' && maxSodRaw !== undefined ? Number(maxSodRaw) : null,
+        custom_note: customNote || null
+      };
+
+      if (messagesEl) {
+        messagesEl.classList.remove('hidden');
+        messagesEl.innerHTML += `
+          <div class="bg-butter/60 nb-border rounded-xl p-2.5 ml-6">
+            <p class="font-extrabold text-[10px] uppercase text-ink/60 mb-0.5">You</p>
+            <p class="font-bold">${escapeHtml(userMessage)}</p>
+          </div>
+        `;
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+
+      if (btn) btn.disabled = true;
+      if (btnText) btnText.textContent = '...';
+
+      try {
+        if (isBackendConnected) {
+          const resp = await fetch(`${apiBaseUrl}/api/needs/chat?dataset=${encodeURIComponent(activeDataset)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: userMessage,
+              needs: needsPayload,
+              groq_api_key: userGroqApiKey || null,
+              gemini_api_key: userGeminiApiKey || null
+            })
+          });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const data = await resp.json();
+
+          if (data.evaluated_record) {
+            needsEvaluatedProduct = data.evaluated_record;
+            latestPineconeMatches[String(data.evaluated_record.id)] = data.evaluated_record;
+          }
+          if (Array.isArray(data.recommendations)) {
+            needsRecommendationsCache = data.recommendations;
+            data.recommendations.forEach(item => {
+              latestPineconeMatches[String(item.id)] = item;
+            });
+          }
+          if (sourceBadge) {
+            sourceBadge.textContent = data.retrieval_source === 'pinecone' ? 'PINECONE LIVE' : 'LOCAL CATALOG';
+          }
+
+          if (messagesEl && data.answer) {
+            const formatted = escapeHtml(data.answer)
+              .replace(/### (.*?)(<br\/>|\n|$)/g, '<h4 class="font-display font-bold text-xs text-ink mt-2 mb-0.5">$1</h4>')
+              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              .replace(/\n/g, '<br/>');
+            messagesEl.innerHTML += `
+              <div class="bg-white nb-border rounded-xl p-3 mr-3">
+                <p class="font-extrabold text-[10px] uppercase text-ink/60 mb-1">Pinecone Assistant (${escapeHtml(data.retrieval_source || 'db')})</p>
+                <div class="leading-relaxed">${formatted}</div>
+              </div>
+            `;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          }
+          needsChatHasSubmitted = true;
+          document.getElementById('needs-results-section')?.classList.remove('hidden');
+          evaluateUserNeeds();
+        } else {
+          // Offline local resolution by ID/name or best match for needs
+          let resolved = null;
+          const lower = userMessage.toLowerCase();
+          resolved = foodDatabase.find(p =>
+            lower.includes(String(p.id).toLowerCase()) ||
+            (p.name && p.name.length >= 4 && lower.includes(p.name.toLowerCase()))
+          );
+          needsEvaluatedProduct = resolved || pickBestProductForCurrentNeeds();
+          needsChatHasSubmitted = true;
+          document.getElementById('needs-results-section')?.classList.remove('hidden');
+          evaluateUserNeeds();
+          if (messagesEl && needsEvaluatedProduct) {
+            messagesEl.innerHTML += `
+              <div class="bg-white nb-border rounded-xl p-3 mr-3">
+                <p class="font-extrabold text-[10px] uppercase text-ink/60 mb-1">Local Database Assistant</p>
+                <p>Evaluated <strong>${escapeHtml(needsEvaluatedProduct.name || needsEvaluatedProduct.id)}</strong> against your nutrition goals. Connect the backend server for live Pinecone vector search.</p>
+              </div>
+            `;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          }
+        }
+      } catch (err) {
+        if (messagesEl) {
+          messagesEl.classList.remove('hidden');
+          messagesEl.innerHTML += `
+            <div class="bg-peach/45 nb-border rounded-xl p-2.5 text-xs font-bold">
+              Could not complete needs lookup: ${escapeHtml(err.message)}
+            </div>
+          `;
+        }
+      } finally {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.textContent = 'Ask AI';
+      }
     }
 
     function renderSupplementMatchCard(matchItem, isPinecone = false) {
@@ -2266,6 +2688,15 @@
       if (!resultsContainer) return;
 
       const targetId = String(currentProduct.id);
+      if (needsRecommendationsCache && needsRecommendationsCache.length > 0) {
+        resultsContainer.innerHTML = needsRecommendationsCache
+          .slice(0, 3)
+          .map(m => renderSupplementMatchCard(m, m.retrieval_source === 'pinecone'))
+          .join('');
+        refreshIcons();
+        return;
+      }
+
       const candidates = foodDatabase
         .filter(p => String(p.id) !== targetId)
         .map(p => ({ p, audit: auditProduct(p) }))
@@ -2276,30 +2707,12 @@
         resultsContainer.innerHTML = `
           <div class="bg-white nb-border rounded-2xl p-4 text-center">
             <p class="font-display font-bold text-sm">No 100% Verified Supplements in Active Dataset</p>
-            <p class="text-xs font-semibold text-ink/70 mt-1">Add complete records or switch dataset to view verified database matches.</p>
+            <p class="text-xs font-semibold text-ink/70 mt-1">Click "Match Needs via Pinecone" or add complete records to view verified recommendations.</p>
           </div>
         `;
       } else {
-        resultsContainer.innerHTML = renderSupplementMatchCard(candidates[0].p, false);
+        resultsContainer.innerHTML = candidates.slice(0, 2).map(c => renderSupplementMatchCard(c.p, false)).join('');
         refreshIcons();
-      }
-
-      if (isBackendConnected) {
-        fetch(`${apiBaseUrl}/api/records/${encodeURIComponent(targetId)}?dataset=${encodeURIComponent(activeDataset)}`)
-          .then(resp => (resp.ok ? resp.json() : null))
-          .then(data => {
-            if (!data || String(selectedProductId) !== targetId) return;
-            const sims = Array.isArray(data.similar_products) ? data.similar_products : [];
-            const pineconeSims = sims.filter(item => item.retrieval_source === 'pinecone');
-            if (pineconeSims.length > 0) {
-              pineconeSims.forEach(item => {
-                latestPineconeMatches[String(item.id)] = item;
-              });
-              resultsContainer.innerHTML = pineconeSims.slice(0, 2).map(m => renderSupplementMatchCard(m, true)).join('');
-              refreshIcons();
-            }
-          })
-          .catch(() => {});
       }
     }
 
@@ -2501,11 +2914,31 @@
       refreshIcons();
     }
 
+    function computeLocalPostAuditSafetyScore(audit) {
+      let score = audit.safetyScore;
+      (audit.anomalies || []).forEach(a => {
+        const sev = String(a.severity || '').toUpperCase();
+        if (sev === 'CRITICAL') score -= 25;
+        else if (sev === 'HIGH') score -= 12;
+        else if (sev === 'MEDIUM') score -= 6;
+      });
+      return Math.max(0, Math.min(100, score));
+    }
+
+    function setAuditPromptAndRun(promptText) {
+      const chatInput = document.getElementById('auditor-chat-input');
+      if (chatInput) {
+        chatInput.value = promptText;
+      }
+      runAIDeepReview();
+    }
+
     async function runAIDeepReview() {
       const product = foodDatabase.find(p => String(p.id) === String(selectedProductId)) || foodDatabase[0];
       if (!product) return;
       const audit = auditProduct(product);
       let deepChecks = runMathAndChemicalChecks(product);
+      const userQuery = (document.getElementById('auditor-chat-input')?.value || '').trim();
 
       const btn = document.getElementById('btn-gemini-audit');
       const btnText = document.getElementById('gemini-btn-text');
@@ -2522,11 +2955,13 @@
         modelBadge.textContent = isBackendConnected ? 'Connecting...' : (activeProvider === 'gemini' ? 'gemini-2.5-flash' : 'groq');
       }
 
-      outputContent.innerHTML = `<p class="animate-pulse font-bold">Injecting Math &amp; Chemical Verification Checks into Zero-Hallucination Audit Engine (${isBackendConnected ? 'Groq Backend (.env)' : activeProvider.toUpperCase()})...</p>`;
+      outputContent.innerHTML = `<p class="animate-pulse font-bold">Auditing ingredients, math/chemical checks, and safety score impact (${isBackendConnected ? 'Groq Backend (.env)' : activeProvider.toUpperCase()})...</p>`;
 
       try {
         let aiText = '';
         let warningBanner = '';
+        let postAuditScore = computeLocalPostAuditSafetyScore(audit);
+        let badgeText = modelBadge ? modelBadge.textContent : 'AI AUDIT';
 
         if (isBackendConnected) {
           const resp = await fetch(`${apiBaseUrl}/api/audit/${encodeURIComponent(product.id)}?dataset=${activeDataset}`, {
@@ -2536,7 +2971,8 @@
               groq_api_key: userGroqApiKey || null,
               gemini_api_key: userGeminiApiKey || null,
               math_checks: deepChecks.mathChecks,
-              chemical_checks: deepChecks.chemicalChecks
+              chemical_checks: deepChecks.chemicalChecks,
+              user_query: userQuery || null
             })
           });
 
@@ -2554,14 +2990,17 @@
             };
             renderDeepChecksCard(deepChecks.mathChecks, deepChecks.chemicalChecks);
           }
+          if (typeof data.safety_score === 'number' && Number.isFinite(data.safety_score)) {
+            postAuditScore = Math.max(0, Math.min(100, Math.round(data.safety_score)));
+          }
           if (modelBadge && data.model) {
-            modelBadge.textContent = `${(data.provider || 'GROQ').toUpperCase()} / ${(data.model || '').toUpperCase()}`;
+            badgeText = `${(data.provider || 'GROQ').toUpperCase()} / ${(data.model || '').toUpperCase()}`;
+            modelBadge.textContent = badgeText;
           }
           if (Array.isArray(data.warnings) && data.warnings.length > 0) {
             warningBanner = `<div class="bg-butter/60 nb-border rounded-xl p-2.5 text-[11px] font-bold">Provider Notice: ${escapeHtml(data.warnings.join('; '))}</div>`;
           }
         } else {
-          const userNeedNote = document.getElementById('custom-need-note')?.value || 'General health';
           const mathBlock = deepChecks.mathChecks.length > 0
             ? deepChecks.mathChecks.map(m => `- [${m.severity}] ${m.message}`).join('\n')
             : '- PASS: No mathematical, macro-bound, or Atwater energy contradictions found on declared values.';
@@ -2570,26 +3009,31 @@
             : '- PASS: No salt/sodium stoichiometry contradictions, flagged chemical additives, or ingredient-allergen mismatches detected.';
 
           const clientPrompt = [
-            'You are NutriAudit AI, an expert food safety and database auditor.',
-            'CRITICAL DIRECTIVE: NEVER invent, guess, or estimate missing ingredients, allergens, or nutrients.',
+            'You are NutriAudit AI, a senior food safety and database quality auditor.',
+            'Focus strictly on declared ingredients, missing fields, math/chemical checks, and exact impact on Safety Score (major vs. minimal impact). Do NOT open with a guardrail preamble.',
+            userQuery ? `Audit Question: "${userQuery}"` : 'Evaluate ingredient completeness, math/chemical checks, and safety score impact.',
+            `Post-Audit Safety Score: ${postAuditScore}/100`,
             `Record: ${JSON.stringify(product)}`,
-            `Missing fields: ${audit.missingFields.map(f => f.key).join(', ') || 'None'}`,
+            `Missing fields: ${audit.missingFields.map(f => `${f.key} (${f.severity})`).join(', ') || 'None'}`,
             '',
             'ON-DEMAND MATHEMATICAL VERIFICATION CHECKS (INJECTED ON DEEP AUDIT):',
             mathBlock,
             '',
             'ON-DEMAND CHEMICAL & INGREDIENT SAFETY CHECKS (INJECTED ON DEEP AUDIT):',
-            chemBlock,
-            '',
-            `User Goal: ${userNeedNote}`
+            chemBlock
           ].join('\n');
+
           if (activeProvider === 'gemini' && userGeminiApiKey) {
             aiText = await callGeminiWithBackoff(clientPrompt);
+            badgeText = 'GEMINI / GEMINI-2.5-FLASH';
           } else if (activeProvider === 'groq' && userGroqApiKey) {
             aiText = await callGroqWithBackoff(clientPrompt);
+            badgeText = 'GROQ / LLAMA-3.3-70B';
           } else {
-            aiText = buildClientDeterministicAudit(product, audit, deepChecks);
+            aiText = buildClientDeterministicAudit(product, audit, deepChecks, userQuery);
+            badgeText = 'DETERMINISTIC AUDIT';
           }
+          if (modelBadge) modelBadge.textContent = badgeText;
         }
 
         const formattedHtml = escapeHtml(aiText)
@@ -2598,8 +3042,19 @@
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\n/g, '<br/>');
 
-        outputContent.innerHTML = `${warningBanner}<div class="leading-relaxed space-y-2">${formattedHtml}</div>`;
-        showToast('Zero-Hallucination Deep Audit complete!', 'bg-lilac');
+        const queryHeader = userQuery
+          ? `<div class="bg-white nb-border rounded-xl px-3 py-2 text-[11px] font-bold mb-2"><span class="uppercase text-ink/60 mr-1">Audit Query:</span> ${escapeHtml(userQuery)}</div>`
+          : '';
+        const renderedHtml = `${queryHeader}${warningBanner}<div class="leading-relaxed space-y-2">${formattedHtml}</div>`;
+
+        outputContent.innerHTML = renderedHtml;
+        aiAuditResults[String(product.id)] = {
+          safetyScore: postAuditScore,
+          renderedHtml,
+          badgeText
+        };
+        renderSafetySpeedDial(product.id, audit);
+        showToast(`Audit complete — Safety Score: ${postAuditScore}/100`, 'bg-lilac');
       } catch (err) {
         outputContent.innerHTML = `
           <div class="bg-peach/40 nb-border rounded-xl p-3">
@@ -2618,24 +3073,31 @@
       }
     }
 
-    function buildClientDeterministicAudit(product, audit, deepChecks = null) {
+    function buildClientDeterministicAudit(product, audit, deepChecks = null, userQuery = '') {
       const checks = deepChecks || runMathAndChemicalChecks(product);
-      const riskPoints = [];
-      const missingCrit = audit.missingFields.filter(f => f.severity === 'CRITICAL').map(f => f.label);
-      const missingHigh = audit.missingFields.filter(f => f.severity === 'HIGH').map(f => f.label);
+      const verdictLines = [];
+      if (userQuery) {
+        verdictLines.push(`**Query Addressed:** "${userQuery}"`);
+      }
+      const postScore = computeLocalPostAuditSafetyScore(audit);
+      verdictLines.push(`**Safety Score for ${product.name || 'MISSING PRODUCT NAME'}:** **${postScore}/100** (**${audit.priority} PRIORITY**, ${audit.completenessPct}% complete).`);
 
-      if (missingCrit.includes('Allergen Declaration')) {
-        riskPoints.push('* CRITICAL ALLERGEN HAZARD: Undeclared allergen data creates direct anaphylactic health hazard for allergic consumers.');
-      }
-      if (missingCrit.includes('Ingredients List')) {
-        riskPoints.push('* REGULATORY NON-COMPLIANCE: Complete ingredients list missing, preventing verification of artificial additives or binders.');
-      }
-      if (missingHigh.length > 0) {
-        riskPoints.push(`* NUTRITIONAL OMISSIONS: Missing high-priority metrics: ${missingHigh.join(', ')}.`);
-      }
-      if (riskPoints.length === 0) {
-        riskPoints.push('* All primary safety and nutritional metrics are declared.');
-      }
+      const impactLines = [];
+      audit.missingFields.forEach(f => {
+        const impactTag = f.severity === 'CRITICAL'
+          ? 'MAJOR CRITICAL IMPACT (blocks safety sign-off)'
+          : f.severity === 'HIGH'
+          ? 'MODERATE IMPACT'
+          : 'MINIMAL IMPACT (low effect on ingredient safety)';
+        impactLines.push(`* **${f.label}** (\`${f.key}\`): ${impactTag}`);
+      });
+
+      const ingText = product.ingredients_text || (Array.isArray(product.ingredients) ? product.ingredients.join(', ') : product.ingredients);
+      const algText = product.allergens_text || (Array.isArray(product.allergens) ? product.allergens.join(', ') : product.allergens);
+      const verificationLines = [
+        ingText ? `* **Ingredients Declared:** ${ingText}` : '* **Ingredients:** MISSING — prevents ingredient-level safety verification.',
+        algText ? `* **Allergens Declared:** ${algText}` : '* **Allergens:** UNDECLARED / MISSING — major safety gap regardless of base ingredients.'
+      ];
 
       const mathPoints = (checks.mathChecks || []).map(m => `* [${m.severity}] ${m.message}`);
       if (mathPoints.length === 0) mathPoints.push('* PASS: No mathematical, macro-bound, or Atwater calorie contradictions detected.');
@@ -2643,12 +3105,12 @@
       const chemPoints = (checks.chemicalChecks || []).map(c => `* [${c.severity}] ${c.message}`);
       if (chemPoints.length === 0) chemPoints.push('* PASS: No salt/sodium stoichiometry errors, flagged chemical additives, or allergen-ingredient mismatches detected.');
 
-      return `### Zero-Hallucination Verification Guarantee
-**ACTIVE GUARDRAIL:** No missing data points were inferred, estimated, or imputed for **${product.name || 'MISSING'}**. All missing fields are strictly preserved as \`MISSING\`.
+      return `### Audit Summary & Safety Score Impact
+${verdictLines.join('\n')}
+${impactLines.length > 0 ? impactLines.join('\n') : '* No missing fields — full completeness score.'}
 
-### Triage Priority: ${audit.priority} (${audit.completenessPct}% Complete)
-**Risk Assessment:**
-${riskPoints.join('\n')}
+### Ingredient & Allergen Verification
+${verificationLines.join('\n')}
 
 ### Mathematical Checks (Injected on Deep Audit)
 ${mathPoints.join('\n')}
@@ -2656,10 +3118,10 @@ ${mathPoints.join('\n')}
 ### Chemical & Ingredient Safety Checks (Injected on Deep Audit)
 ${chemPoints.join('\n')}
 
-### Actionable QA Verification Guidance
+### Recommended QA Actions
 1. Cross-check manufacturer official technical specification sheet for '${product.brand || 'MISSING'}'.
 2. Inspect physical package label for mandatory nutrition facts and allergen declaration.
-3. If formula is disputed, mandate third-party certified chemical lab assay.`;
+3. If formula or energy values are disputed, mandate third-party certified chemical lab assay.`;
     }
 
     /* =========================================================================

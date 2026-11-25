@@ -28,6 +28,9 @@ from werkzeug.utils import secure_filename
 from data_connector import DataConnector, DATASET_CONFIGS, UPLOAD_DIR
 from triage_service import (
     run_triage_audit,
+    run_needs_chat_assistant,
+    evaluate_needs_checks,
+    compute_audited_safety_score,
     get_active_groq_key,
     get_active_gemini_key
 )
@@ -222,6 +225,12 @@ def upload_dataset_file():
         }
 
     connector.active_dataset_key = matched_key
+    if matched_key == "custom":
+        try:
+            loaded_rows = connector.load_dataset("custom")
+            DATASET_CONFIGS["custom"]["expected_rows"] = len(loaded_rows)
+        except Exception as exc:
+            logger.warning("Failed to pre-count custom uploaded dataset '%s': %s", safe_filename, exc)
 
     return jsonify({
         "status": "success",
@@ -308,6 +317,7 @@ def audit_product_triage(record_id: str):
     data = request.get_json(silent=True) or {}
     client_groq = data.get("groq_api_key")
     client_gemini = data.get("gemini_api_key")
+    user_query = (data.get("user_query") or "").strip() or None
 
     # Run deterministic mathematical and chemical checks on Deep Audit click & inject into prompt
     deep_checks = audit_math_and_chemical_checks(rec)
@@ -322,6 +332,7 @@ def audit_product_triage(record_id: str):
         client_gemini_key=client_gemini,
         math_checks=math_checks,
         chemical_checks=chemical_checks,
+        user_query=user_query,
     )
 
     return jsonify(audit_result)
@@ -337,6 +348,111 @@ def add_product_record():
         "status": "success",
         "message": f"Added and audited '{new_record.get('name') or new_record.get('id')}' successfully.",
         "record": new_record
+    })
+
+
+@app.route("/api/needs/chat", methods=["POST"])
+def needs_pinecone_chat():
+    """
+    Personal Nutrition & Health Needs chatbot backed by Pinecone semantic search.
+    Resolves any product name/ID mentioned in chat, retrieves verified matches from Pinecone
+    (with local fallback), and evaluates suitability without hallucinating missing data.
+    """
+    dataset = request.args.get("dataset") or connector.active_dataset_key
+    data = request.get_json(silent=True) or {}
+    user_message = (data.get("message") or "").strip()
+    needs = data.get("needs") if isinstance(data.get("needs"), dict) else {}
+    client_groq = data.get("groq_api_key")
+    client_gemini = data.get("gemini_api_key")
+
+    mentioned_rec = connector.find_mentioned_record(user_message, dataset) if user_message else None
+
+    # Build semantic Pinecone query from user's message + active nutrition/allergen targets
+    query_parts = []
+    if user_message:
+        query_parts.append(user_message)
+    if needs.get("custom_note"):
+        query_parts.append(str(needs["custom_note"]))
+    try:
+        if needs.get("min_protein_g") is not None and float(needs["min_protein_g"]) >= 15:
+            query_parts.append("high protein")
+    except (ValueError, TypeError):
+        pass
+    try:
+        if needs.get("max_sugar_g") is not None and float(needs["max_sugar_g"]) <= 8:
+            query_parts.append("low sugar")
+    except (ValueError, TypeError):
+        pass
+    if needs.get("goal"):
+        query_parts.append(str(needs["goal"]))
+    search_query = " ".join(p for p in query_parts if p).strip() or "nutritious high protein food"
+
+    recommendations: list = []
+    retrieval_source = "local_fallback"
+    try:
+        recommendations = connector.query_pinecone_similar(
+            query_text=search_query,
+            exclude_id=str(mentioned_rec["id"]) if mentioned_rec else None,
+            limit=5,
+            safe_only=True,
+            dataset_key=dataset,
+        )
+        if recommendations:
+            retrieval_source = "pinecone"
+    except Exception as exc:
+        logger.warning("Pinecone retrieval in /api/needs/chat failed (%s); falling back to local verified catalog.", exc)
+
+    if not recommendations:
+        all_recs = connector.load_dataset(dataset)
+        scored = []
+        for r in all_recs:
+            if mentioned_rec and str(r.get("id")) == str(mentioned_rec.get("id")):
+                continue
+            full_rec = connector.get_record_by_id(str(r["id"]), dataset)
+            if not full_rec:
+                continue
+            if full_rec["audit"]["completeness_pct"] >= 70.0 and not full_rec["audit"]["missing_critical"]:
+                scored.append(full_rec)
+            if len(scored) >= 25:
+                break
+        recommendations = scored[:5]
+
+    for rec in recommendations:
+        if "safety_score" not in rec:
+            rec["safety_score"] = compute_audited_safety_score(
+                rec.get("audit", {}), rec.get("anomalies", [])
+            )
+
+    if recommendations and needs:
+        def _fit_key(item: dict) -> tuple:
+            ev = evaluate_needs_checks(item, needs)
+            return (ev["pass_count"] - (ev["fail_count"] * 2), -ev["unknown_count"], item.get("safety_score", 0))
+        recommendations.sort(key=_fit_key, reverse=True)
+
+    evaluated_record = mentioned_rec or (recommendations[0] if recommendations else None)
+    if evaluated_record and "safety_score" not in evaluated_record:
+        evaluated_record["safety_score"] = compute_audited_safety_score(
+            evaluated_record.get("audit", {}), evaluated_record.get("anomalies", [])
+        )
+
+    assistant_result = run_needs_chat_assistant(
+        user_message=user_message,
+        needs=needs,
+        evaluated_record=evaluated_record,
+        recommendations=recommendations,
+        retrieval_source=retrieval_source,
+        mentioned_in_chat=bool(mentioned_rec),
+        client_groq_key=client_groq,
+        client_gemini_key=client_gemini,
+    )
+
+    return jsonify({
+        "status": "success",
+        "retrieval_source": retrieval_source,
+        "mentioned_in_chat": bool(mentioned_rec),
+        "evaluated_record": evaluated_record,
+        "recommendations": recommendations,
+        **assistant_result,
     })
 
 

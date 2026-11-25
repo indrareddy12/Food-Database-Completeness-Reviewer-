@@ -303,6 +303,26 @@ def test_flask_endpoints():
     assert root_resp.status_code == 200
     assert "NUTRIAUDIT" in root_resp.data.decode("utf-8")
 
+    # Verify My Needs Pinecone Chatbot resolves product mentions & returns safety_score
+    needs_resp = client.post(
+        "/api/needs/chat?dataset=demo",
+        json={
+            "message": "Check Peanut butter 8908010900056 for my gym diet",
+            "needs": {
+                "goal": "gym",
+                "min_protein_g": 20,
+                "max_sugar_g": 5,
+                "max_sodium_mg": 300
+            }
+        }
+    )
+    assert needs_resp.status_code == 200
+    needs_data = needs_resp.get_json()
+    assert needs_data["mentioned_in_chat"] is True
+    assert str(needs_data["evaluated_record"]["id"]) == "8908010900056"
+    assert isinstance(needs_data.get("safety_score"), int)
+    assert len(needs_data.get("recommendations", [])) > 0
+
     # Verify secret/source protection in serve_static (strict allowlist)
     for sensitive_path in ("/.env", "/.env.example", "/.git/config", "/backend/main.py", "/tests/test_nutriaudit.py"):
         sec_resp = client.get(sensitive_path)
@@ -311,13 +331,22 @@ def test_flask_endpoints():
 
 
 def test_triage_service_audit_and_warning_reporting():
-    """Verify triage service returns structured zero-hallucination report and surfaces warnings on failures."""
+    """Verify triage service evaluates ingredients/missingness impact cleanly without meta-preamble."""
     connector = DataConnector()
     rec = connector.get_record_by_id("8908010900056", "demo")
-    audit = run_triage_audit(rec, rec["audit"], rec["anomalies"])
+    audit = run_triage_audit(
+        rec,
+        rec["audit"],
+        rec["anomalies"],
+        user_query="How much do the missing fields impact the safety score?",
+    )
     assert audit["status"] == "success"
     assert audit["zero_hallucination_guaranteed"] is True
-    assert "ZERO-HALLUCINATION" in audit["content"].upper()
+    assert isinstance(audit.get("safety_score"), int)
+    assert not audit["content"].lstrip().upper().startswith("### ZERO-HALLUCINATION")
+    assert "SAFETY SCORE" in audit["content"].upper()
+    if audit.get("provider") == "deterministic_fallback":
+        assert "How much do the missing fields impact the safety score?" in audit["content"]
 
     # Verify fallback surfaces warnings instead of swallowing exceptions silently
     with patch("triage_service.requests.post", side_effect=ConnectionError("Simulated network outage")):

@@ -771,3 +771,32 @@ class DataConnector:
         self._duplicates_cache[dataset_key] = detect_dataset_duplicates(records)
 
         return self.get_record_by_id(new_id, dataset_key)
+
+    def find_mentioned_record(self, text: str, dataset_key: str = "demo") -> Optional[Dict[str, Any]]:
+        """Resolve an explicitly mentioned product ID/barcode or product name from user chat text."""
+        if not text or not text.strip():
+            return None
+
+        cleaned = text.strip()
+        records = self.load_dataset(dataset_key)
+
+        # 1. Check explicit IDs / barcodes (e.g., 3267460030306, PROD-101, SYN-100, USER-0001)
+        id_candidates = re.findall(r"\b(?:PROD-\d+|SYN-\d+|USER-\d+|\d{5,14})\b", cleaned, flags=re.IGNORECASE)
+        for cand in id_candidates:
+            rec = self.get_record_by_id(cand, dataset_key)
+            if rec:
+                return rec
+
+        # 2. Check direct product name containment (prefer longest exact product name match)
+        lowered = cleaned.lower()
+        best_match_id: Optional[str] = None
+        best_len = 0
+        for r in records:
+            name = (r.get("name") or "").strip().lower()
+            if len(name) >= 4 and name in lowered and len(name) > best_len:
+                best_len = len(name)
+                best_match_id = str(r["id"])
+
+        if best_match_id:
+            return self.get_record_by_id(best_match_id, dataset_key)
+        return None
