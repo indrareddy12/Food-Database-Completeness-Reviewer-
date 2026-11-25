@@ -48,11 +48,15 @@ connector = DataConnector()
 
 @app.route("/api/health", methods=["GET"])
 def health_check():
-    """Health check endpoint showing backend status, Groq key presence, and active dataset."""
+    """Health check endpoint showing backend status, Groq/Gemini/Pinecone readiness, and active dataset."""
     groq_key = get_active_groq_key()
     gemini_key = get_active_gemini_key()
-    pinecone_key = os.getenv("PINECONE_API_KEY")
-    pinecone_configured = bool(pinecone_key and pinecone_key != "your_pinecone_api_key_here")
+    api_key, index_name, namespace, embed_model = connector._get_pinecone_settings()
+    try:
+        import pinecone  # noqa: F401
+        pinecone_sdk_installed = True
+    except ImportError:
+        pinecone_sdk_installed = False
 
     return jsonify({
         "status": "healthy",
@@ -61,8 +65,60 @@ def health_check():
         "groq_configured": bool(groq_key),
         "groq_key_prefix": (groq_key[:8] + "...") if groq_key else None,
         "gemini_configured": bool(gemini_key),
-        "pinecone_configured": pinecone_configured,
+        "pinecone_configured": bool(api_key),
+        "pinecone_sdk_installed": pinecone_sdk_installed,
+        "pinecone_index": index_name,
+        "pinecone_namespace": namespace,
+        "pinecone_embed_model": embed_model,
         "zero_hallucination_guardrail": "ENFORCED"
+    })
+
+
+@app.route("/api/pinecone/status", methods=["GET"])
+def pinecone_status():
+    """Check live Pinecone vector index connection and vector count."""
+    return jsonify(connector.get_pinecone_status())
+
+
+@app.route("/api/pinecone/search", methods=["GET"])
+def pinecone_semantic_search():
+    """Run semantic food search against Pinecone with verified-safe filter and local fallback."""
+    query = (request.args.get("q") or "").strip()
+    if not query:
+        return jsonify({"error": "Missing query parameter 'q'."}), 400
+
+    dataset = request.args.get("dataset") or connector.active_dataset_key
+    limit = min(max(request.args.get("limit", default=5, type=int), 1), 20)
+    safe_only = request.args.get("safe_only", default="true").lower() != "false"
+
+    try:
+        matches = connector.query_pinecone_similar(
+            query_text=query,
+            limit=limit,
+            safe_only=safe_only,
+            dataset_key=dataset,
+        )
+        source = "pinecone"
+    except Exception as exc:
+        logger.warning("Pinecone search failed (%s); falling back to local search.", exc)
+        matches = []
+        source = "local_fallback"
+
+    if not matches:
+        records_page, _, _ = connector.get_records(
+            dataset_key=dataset,
+            search=query,
+            priority="COMPLETE" if safe_only else "ALL",
+            limit=limit,
+        )
+        matches = records_page
+        source = "local_fallback"
+
+    return jsonify({
+        "query": query,
+        "safe_only": safe_only,
+        "source": source,
+        "matches": matches,
     })
 
 

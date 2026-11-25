@@ -12,12 +12,16 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from dotenv import load_dotenv
+
 from validator import (
     MISSING_TOKENS,
     audit_record_completeness,
     audit_cross_field_anomalies,
     detect_dataset_duplicates,
 )
+
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 
 logger = logging.getLogger("nutriaudit.connector")
 
@@ -69,15 +73,15 @@ def assign_food_icon(name: Optional[str], category: Optional[str]) -> Tuple[str,
 
 
 def parse_clean_float(val: Any) -> Optional[float]:
-    """Parse float without guessing or imputing."""
-    if val is None:
+    """Parse finite float without guessing or imputing."""
+    if val is None or isinstance(val, bool):
         return None
     s = str(val).strip()
     if s.lower() in MISSING_TOKENS:
         return None
     try:
         f = float(s)
-        return None if math.isnan(f) else f
+        return f if math.isfinite(f) else None
     except (ValueError, TypeError):
         return None
 
@@ -93,7 +97,14 @@ def parse_clean_text(val: Any) -> Optional[str]:
 
 
 def parse_ingredients_or_allergens(val: Any) -> Optional[List[str]]:
-    """Parse comma/semicolon separated list, returning clean list or None."""
+    """Parse comma/semicolon separated text or list, returning clean list or None."""
+    if isinstance(val, (list, tuple)):
+        cleaned = [
+            str(t).strip()
+            for t in val
+            if t is not None and str(t).strip() and str(t).strip().lower() not in MISSING_TOKENS
+        ]
+        return cleaned if cleaned else None
     text = parse_clean_text(val)
     if not text:
         return None
@@ -110,7 +121,7 @@ DATASET_CONFIGS = {
     "demo": {
         "key": "demo",
         "name": "Demo Subset (552 rows)",
-        "filenames": ["demo_subset(1).csv", "demo_subset.csv"],
+        "filenames": ["demo_subset(1).csv", "demo_subset1.csv", "demo_subset.csv"],
         "format": "csv_off",
         "expected_rows": 552,
         "is_default": True,
@@ -119,7 +130,7 @@ DATASET_CONFIGS = {
     "full": {
         "key": "full",
         "name": "Full Preprocessed Catalog (16,091 rows)",
-        "filenames": ["preprocessed_full(1).csv", "preprocessed_full.csv"],
+        "filenames": ["preprocessed_full(1).csv", "preprocessed_full1.csv", "preprocessed_full.csv"],
         "format": "csv_off",
         "expected_rows": 16091,
         "is_default": False,
@@ -144,6 +155,8 @@ class DataConnector:
         self._cache: Dict[str, List[Dict[str, Any]]] = {}
         self._duplicates_cache: Dict[str, Dict[str, Any]] = {}
         self.active_dataset_key: str = "demo"
+        self._pinecone_handle: Optional[Tuple[Any, Any, str, str, str]] = None
+        self._pinecone_key_loaded: Optional[str] = None
 
     def get_dataset_metadata(self) -> List[Dict[str, Any]]:
         """Return availability status and info for all 3 supported datasets."""
@@ -437,28 +450,253 @@ class DataConnector:
         result["duplicate_info"] = dup_lookup.get(str(target["id"]))
         return result
 
+    @staticmethod
+    def _get_pinecone_settings() -> Tuple[Optional[str], str, str, str]:
+        """Read Pinecone credentials and index config from environment."""
+        raw_key = (os.getenv("PINECONE_API_KEY") or "").strip()
+        if not raw_key or raw_key == "your_pinecone_api_key_here":
+            api_key = None
+        else:
+            api_key = raw_key
+        index_name = (
+            os.getenv("PINECONE_INDEX")
+            or os.getenv("PINECONE_INDEX_NAME")
+            or "food-database-completeness"
+        ).strip()
+        namespace = (os.getenv("PINECONE_NAMESPACE") or "food-products").strip()
+        embed_model = (os.getenv("PINECONE_EMBED_MODEL") or "multilingual-e5-large").strip()
+        return api_key, index_name, namespace, embed_model
+
+    def _get_pinecone_handle(self) -> Optional[Tuple[Any, Any, str, str, str]]:
+        """Lazily initialize and cache the Pinecone client and Index handle."""
+        api_key, index_name, namespace, embed_model = self._get_pinecone_settings()
+        if not api_key:
+            return None
+
+        if self._pinecone_handle is not None and self._pinecone_key_loaded == api_key:
+            return self._pinecone_handle
+
+        from pinecone import Pinecone
+
+        pc = Pinecone(api_key=api_key)
+        index = pc.Index(index_name)
+        self._pinecone_handle = (pc, index, index_name, namespace, embed_model)
+        self._pinecone_key_loaded = api_key
+        return self._pinecone_handle
+
+    def get_pinecone_status(self) -> Dict[str, Any]:
+        """Return Pinecone connection readiness and live index stats when reachable."""
+        api_key, index_name, namespace, embed_model = self._get_pinecone_settings()
+        status: Dict[str, Any] = {
+            "configured": bool(api_key),
+            "sdk_installed": False,
+            "connected": False,
+            "index_name": index_name,
+            "namespace": namespace,
+            "embed_model": embed_model,
+            "total_vector_count": None,
+            "dimension": None,
+            "error": None,
+        }
+        try:
+            import pinecone  # noqa: F401
+            status["sdk_installed"] = True
+        except ImportError as exc:
+            status["error"] = f"Pinecone SDK not installed: {exc}"
+            return status
+
+        if not api_key:
+            return status
+
+        try:
+            handle = self._get_pinecone_handle()
+            if handle:
+                _, index, _, _, _ = handle
+                stats = index.describe_index_stats()
+                status["connected"] = True
+                status["total_vector_count"] = getattr(stats, "total_vector_count", None)
+                status["dimension"] = getattr(stats, "dimension", None)
+        except Exception as exc:
+            logger.warning("Pinecone stats check failed: %s", exc)
+            status["error"] = str(exc)
+
+        return status
+
+    @staticmethod
+    def _parse_pinecone_text_fields(text: str) -> Dict[str, Any]:
+        """Extract only explicitly serialized factual fields from Pinecone vector text."""
+        extracted: Dict[str, Any] = {}
+        if not text:
+            return extracted
+        for segment in text.split(" | "):
+            if segment.startswith("Serving Size: "):
+                val = parse_clean_text(segment[len("Serving Size: "):])
+                if val:
+                    extracted["serving_size"] = val
+            elif segment.startswith("Ingredients: "):
+                raw_ing = segment[len("Ingredients: "):].strip()
+                if raw_ing and not raw_ing.upper().startswith("MISSING"):
+                    extracted["ingredients_text"] = raw_ing
+                    extracted["ingredients"] = parse_ingredients_or_allergens(raw_ing)
+            elif segment.startswith("Nutrition per 100g: "):
+                raw_nut = segment[len("Nutrition per 100g: "):].strip()
+                if raw_nut and not raw_nut.upper().startswith("MISSING"):
+                    for pair in raw_nut.split(","):
+                        if "=" not in pair:
+                            continue
+                        k, v = pair.strip().split("=", 1)
+                        num = parse_clean_float(v)
+                        if num is not None:
+                            extracted[k.strip()] = num
+        return extracted
+
+    def _build_record_from_pinecone_match(
+        self,
+        match: Any,
+        local_lookup: Dict[str, Dict[str, Any]],
+        dataset_key: str,
+    ) -> Dict[str, Any]:
+        """Normalize a Pinecone vector hit using local data or verified Pinecone metadata."""
+        match_id = str(match["id"] if isinstance(match, dict) else getattr(match, "id", ""))
+        score = float(match["score"] if isinstance(match, dict) else getattr(match, "score", 0.0))
+        meta = (match["metadata"] if isinstance(match, dict) else getattr(match, "metadata", None)) or {}
+        code = str(meta.get("code") or match_id)
+
+        local_rec = local_lookup.get(code) or local_lookup.get(match_id)
+        if local_rec:
+            item = dict(local_rec)
+            item["audit"] = audit_record_completeness(local_rec)
+            item["similarity_score"] = round(score * 100.0, 1)
+            item["retrieval_source"] = "pinecone"
+            return item
+
+        parsed_text = self._parse_pinecone_text_fields(str(meta.get("text") or ""))
+        name = parse_clean_text(meta.get("product_name"))
+        brand = parse_clean_text(meta.get("brands"))
+        category = parse_clean_text(meta.get("categories"))
+        allergens_text = parse_clean_text(meta.get("allergens"))
+        allergens_list = parse_ingredients_or_allergens(allergens_text)
+        sodium_100g = parse_clean_float(meta.get("sodium_100g"))
+        if sodium_100g is None:
+            sodium_100g = parsed_text.get("sodium_100g")
+        sodium_mg = round(sodium_100g * 1000.0, 1) if sodium_100g is not None else None
+        icon, icon_color = assign_food_icon(name, category)
+
+        rec = {
+            "id": code,
+            "name": name,
+            "brand": brand,
+            "category": category,
+            "icon": icon,
+            "iconColor": icon_color,
+            "serving_size": parsed_text.get("serving_size"),
+            "calories": parse_clean_float(meta.get("energy_kcal_100g")) if meta.get("energy_kcal_100g") is not None else parsed_text.get("energy_kcal_100g"),
+            "protein_g": parse_clean_float(meta.get("proteins_100g")) if meta.get("proteins_100g") is not None else parsed_text.get("proteins_100g"),
+            "carbs_g": parsed_text.get("carbohydrates_100g"),
+            "sugar_g": parse_clean_float(meta.get("sugars_100g")) if meta.get("sugars_100g") is not None else parsed_text.get("sugars_100g"),
+            "added_sugars_g": parsed_text.get("added_sugars_100g"),
+            "fat_g": parsed_text.get("fat_100g"),
+            "saturated_fat_g": parsed_text.get("saturated_fat_100g"),
+            "fiber_g": parse_clean_float(meta.get("fiber_100g")) if meta.get("fiber_100g") is not None else parsed_text.get("fiber_100g"),
+            "sodium_mg": sodium_mg,
+            "salt_g": parsed_text.get("salt_100g"),
+            "ingredients": parsed_text.get("ingredients"),
+            "ingredients_text": parsed_text.get("ingredients_text"),
+            "allergens": allergens_list,
+            "allergens_text": allergens_text,
+            "dataset_key": dataset_key,
+            "pinecone_verified_safe": bool(meta.get("is_verified_safe")),
+            "pinecone_priority": meta.get("audit_priority") or meta.get("review_priority"),
+        }
+        rec["audit"] = audit_record_completeness(rec)
+        rec["similarity_score"] = round(score * 100.0, 1)
+        rec["retrieval_source"] = "pinecone"
+        return rec
+
+    def query_pinecone_similar(
+        self,
+        query_text: str,
+        exclude_id: Optional[str] = None,
+        limit: int = 3,
+        safe_only: bool = True,
+        dataset_key: str = "demo",
+    ) -> List[Dict[str, Any]]:
+        """Query live Pinecone index via inference embeddings + verified-safe metadata filter."""
+        handle = self._get_pinecone_handle()
+        if not handle or not query_text.strip():
+            return []
+
+        pc, index, _, namespace, embed_model = handle
+        embed_resp = pc.inference.embed(
+            model=embed_model,
+            inputs=[query_text.strip()],
+            parameters={"input_type": "query", "truncate": "END"},
+        )
+        q_vec = embed_resp.data[0]["values"]
+        meta_filter = {"is_verified_safe": {"$eq": True}} if safe_only else None
+        query_resp = index.query(
+            namespace=namespace,
+            vector=q_vec,
+            top_k=max(limit + 3, 6),
+            include_metadata=True,
+            filter=meta_filter,
+        )
+
+        local_lookup: Dict[str, Dict[str, Any]] = {}
+        for cached_list in (self._cache.get(dataset_key), self._cache.get("full")):
+            if cached_list:
+                for rec in cached_list:
+                    local_lookup.setdefault(str(rec.get("id")), rec)
+
+        matches = query_resp.get("matches", []) if isinstance(query_resp, dict) else getattr(query_resp, "matches", []) or []
+        results: List[Dict[str, Any]] = []
+        for match in matches:
+            item = self._build_record_from_pinecone_match(match, local_lookup, dataset_key)
+            if exclude_id is not None and str(item.get("id")) == str(exclude_id):
+                continue
+            if safe_only and item["audit"]["completeness_pct"] < 70.0:
+                continue
+            results.append(item)
+            if len(results) >= limit:
+                break
+
+        return results
+
     def get_similar_records(self, record_id: str, dataset_key: str = "demo", limit: int = 3) -> List[Dict[str, Any]]:
         """
-        Pinecone-ready similarity retriever.
-        If PINECONE_API_KEY and PINECONE_INDEX are set, routes query to Pinecone index.
-        Otherwise, runs deterministic local similarity matching on the active dataset.
+        Pinecone-integrated similarity retriever with safe local fallback.
+        Queries Pinecone vector index when configured & reachable; otherwise runs
+        deterministic local similarity matching on the active dataset.
         """
-        pinecone_key = os.getenv("PINECONE_API_KEY")
-        pinecone_index = os.getenv("PINECONE_INDEX")
-
-        if pinecone_key and pinecone_index and pinecone_key != "your_pinecone_api_key_here":
-            try:
-                import pinecone  # noqa: F401
-                logger.info("Pinecone client available; index '%s' staged for semantic retrieval.", pinecone_index)
-            except ImportError as exc:
-                logger.warning("PINECONE_API_KEY configured but pinecone package is unavailable (%s); falling back to local similarity.", exc)
-            except Exception as exc:
-                logger.warning("Pinecone similarity lookup failed (%s); falling back to local similarity.", exc)
-
         all_records = self.load_dataset(dataset_key)
         target = self.get_record_by_id(record_id, dataset_key)
         if not target:
             return []
+
+        api_key, index_name, _, _ = self._get_pinecone_settings()
+        if api_key:
+            query_parts = [
+                str(target.get("name") or "").strip(),
+                str(target.get("category") or "").strip(),
+                str(target.get("brand") or "").strip(),
+            ]
+            query_text = " ".join(p for p in query_parts if p)
+            if query_text:
+                try:
+                    pinecone_matches = self.query_pinecone_similar(
+                        query_text=query_text,
+                        exclude_id=str(record_id),
+                        limit=limit,
+                        safe_only=True,
+                        dataset_key=dataset_key,
+                    )
+                    if pinecone_matches:
+                        logger.info("Pinecone returned %d verified matches from '%s'.", len(pinecone_matches), index_name)
+                        return pinecone_matches
+                except ImportError as exc:
+                    logger.warning("PINECONE_API_KEY configured but pinecone package is unavailable (%s); falling back to local similarity.", exc)
+                except Exception as exc:
+                    logger.warning("Pinecone similarity lookup failed (%s); falling back to local similarity.", exc)
 
         target_cat = (target.get("category") or "").lower()
         target_cal = target.get("calories") or 200.0
@@ -488,6 +726,7 @@ class DataConnector:
             item = dict(r)
             item["audit"] = audit
             item["similarity_score"] = round(similarity_score * 100.0, 1)
+            item["retrieval_source"] = "local_fallback"
             candidates.append(item)
 
         candidates.sort(key=lambda x: x["similarity_score"], reverse=True)
@@ -521,9 +760,9 @@ class DataConnector:
             "fiber_g": parse_clean_float(record_data.get("fiber_g")),
             "sodium_mg": parse_clean_float(record_data.get("sodium_mg")),
             "salt_g": parse_clean_float(record_data.get("salt_g")),
-            "ingredients": record_data.get("ingredients") if isinstance(record_data.get("ingredients"), list) else parse_ingredients_or_allergens(record_data.get("ingredients")),
+            "ingredients": parse_ingredients_or_allergens(record_data.get("ingredients")),
             "ingredients_text": parse_clean_text(record_data.get("ingredients_text")),
-            "allergens": record_data.get("allergens") if isinstance(record_data.get("allergens"), list) else parse_ingredients_or_allergens(record_data.get("allergens")),
+            "allergens": parse_ingredients_or_allergens(record_data.get("allergens")),
             "allergens_text": parse_clean_text(record_data.get("allergens_text")),
             "dataset_key": dataset_key
         }

@@ -27,7 +27,10 @@ from triage_service import run_triage_audit, get_active_groq_key
 
 def test_validator_zero_hallucination_and_missing_detection():
     """Verify that missing values and placeholder tokens are never guessed or imputed."""
-    for token in (None, "", "   ", "na", "N/A", "tbd", "TBD", "-", "?", "missing", "unknown", "null", "[]", []):
+    for token in (
+        None, "", "   ", "na", "N/A", "tbd", "TBD", "-", "?", "missing", "unknown", "null", "[]",
+        [], ["N/A", ""], ["tbd"], float("nan"), float("inf"), float("-inf")
+    ):
         assert is_missing_value(token) is True, f"Expected missing token {token!r} to be flagged"
 
     assert is_missing_value(0) is False
@@ -122,6 +125,15 @@ def test_zero_hallucination_normalization():
     assert off_norm["calories"] is None
     assert "emoji" not in off_norm
 
+    inf_norm = connector.normalize_off_csv_row({
+        "code": "12346",
+        "product_name": "Inf Test",
+        "energy_kcal_100g": "inf",
+        "proteins_100g": "-Infinity",
+    }, 2, "demo")
+    assert inf_norm["calories"] is None
+    assert inf_norm["protein_g"] is None
+
     synth_norm = connector.normalize_synthetic_xlsx_row({
         "product_id": "SYN-100",
         "product_name": "Synthetic Almond Drink",
@@ -167,14 +179,46 @@ def test_dataset_toggle_metadata():
 
 
 def test_pinecone_ready_local_similarity():
-    """Verify local similarity fallback returns verified records with high safety."""
+    """Verify Pinecone live query integration (mocked) and local similarity fallback."""
     connector = DataConnector()
     records = connector.load_dataset("demo")
-    similar = connector.get_similar_records(records[0]["id"], "demo", limit=3)
-    assert len(similar) <= 3
-    for s in similar:
-        assert s["audit"]["completeness_pct"] >= 70.0
-        assert s["id"] != records[0]["id"]
+
+    # 1. Verify local fallback works when Pinecone fails or is offline
+    with patch.object(connector, "query_pinecone_similar", side_effect=ConnectionError("Offline")):
+        similar = connector.get_similar_records(records[0]["id"], "demo", limit=3)
+        assert len(similar) <= 3
+        for s in similar:
+            assert s["audit"]["completeness_pct"] >= 70.0
+            assert s["id"] != records[0]["id"]
+            assert s["retrieval_source"] == "local_fallback"
+
+    # 2. Verify Pinecone match normalization preserves zero-hallucination and passes Flask routes
+    sample_match = {
+        "id": "5060043225261",
+        "score": 0.8702,
+        "metadata": {
+            "code": "5060043225261",
+            "product_name": "High Protein Granola",
+            "brands": "Lizi's",
+            "categories": "Breakfast cereals",
+            "allergens": "en:nuts, en:oats",
+            "has_allergens": True,
+            "has_ingredients": True,
+            "is_verified_safe": True,
+            "audit_priority": "NONE",
+            "energy_kcal_100g": 442.0,
+            "proteins_100g": 25.6,
+            "sugars_100g": 4.9,
+            "sodium_100g": 0.08,
+            "fiber_100g": 8.2,
+            "text": "Product: High Protein Granola | Serving Size: 50g | Ingredients: Oats, Soy protein | Nutrition per 100g: fat_100g=16.5, carbohydrates_100g=45.0"
+        }
+    }
+    normalized = connector._build_record_from_pinecone_match(sample_match, {}, "demo")
+    assert normalized["retrieval_source"] == "pinecone"
+    assert normalized["similarity_score"] == 87.0
+    assert normalized["salt_g"] is None  # Never derived from sodium
+    assert normalized["audit"]["completeness_pct"] == 100.0
 
 
 def test_upload_security_sanitization():

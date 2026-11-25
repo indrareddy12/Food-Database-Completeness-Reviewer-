@@ -5,6 +5,7 @@ Never invent, estimate, impute, or guess any missing nutritional or ingredient v
 All missing fields are explicitly preserved and labeled as MISSING.
 """
 
+import math
 from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -24,13 +25,14 @@ def is_missing_value(val: Any) -> bool:
     if val is None:
         return True
     if isinstance(val, (list, tuple)):
-        return len(val) == 0
+        return len(val) == 0 or all(is_missing_value(item) for item in val)
     if isinstance(val, str):
         cleaned = val.strip().lower()
         return cleaned in MISSING_TOKENS
+    if isinstance(val, bool):
+        return False
     if isinstance(val, (int, float)):
-        import math
-        return math.isnan(val)
+        return not math.isfinite(val)
     return False
 
 
@@ -112,10 +114,11 @@ def audit_cross_field_anomalies(record: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     def get_num(key: str) -> Optional[float]:
         val = record.get(key)
-        if is_missing_value(val):
+        if isinstance(val, bool) or is_missing_value(val):
             return None
         try:
-            return float(val)
+            num = float(val)
+            return num if math.isfinite(num) else None
         except (ValueError, TypeError):
             return None
 

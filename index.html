@@ -943,16 +943,16 @@
         </div>
       </div>
 
-      <!-- Pinecone Context & Vector DB Roadmap -->
+      <!-- Pinecone Context & Vector DB Status -->
       <div class="bg-skyMint nb-card p-6 space-y-3">
         <div class="flex items-center justify-between gap-2">
           <h3 class="font-display font-bold text-xl flex items-center gap-2">
             <i data-lucide="trees" class="w-5 h-5 text-emerald-800"></i>
-            <span>Pinecone Vector Storage (Connector Ready)</span>
+            <span>Pinecone Vector Storage (<span id="pinecone-status-title">Connector Ready</span>)</span>
           </h3>
-          <span class="px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase">Ready</span>
+          <span id="pinecone-status-badge" class="px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase">Ready</span>
         </div>
-        <p class="text-xs sm:text-sm font-semibold text-ink/80 leading-relaxed">
+        <p id="pinecone-status-text" class="text-xs sm:text-sm font-semibold text-ink/80 leading-relaxed">
           Vector search index <code class="bg-white nb-border px-2 py-0.5 rounded-full text-[11px]">food-database-completeness</code> is integrated in <code>data_connector.py</code> with automatic local macronutrient similarity fallback.
         </p>
       </div>
@@ -1278,8 +1278,8 @@
       if (typeof val === 'string') {
         return MISSING_PLACEHOLDER_TOKENS.has(val.trim().toLowerCase());
       }
-      if (Array.isArray(val) && val.length === 0) return true;
-      if (typeof val === 'number' && isNaN(val)) return true;
+      if (Array.isArray(val)) return val.every(item => isFieldMissing(item));
+      if (typeof val === 'number') return !Number.isFinite(val);
       return false;
     }
 
@@ -2173,12 +2173,60 @@
       refreshIcons();
     }
 
+    function renderSupplementMatchCard(matchItem, isPinecone = false) {
+      const p = matchItem;
+      const iconObj = p.icon ? { icon: p.icon, iconColor: p.iconColor || 'text-emerald-700' } : assignFoodIcon(p.name, p.category);
+      const badgeLabel = isPinecone
+        ? `PINECONE MATCH${p.similarity_score ? ` • ${p.similarity_score}%` : ''}`
+        : 'TOP DATABASE MATCH';
+      const badgeClass = isPinecone ? 'bg-lilac' : 'bg-matcha';
+      const protText = p.protein_g !== null && p.protein_g !== undefined ? `${p.protein_g}g Protein • ` : '';
+      const sugarText = p.sugar_g !== null && p.sugar_g !== undefined ? `${p.sugar_g}g Sugar • ` : '';
+      const safetyNote = (p.pinecone_verified_safe || (p.audit && p.audit.completeness_pct >= 70))
+        ? 'Verified Ingredients &amp; Allergens Declared'
+        : 'Verified Safe Database Match';
+
+      return `
+        <div class="bg-white nb-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <span class="w-12 h-12 rounded-full bg-cream nb-border flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#18181B]">
+              <i data-lucide="${escapeHtml(iconObj.icon)}" class="w-6 h-6 ${escapeHtml(iconObj.iconColor)}"></i>
+            </span>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${badgeClass} nb-border">${badgeLabel}</span>
+                <span class="text-[11px] font-bold text-ink/65">${escapeHtml(p.category || 'UNSPECIFIED')}</span>
+              </div>
+              <h4 class="font-display font-bold text-base mt-0.5">${escapeHtml(p.name || 'MISSING PRODUCT NAME')}</h4>
+              <p class="text-xs font-semibold text-ink/75">
+                ${protText}${sugarText}${safetyNote}
+              </p>
+            </div>
+          </div>
+          <button onclick="inspectMatchedRecord('${escapeHtml(p.id)}')" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold shrink-0">
+            Inspect Match →
+          </button>
+        </div>
+      `;
+    }
+
+    let latestPineconeMatches = {};
+
+    function inspectMatchedRecord(matchId) {
+      const existing = foodDatabase.find(p => String(p.id) === String(matchId));
+      if (!existing && latestPineconeMatches[String(matchId)]) {
+        foodDatabase.unshift(latestPineconeMatches[String(matchId)]);
+      }
+      selectProduct(matchId, true);
+    }
+
     function renderDatabaseSupplement(currentProduct, needsAlternative) {
       const resultsContainer = document.getElementById('supplement-results');
       if (!resultsContainer) return;
 
+      const targetId = String(currentProduct.id);
       const candidates = foodDatabase
-        .filter(p => String(p.id) !== String(currentProduct.id))
+        .filter(p => String(p.id) !== targetId)
         .map(p => ({ p, audit: auditProduct(p) }))
         .filter(item => item.audit.safetyScore >= 80 && !item.audit.hasCritical)
         .sort((a, b) => b.audit.safetyScore - a.audit.safetyScore);
@@ -2190,35 +2238,28 @@
             <p class="text-xs font-semibold text-ink/70 mt-1">Add complete records or switch dataset to view verified database matches.</p>
           </div>
         `;
-        return;
+      } else {
+        resultsContainer.innerHTML = renderSupplementMatchCard(candidates[0].p, false);
+        refreshIcons();
       }
 
-      const best = candidates[0];
-      const bestIcon = best.p.icon ? { icon: best.p.icon, iconColor: best.p.iconColor || 'text-emerald-700' } : assignFoodIcon(best.p.name, best.p.category);
-
-      resultsContainer.innerHTML = `
-        <div class="bg-white nb-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div class="flex items-start gap-3">
-            <span class="w-12 h-12 rounded-full bg-cream nb-border flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#18181B]">
-              <i data-lucide="${escapeHtml(bestIcon.icon)}" class="w-6 h-6 ${escapeHtml(bestIcon.iconColor)}"></i>
-            </span>
-            <div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-matcha nb-border">TOP DATABASE MATCH</span>
-                <span class="text-[11px] font-bold text-ink/65">${escapeHtml(best.p.category || 'UNSPECIFIED')}</span>
-              </div>
-              <h4 class="font-display font-bold text-base mt-0.5">${escapeHtml(best.p.name || 'MISSING PRODUCT NAME')}</h4>
-              <p class="text-xs font-semibold text-ink/75">
-                ${best.p.protein_g !== null ? `${best.p.protein_g}g Protein • ` : ''}${best.p.sugar_g !== null ? `${best.p.sugar_g}g Sugar • ` : ''}100% Ingredients &amp; Allergens Declared
-              </p>
-            </div>
-          </div>
-          <button onclick="selectProduct('${escapeHtml(best.p.id)}', true)" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold shrink-0">
-            Inspect Match →
-          </button>
-        </div>
-      `;
-      refreshIcons();
+      if (isBackendConnected) {
+        fetch(`${apiBaseUrl}/api/records/${encodeURIComponent(targetId)}?dataset=${encodeURIComponent(activeDataset)}`)
+          .then(resp => (resp.ok ? resp.json() : null))
+          .then(data => {
+            if (!data || String(selectedProductId) !== targetId) return;
+            const sims = Array.isArray(data.similar_products) ? data.similar_products : [];
+            const pineconeSims = sims.filter(item => item.retrieval_source === 'pinecone');
+            if (pineconeSims.length > 0) {
+              pineconeSims.forEach(item => {
+                latestPineconeMatches[String(item.id)] = item;
+              });
+              resultsContainer.innerHTML = pineconeSims.slice(0, 2).map(m => renderSupplementMatchCard(m, true)).join('');
+              refreshIcons();
+            }
+          })
+          .catch(() => {});
+      }
     }
 
     /* =========================================================================
@@ -2559,7 +2600,7 @@ ${anomPoints.join('\n')}
       const raw = el.value.trim();
       if (raw === '' || MISSING_PLACEHOLDER_TOKENS.has(raw.toLowerCase())) return null;
       const num = parseFloat(raw);
-      return isNaN(num) ? null : num;
+      return Number.isFinite(num) ? num : null;
     }
 
     function parseNullableList(id) {
@@ -2703,6 +2744,7 @@ ${anomPoints.join('\n')}
             availableDatasets = dsData.datasets || [];
             updateDatasetBadgesUI(availableDatasets);
           }
+          updatePineconeStatusUI(data);
           updateApiStatusUI();
           return true;
         }
@@ -2712,6 +2754,46 @@ ${anomPoints.join('\n')}
         if (text) text.textContent = 'Backend: Standalone UI';
       }
       return false;
+    }
+
+    async function updatePineconeStatusUI(healthData) {
+      const titleEl = document.getElementById('pinecone-status-title');
+      const badgeEl = document.getElementById('pinecone-status-badge');
+      const textEl = document.getElementById('pinecone-status-text');
+      if (!badgeEl || !textEl) return;
+
+      const indexName = healthData?.pinecone_index || 'food-database-completeness';
+      const namespace = healthData?.pinecone_namespace || 'food-products';
+
+      if (!healthData?.pinecone_configured) {
+        if (titleEl) titleEl.textContent = 'Connector Ready';
+        badgeEl.className = 'px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase';
+        badgeEl.textContent = 'Local Fallback';
+        return;
+      }
+
+      try {
+        const pcResp = await fetch(`${apiBaseUrl}/api/pinecone/status`);
+        if (pcResp.ok) {
+          const pcData = await pcResp.json();
+          if (pcData.connected) {
+            const vecCount = pcData.total_vector_count !== null && pcData.total_vector_count !== undefined
+              ? pcData.total_vector_count.toLocaleString()
+              : 'Live';
+            if (titleEl) titleEl.textContent = 'Live Cloud Connected';
+            badgeEl.className = 'px-2.5 py-0.5 text-[10px] font-extrabold bg-matcha text-ink nb-border rounded-full uppercase';
+            badgeEl.textContent = `LIVE • ${vecCount} Vectors`;
+            textEl.innerHTML = `Connected to Pinecone index <code class="bg-white nb-border px-2 py-0.5 rounded-full text-[11px]">${escapeHtml(pcData.index_name || indexName)}</code> (namespace <code>${escapeHtml(pcData.namespace || namespace)}</code>, <code>${escapeHtml(pcData.embed_model || 'multilingual-e5-large')}</code>) with verified-safe filtering and automatic local fallback.`;
+            return;
+          }
+        }
+      } catch (e) {
+        // Fallback status below
+      }
+
+      if (titleEl) titleEl.textContent = 'Configured';
+      badgeEl.className = 'px-2.5 py-0.5 text-[10px] font-extrabold bg-butter text-ink nb-border rounded-full uppercase';
+      badgeEl.textContent = 'Key Loaded';
     }
 
     function updateDatasetBadgesUI(datasets) {
@@ -2803,7 +2885,7 @@ ${anomPoints.join('\n')}
             const s = getStr(name);
             if (s === null) return null;
             const n = parseFloat(s);
-            return isNaN(n) ? null : n;
+            return Number.isFinite(n) ? n : null;
           };
 
           const code = getStr('code') || `ITEM-${i}`;

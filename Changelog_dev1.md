@@ -22,7 +22,7 @@ The `dharshan` branch implements the complete end-to-end architecture for **Prob
 3. **Strict Zero-Hallucination Governance:** Zero imputation/guessing/derivation of missing values (`null` / `None` preserved strictly across product names, brands, categories, nutrients, and `salt_g`). Full placeholder token coverage (`na`, `n/a`, `tbd`, `-`, `?`, `missing`, `unknown`, `null`, etc.).
 4. **Deterministic Validation Engine:** 10 core fields evaluation, 7 mathematical and chemical cross-field plausibility checks, and duplicate SKU detection across brand/product pairs.
 5. **LLM Triage & Verification Service:** Automated triage utilizing Groq Cloud API (`qwen/qwen3.8-27b`) and Gemini fallback with structured logging and surfaced error/warning notices (no silent exception swallowing).
-6. **Pinecone-Ready Vector Connector:** Structured vector similarity interface with local Euclidean macro-distance fallback for alternative product discovery.
+6. **Live Pinecone Vector DB Integration:** Connected backend (`backend/data_connector.py`, `backend/main.py`) and UI (`index.html`) to the live `food-database-completeness` index (`namespace: food-products`, `multilingual-e5-large`, `16,091` vectors) with `is_verified_safe` metadata filtering and automatic local macronutrient similarity fallback when offline.
 7. **Frontend Hardening & Lucide Alignment:** Preserved 100% Lucide vector icons (`lucide.createIcons()`), zero emoji regressions, fixed missing DOM ID (`new-calories`), dataset switcher bar, anomaly & duplicate diagnostic cards, active filter pills, and quote-safe RFC-4180 CSV parsing.
 8. **End-to-End Security & Test Verification:** Path-traversal protection on uploads (`secure_filename`, extension whitelist, isolated `uploads/` dir) and automated test suite (`tests/test_nutriaudit.py`) achieving 10/10 pass rate.
 
@@ -32,7 +32,8 @@ The `dharshan` branch implements the complete end-to-end architecture for **Prob
 
 - Pulled `origin/main` updates (`07b4f5e`) initially into `dharshan`.
 - Merged `main` (`9412bc3`, incorporating `feature/likhith_works` Lucide migration `154e125`, `PRD.md`, `TEAM_WORK_PLAN.md`, `CHANGELOG_DEV2.md`, and `docs/*`) into `dharshan`.
-- Resolved `index.html` merge conflict cleanly, integrating all Dev 2 Lucide icons with Dev 1 PS 134 full-stack features so `dharshan -> main` has zero merge conflicts.
+- Resolved `index.html` merge conflict cleanly, integrating all Dev 2 Lucide icons with Dev 1 PS 134 full-stack features (`00f9b28`).
+- Merged `origin/main` (`d1728b4`, incorporating Dev 3's `review-1-food-db-reviewer` pipeline in `food-db-reviewer/`, `change_log_dev3.md`, and audit/UI hardening) cleanly into `dharshan` (`39c4829`) with zero merge conflicts.
 
 ---
 
@@ -61,28 +62,52 @@ All critical blockers and code-quality findings identified during pre-merge veri
 
 ---
 
-## 4. Complete File Modification Ledger
+## 4. Post-Merge Parity Patches, Multi-Dataset Verification & Pinecone Integration
+
+Following the `origin/main` (`d1728b4`) merge (`39c4829`), additional hardening patches, dataset checks, and live Pinecone vector DB integration were completed:
+
+1. **`NaN` / `Inf` / `bool` & Placeholder-List Parity Patches (`backend/validator.py`, `backend/data_connector.py`, `index.html`):**
+   - Updated `is_missing_value()` and `audit_cross_field_anomalies()` (`get_num()`) in `backend/validator.py` to treat lists/tuples containing only placeholder tokens (e.g., `["N/A", ""]`, `["tbd"]`) as missing, reject non-finite numbers (`nan`, `inf`, `-inf`) via `math.isfinite()`, and avoid coercing `bool` as numeric.
+   - Hardened `parse_clean_float()`, `parse_ingredients_or_allergens()`, and `add_custom_record()` in `backend/data_connector.py` to reject `bool` / `"inf"` / `"-Infinity"` strings and strip placeholder tokens from list payloads.
+   - Added `preprocessed_full1.csv` and `demo_subset1.csv` to `DATASET_CONFIGS` so `secure_filename()`-sanitized uploads resolve cleanly.
+   - Updated `isFieldMissing()`, `parseNullableNumber()`, and CSV `getNum()` in `index.html` to check `val.every(item => isFieldMissing(item))` and `Number.isFinite(...)`.
+2. **Full & Synthetic Dataset Verification (`DataConnector`):**
+   - Verified `preprocessed_full(1).csv` (`full` — 16,091 rows: `7,040` Critical, `822` High, `4,040` Low, `4,189` Complete, `1,590` anomalies, `1,570` duplicate records).
+   - Verified `food_completeness_dataset_2000.xlsx` (`synthetic`, `Products` sheet — 2,000 rows: `532` Critical, `426` High, `257` Low, `785` Complete, `0` anomalies, `130` duplicate records), confirming absent `salt_g` and `allergens` stay `None`.
+3. **Live Pinecone Vector DB Integration (`backend/data_connector.py`, `backend/main.py`, `index.html`, `requirements.txt`):**
+   - Installed `pinecone==10.3.0` and `pydantic==2.14.4`; added `pinecone>=6.0.0` and `pydantic>=2.0.0` to root `requirements.txt`.
+   - Fixed a stray leading `<` on `PINECONE_API_KEY` in local `.env` (gitignored).
+   - Implemented `_get_pinecone_settings()`, `_get_pinecone_handle()`, `get_pinecone_status()`, `_parse_pinecone_text_fields()`, `_build_record_from_pinecone_match()`, and `query_pinecone_similar()` in `backend/data_connector.py` targeting index `food-database-completeness` (namespace `food-products`, embed model `multilingual-e5-large`, filter `{"is_verified_safe": {"$eq": True}}`).
+   - Updated `get_similar_records()` to query live Pinecone first and fall back automatically to local deterministic similarity (`retrieval_source: "local_fallback"`).
+   - Added `GET /api/pinecone/status` and `GET /api/pinecone/search` routes and enriched `GET /api/health` in `backend/main.py`.
+   - Updated `index.html` Settings Pinecone card (`updatePineconeStatusUI()`) to show live vector count and updated `renderDatabaseSupplement()`, `renderSupplementMatchCard()`, and `inspectMatchedRecord()` to display live Pinecone semantic alternatives.
+   - Verified live Pinecone stats (`connected: True`, `dimension: 1024`, `total_vector_count: 16091`) and live semantic queries (`/api/records/8908010900056?dataset=demo`, `/api/pinecone/search?q=high+protein+granola&limit=2`).
+
+---
+
+## 5. Complete File Modification Ledger
 
 | File Path | Action | Description / Purpose |
 | :--- | :--- | :--- |
 | `backend/__init__.py` | **Created** | Python package initialization for backend modules. |
-| `backend/validator.py` | **Created** | Canonical `MISSING_TOKENS`, deterministic completeness scoring, duplicate SKU detection, 7 cross-field anomaly checks, and zero-hallucination verification. |
-| `backend/data_connector.py` | **Created** | Dataset registry (`demo`, `full`, `synthetic`), zero-hallucination schema normalization, Lucide icon mapping (`assign_food_icon`), and Pinecone-ready similarity connector. |
+| `backend/validator.py` | **Created & Hardened** | Canonical `MISSING_TOKENS`, placeholder-list & `math.isfinite()` guards, deterministic completeness scoring, duplicate SKU detection, 7 cross-field anomaly checks, and zero-hallucination verification. |
+| `backend/data_connector.py` | **Created & Updated** | Dataset registry (`demo`, `full`, `synthetic`), zero-hallucination schema normalization, Lucide icon mapping (`assign_food_icon`), and live Pinecone semantic retriever with local similarity fallback. |
 | `backend/triage_service.py` | **Created** | Groq Cloud (`qwen/qwen3.8-27b`) & Gemini triage service with logged warning tracking and deterministic rule-based fallback. |
-| `backend/main.py` | **Created** | Flask REST API application with CORS, `secure_filename` sandboxed uploads, and full API routes. |
+| `backend/main.py` | **Created & Updated** | Flask REST API application with CORS, `secure_filename` sandboxed uploads, `/api/pinecone/status`, `/api/pinecone/search`, and dataset/audit routes. |
 | `run_server.py` | **Created** | Root entry point to launch Flask backend server on `http://127.0.0.1:8000`. |
-| `requirements.txt` | **Created** | Runtime dependencies (`flask`, `flask-cors`, `werkzeug`, `requests`, `python-dotenv`, `openpyxl`, `pandas`). |
-| `tests/test_nutriaudit.py` | **Created** | Comprehensive test suite containing 10 unit/integration/security tests. |
+| `requirements.txt` | **Created & Updated** | Runtime dependencies (`flask`, `flask-cors`, `werkzeug`, `requests`, `python-dotenv`, `openpyxl`, `pandas`, `pinecone`, `pydantic`). |
+| `tests/test_nutriaudit.py` | **Created & Updated** | Automated test suite (10/10 passing), including `NaN`/`Inf`/placeholder-list checks and mocked Pinecone match normalization. |
 | `demo_subset(1).csv` | **Created** | Default 552-row benchmark CSV in repo root for out-of-the-box backend & static UI usage. |
-| `index.html` | **Merged & Updated** | Unified Dev 2 Lucide icon UI with Dev 1 PS 134 dataset toggle, diagnostic cards, `#new-calories` modal fix, backend REST sync, and RFC-4180 CSV parser. |
+| `index.html` | **Merged & Updated** | Unified Dev 2 Lucide icon UI with Dev 1 PS 134 dataset toggle, diagnostic cards, `#new-calories` modal fix, `Number.isFinite` & list validation, live Pinecone status/match UI, backend REST sync, and RFC-4180 CSV parser. |
 | `README.md` | **Modified** | Complete PS 134 architecture, API docs, anomaly specs, and setup guide. |
 | `.gitignore` | **Updated** | Inherited `main` ignores plus `uploads/`. |
-| `Changelog_dev1.md` | **Created** | Comprehensive developer decision log and verification ledger. |
+| `Changelog_dev1.md` | **Created & Updated** | Comprehensive developer decision log and verification ledger. |
 
 ---
 
-## 5. Automated Verification Results (`tests/test_nutriaudit.py`)
+## 6. Automated & Live Verification Results
 
+### Offline Test Suite (`tests/test_nutriaudit.py`)
 ```text
 Running NutriAudit Test Suite...
 ✓ test_validator_zero_hallucination_and_missing_detection passed
@@ -99,9 +124,14 @@ Running NutriAudit Test Suite...
 ALL 10 TESTS PASSED PERFECTLY!
 ```
 
+### Live Pinecone Integration Verification
+- `GET /api/pinecone/status`: `connected: True`, `index_name: "food-database-completeness"`, `namespace: "food-products"`, `dimension: 1024`, `total_vector_count: 16091`.
+- `GET /api/records/8908010900056?dataset=demo`: Returned 3 verified-safe matches from Pinecone (`3415587128011`, `4056489424765`, `6111271520044`, `retrieval_source: "pinecone"`).
+- `GET /api/pinecone/search?q=high+protein+granola&limit=2`: Returned live Pinecone matches (`5060043225261`, `4056489239901`).
+
 ---
 
-## 6. How to Run & Verify
+## 7. How to Run & Verify
 
 1. **Install Dependencies (optional in clean `.venv`):**
    ```bash
