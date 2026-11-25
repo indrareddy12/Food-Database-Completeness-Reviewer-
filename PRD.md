@@ -8,9 +8,17 @@
 ### 1.1 Product Vision
 **NutriAudit (Food Database Completeness Reviewer)** is an agentic, zero-hallucination GenAI audit application engineered to inspect commercial and user-submitted food nutrition and ingredient records. The platform instantly pinpoints missing data fields, assigns triage review priorities, visualizes food transparency through an animated **Safety Speed Dial**, evaluates items against personal dietary goals (such as Gym/High-Protein or Daily Health), and recommends verified dietary supplements or alternatives strictly from existing database records.
 
-### 1.2 Hackathon MVP Philosophy
+### 1.2 Hackathon MVP Philosophy & Technical Stack Architecture
+
+> [!TIP]
+> ### Selected Architecture: Option 1 — Modern HTML + Tailwind CSS (CDN) + Vanilla ES6+ JavaScript
+> * **The Pitch:** Zero build step, zero `node_modules` dependency hell, runs immediately by double-clicking `index.html` or on any static host (GitHub Pages, Vercel, Netlify).
+> * **Hackathon Velocity:** 100% of development bandwidth is focused on polishing UI animations, prompt engineering, and live demoing, rather than debugging build bundlers, packaging pipelines, or TypeScript compiler errors.
+> * **Instant Demos:** Shareable as a single file or static deploy; hackathon judges and evaluators can test the entire prototype immediately without running `npm install`, maintaining node runtimes, or waiting for build steps.
+> * **Controlled Scope:** The Speed Dial gauge, Organic Neo-Brutalist styling, 5-tab system, top-bar API key switcher (Gemini + Groq), and deterministic audit logic are fully unified within `index.html`.
+
 Built specifically as a high-velocity, controlled, and resilient MVP for a GenAI Hackathon:
-* **Zero Over-Engineering:** Fully functional, dependency-light architecture using modern HTML5, CSS3 (Tailwind CSS engine), and vanilla ES6+ JavaScript.
+* **Zero Over-Engineering:** Fully functional, dependency-light architecture using modern HTML5, CSS3 (Tailwind CSS engine via CDN), and vanilla ES6+ JavaScript.
 * **Deterministic Reliability First:** Deterministic rules handle calculations, missing data flags, and safety scoring; GenAI (Gemini / Groq) is leveraged strictly for qualitative synthesis, risk analysis, and audit action plans.
 * **Immediate Usability:** Zero required build steps; works out of the box in any browser or static hosting environment.
 

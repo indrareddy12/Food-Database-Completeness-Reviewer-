@@ -8,6 +8,9 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Lucide Icons CDN (2.5px stroke Neo-Brutalist icons) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <!-- Google Fonts: Space Grotesk (Neo-Brutalist display) & Plus Jakarta Sans (clean UI) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -145,6 +148,13 @@
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* Lucide Icons styled for Organic Neo-Brutalism (matches 2.5px ink borders) */
+    .lucide {
+      stroke-width: 2.5;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body class="min-h-screen pb-28 lg:pb-12">
@@ -181,20 +191,25 @@
 
       <!-- Desktop Pill Tab Navigation -->
       <nav class="hidden lg:flex items-center gap-1.5 bg-cream nb-border rounded-full p-1.5 shadow-[3px_3px_0px_#18181B]">
-        <button onclick="switchTab('home')" id="desk-tab-home" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
-          🏠 Home
+        <button onclick="switchTab('home')" id="desk-tab-home" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition inline-flex items-center gap-1.5">
+          <i data-lucide="home" class="w-3.5 h-3.5"></i>
+          <span>Home</span>
         </button>
-        <button onclick="switchTab('database')" id="desk-tab-database" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
-          🗄️ Database
+        <button onclick="switchTab('database')" id="desk-tab-database" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition inline-flex items-center gap-1.5">
+          <i data-lucide="database" class="w-3.5 h-3.5"></i>
+          <span>Database</span>
         </button>
-        <button onclick="switchTab('auditor')" id="desk-tab-auditor" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
-          ⚡ Auditor
+        <button onclick="switchTab('auditor')" id="desk-tab-auditor" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition inline-flex items-center gap-1.5">
+          <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+          <span>Auditor</span>
         </button>
-        <button onclick="switchTab('needs')" id="desk-tab-needs" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition">
-          🎯 My Needs
+        <button onclick="switchTab('needs')" id="desk-tab-needs" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition inline-flex items-center gap-1.5">
+          <i data-lucide="target" class="w-3.5 h-3.5"></i>
+          <span>My Needs</span>
         </button>
-        <button onclick="switchTab('settings')" id="desk-tab-settings" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition flex items-center gap-1.5">
-          <span>⚙️ Settings</span>
+        <button onclick="switchTab('settings')" id="desk-tab-settings" class="desk-tab-btn px-4 py-1.5 rounded-full text-xs font-extrabold transition inline-flex items-center gap-1.5">
+          <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+          <span>Settings</span>
         </button>
       </nav>
 
@@ -207,7 +222,7 @@
           class="nb-pill bg-cream hover:bg-white px-3 sm:px-3.5 py-2 text-xs font-extrabold flex items-center gap-1.5 shrink-0"
           title="Configure Gemini or Groq API Key"
         >
-          <span class="text-sm">🔑</span>
+          <i data-lucide="key-round" class="w-3.5 h-3.5 text-amber-700"></i>
           <span id="top-api-label" class="hidden sm:inline">API Key</span>
           <span id="top-api-dot" class="w-2.5 h-2.5 rounded-full bg-butter border border-ink inline-block" title="API Status"></span>
         </button>
@@ -234,7 +249,8 @@
       <div class="bg-lilac nb-card p-6 sm:p-10 flex flex-col lg:flex-row items-center justify-between gap-8">
         <div class="max-w-xl space-y-4 text-center lg:text-left">
           <div class="inline-flex items-center gap-2 px-3.5 py-1 bg-cream nb-border rounded-full text-xs font-extrabold uppercase">
-            <span>🔒</span> Zero-Hallucination Food Audit Engine
+            <i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-700"></i>
+            <span>Zero-Hallucination Food Audit Engine</span>
           </div>
           <h2 class="font-display font-bold text-3xl sm:text-5xl leading-[1.08] tracking-tight">
             Spot Missing Food Data Before It Hits Your Plate.
@@ -243,14 +259,17 @@
             NutriAudit inspects nutrition &amp; ingredient records, flags missing safety fields with review priorities, scores trust on a visual speed dial, and matches verified supplements strictly from your database—<strong>never inventing missing values</strong>.
           </p>
           <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
-            <button onclick="switchTab('database')" class="nb-pill bg-ink text-cream px-6 py-3 text-sm font-extrabold">
-              🗄️ Browse Food Database
+            <button onclick="switchTab('database')" class="nb-pill bg-ink text-cream px-6 py-3 text-sm font-extrabold inline-flex items-center gap-2">
+              <i data-lucide="database" class="w-4 h-4"></i>
+              <span>Browse Food Database</span>
             </button>
-            <button onclick="switchTab('auditor')" class="nb-pill bg-matcha text-ink px-6 py-3 text-sm font-extrabold">
-              ⚡ Open Speed Dial Auditor
+            <button onclick="switchTab('auditor')" class="nb-pill bg-matcha text-ink px-6 py-3 text-sm font-extrabold inline-flex items-center gap-2">
+              <i data-lucide="gauge" class="w-4 h-4"></i>
+              <span>Open Speed Dial Auditor</span>
             </button>
-            <button onclick="switchTab('needs')" class="nb-pill bg-cream text-ink px-5 py-3 text-sm font-extrabold">
-              🎯 Check My Health Needs
+            <button onclick="switchTab('needs')" class="nb-pill bg-cream text-ink px-5 py-3 text-sm font-extrabold inline-flex items-center gap-2">
+              <i data-lucide="target" class="w-4 h-4"></i>
+              <span>Check My Health Needs</span>
             </button>
           </div>
         </div>
@@ -270,7 +289,7 @@
           </div>
           <span class="mt-4 px-3 py-1 bg-ink text-cream rounded-full text-[11px] font-extrabold uppercase">Live Database Snapshot</span>
           <p class="text-xs font-bold text-ink/85 mt-2">
-            Click the <strong class="text-ink">🔑 API Key</strong> button above to connect your Google AI Studio or Groq key.
+            Click the <strong class="text-ink inline-flex items-center gap-1 align-baseline"><i data-lucide="key-round" class="w-3 h-3 inline"></i> API Key</strong> button above to connect your Google AI Studio or Groq key.
           </p>
         </div>
       </div>
@@ -282,28 +301,36 @@
             <p class="text-[11px] font-extrabold uppercase text-ink/60">Total Records</p>
             <p id="stat-total" class="font-display font-bold text-3xl leading-tight">0</p>
           </div>
-          <span class="w-11 h-11 rounded-full bg-butter nb-border flex items-center justify-center text-xl">📦</span>
+          <span class="w-11 h-11 rounded-full bg-butter nb-border flex items-center justify-center">
+            <i data-lucide="package" class="w-5 h-5 text-ink"></i>
+          </span>
         </button>
         <button onclick="switchTab('database'); setFilter('CRITICAL');" class="text-left bg-peach nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
           <div>
             <p class="text-[11px] font-extrabold uppercase text-ink/80">Critical Priority</p>
             <p id="stat-critical" class="font-display font-bold text-3xl leading-tight">0</p>
           </div>
-          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl">🚨</span>
+          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center">
+            <i data-lucide="siren" class="w-5 h-5 text-red-700"></i>
+          </span>
         </button>
         <button onclick="switchTab('auditor')" class="text-left bg-skyMint nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
           <div>
             <p class="text-[11px] font-extrabold uppercase text-ink/80">Avg Completeness</p>
             <p id="stat-avg" class="font-display font-bold text-3xl leading-tight">0%</p>
           </div>
-          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl">📊</span>
+          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center">
+            <i data-lucide="bar-chart-3" class="w-5 h-5 text-sky-800"></i>
+          </span>
         </button>
         <button onclick="switchTab('database'); setFilter('COMPLETE');" class="text-left bg-matcha nb-card-sm p-4 flex items-center justify-between hover:-translate-y-0.5 transition">
           <div>
             <p class="text-[11px] font-extrabold uppercase text-ink/80">Verified Complete</p>
             <p id="stat-complete" class="font-display font-bold text-3xl leading-tight">0</p>
           </div>
-          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl">✅</span>
+          <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center">
+            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-700"></i>
+          </span>
         </button>
       </div>
 
@@ -352,16 +379,19 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <div>
             <h2 class="font-display font-bold text-2xl flex items-center gap-2">
-              <span>🗄️</span> Product Database &amp; Review Queue
+              <i data-lucide="database" class="w-6 h-6 text-ink"></i>
+              <span>Product Database &amp; Review Queue</span>
             </h2>
             <p class="text-xs sm:text-sm font-semibold text-ink/70">Click any product card to open its full Completeness Audit &amp; Safety Speed Dial.</p>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold">
-              🔄 Re-Scan All
+            <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Re-Scan All</span>
             </button>
-            <button onclick="openAddModal()" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold">
-              + Add Product
+            <button onclick="openAddModal()" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Add Product</span>
             </button>
           </div>
         </div>
@@ -404,8 +434,9 @@
             <!-- Populated dynamically -->
           </select>
         </div>
-        <button onclick="switchTab('needs')" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold shrink-0">
-          🎯 Check Against My Needs →
+        <button onclick="switchTab('needs')" class="nb-pill bg-berry px-4 py-2 text-xs font-extrabold shrink-0 inline-flex items-center gap-1.5">
+          <i data-lucide="target" class="w-3.5 h-3.5"></i>
+          <span>Check Against My Needs →</span>
         </button>
       </div>
 
@@ -413,8 +444,8 @@
       <div id="inspector-hero" class="bg-matcha nb-card p-5">
         <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div class="flex items-start gap-3">
-            <div id="selected-emoji" class="w-14 h-14 rounded-full bg-cream nb-border flex items-center justify-center text-3xl shadow-[3px_3px_0px_#18181B] shrink-0">
-              🥣
+            <div id="selected-emoji" class="w-14 h-14 rounded-full bg-cream nb-border flex items-center justify-center shadow-[3px_3px_0px_#18181B] shrink-0">
+              <i data-lucide="utensils" class="w-7 h-7 text-ink"></i>
             </div>
             <div>
               <div class="flex items-center gap-2 flex-wrap">
@@ -432,14 +463,14 @@
               onclick="runAIDeepReview()"
               class="nb-pill bg-ink text-cream px-5 py-2.5 text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shrink-0 hover:bg-[#2a2a30]"
             >
-              <span id="gemini-btn-icon">✨</span>
+              <span id="gemini-btn-icon" class="inline-flex"><i data-lucide="sparkles" class="w-4 h-4 text-butter"></i></span>
               <span id="gemini-btn-text">GenAI Deep Audit</span>
             </button>
           </div>
         </div>
 
         <div class="mt-4 bg-cream/95 nb-border rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5">
-          <span class="text-base shrink-0">🔒</span>
+          <i data-lucide="lock" class="w-4 h-4 text-emerald-700 shrink-0"></i>
           <p class="text-[11px] sm:text-xs font-bold leading-snug">
             <span class="uppercase font-extrabold">Strict Integrity Mode:</span> Missing ingredients, allergens, or nutrient metrics are flagged as <span class="underline decoration-2">UNVERIFIED / MISSING</span> and are never estimated or invented.
           </p>
@@ -507,7 +538,8 @@
           <!-- RECORDED NUTRITION & INGREDIENT LEDGER -->
           <div class="bg-cream nb-card p-5">
             <h3 class="font-display font-bold text-lg mb-3 flex items-center gap-2">
-              <span>🧾</span> Raw Database Record Audit
+              <i data-lucide="receipt" class="w-5 h-5 text-ink"></i>
+              <span>Raw Database Record Audit</span>
             </h3>
             <div id="nutrition-ledger" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-3">
               <!-- Populated dynamically -->
@@ -532,7 +564,8 @@
           <div id="gemini-output-card" class="bg-lilac nb-card p-5 hidden">
             <div class="flex items-center justify-between mb-2">
               <h3 class="font-display font-bold text-lg flex items-center gap-2">
-                <span>✨</span> GenAI Deep Audit Report
+                <i data-lucide="sparkles" class="w-5 h-5 text-ink"></i>
+                <span>GenAI Deep Audit Report</span>
               </h3>
               <span id="ai-model-badge" class="px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase">gemini-2.5-flash</span>
             </div>
@@ -545,7 +578,8 @@
           <div class="bg-cream nb-card p-5">
             <div class="flex items-center justify-between mb-3">
               <h3 class="font-display font-bold text-lg flex items-center gap-2">
-                <span>📋</span> Incomplete Fields &amp; Review Priorities
+                <i data-lucide="clipboard-list" class="w-5 h-5 text-ink"></i>
+                <span>Incomplete Fields &amp; Review Priorities</span>
               </h3>
               <span id="missing-count-pill" class="px-3 py-0.5 text-xs font-extrabold nb-border rounded-full bg-peach">0 Missing</span>
             </div>
@@ -569,8 +603,9 @@
             <!-- Populated dynamically -->
           </select>
         </div>
-        <button onclick="switchTab('auditor')" class="nb-pill bg-matcha px-4 py-2 text-xs font-extrabold shrink-0">
-          ⚡ View Safety Speed Dial
+        <button onclick="switchTab('auditor')" class="nb-pill bg-matcha px-4 py-2 text-xs font-extrabold shrink-0 inline-flex items-center gap-1.5">
+          <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+          <span>View Safety Speed Dial</span>
         </button>
       </div>
 
@@ -579,23 +614,28 @@
         <div class="lg:col-span-5 bg-berry nb-card p-5">
           <div class="mb-3">
             <h2 class="font-display font-bold text-xl flex items-center gap-2">
-              <span>🎯</span> Your Health &amp; Nutrition Needs
+              <i data-lucide="target" class="w-5 h-5 text-ink"></i>
+              <span>Your Health &amp; Nutrition Needs</span>
             </h2>
             <p class="text-xs font-bold text-ink/75 mt-0.5">Pick a preset or enter manual nutrient goals</p>
           </div>
 
           <div class="flex flex-wrap gap-2 mb-4" id="goal-presets">
-            <button data-goal="gym" onclick="selectGoalPreset('gym')" class="goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold">
-              🏋️ Gym / High Protein
+            <button data-goal="gym" onclick="selectGoalPreset('gym')" class="goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="dumbbell" class="w-3.5 h-3.5"></i>
+              <span>Gym / High Protein</span>
             </button>
-            <button data-goal="daily" onclick="selectGoalPreset('daily')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold">
-              🌿 Daily Basic Health
+            <button data-goal="daily" onclick="selectGoalPreset('daily')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="leaf" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Daily Basic Health</span>
             </button>
-            <button data-goal="weightloss" onclick="selectGoalPreset('weightloss')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold">
-              🔥 Low Sugar / Lean
+            <button data-goal="weightloss" onclick="selectGoalPreset('weightloss')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="flame" class="w-3.5 h-3.5 text-orange-600"></i>
+              <span>Low Sugar / Lean</span>
             </button>
-            <button data-goal="clean" onclick="selectGoalPreset('clean')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold">
-              🛡️ Allergen-Safe Clean
+            <button data-goal="clean" onclick="selectGoalPreset('clean')" class="goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-sky-700"></i>
+              <span>Allergen-Safe Clean</span>
             </button>
           </div>
 
@@ -656,7 +696,8 @@
           <div class="bg-skyMint nb-card p-5">
             <div class="mb-2">
               <h3 class="font-display font-bold text-lg flex items-center gap-2">
-                <span>💊</span> Database Supplement Match
+                <i data-lucide="pill" class="w-5 h-5 text-ink"></i>
+                <span>Database Supplement Match</span>
               </h3>
               <p class="text-xs font-bold text-ink/75">Best verified complement or swap strictly from this database</p>
             </div>
@@ -677,7 +718,8 @@
         <div class="flex items-start justify-between gap-3 flex-wrap mb-4">
           <div>
             <h2 class="font-display font-bold text-2xl flex items-center gap-2">
-              <span>🔑</span> LLM API Provider Settings
+              <i data-lucide="key-round" class="w-6 h-6 text-ink"></i>
+              <span>LLM API Provider Settings</span>
             </h2>
             <p class="text-xs sm:text-sm font-semibold text-ink/80 mt-1">
               Configure your Google Gemini API key or Groq Cloud API key for zero-hallucination AI reviews.
@@ -697,17 +739,19 @@
                 type="button"
                 id="provider-btn-gemini"
                 onclick="setActiveProvider('gemini')"
-                class="px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition"
+                class="px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center gap-1.5"
               >
-                ✨ Gemini (Google AI Studio)
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span>Gemini (Google AI Studio)</span>
               </button>
               <button
                 type="button"
                 id="provider-btn-groq"
                 onclick="setActiveProvider('groq')"
-                class="px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition"
+                class="px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition inline-flex items-center gap-1.5"
               >
-                ⚡ Groq Cloud
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                <span>Groq Cloud</span>
               </button>
             </div>
           </div>
@@ -796,7 +840,8 @@
       <div class="bg-skyMint nb-card p-6 space-y-3">
         <div class="flex items-center justify-between gap-2">
           <h3 class="font-display font-bold text-xl flex items-center gap-2">
-            <span>🌲</span> Pinecone Vector Storage (Roadmap Context)
+            <i data-lucide="trees" class="w-5 h-5 text-emerald-800"></i>
+            <span>Pinecone Vector Storage (Roadmap Context)</span>
           </h3>
           <span class="px-2.5 py-0.5 text-[10px] font-extrabold bg-ink text-cream rounded-full uppercase">Staged</span>
         </div>
@@ -808,7 +853,8 @@
       <!-- Data Integrity & Workspace Controls -->
       <div class="bg-cream nb-card p-6 space-y-4">
         <h3 class="font-display font-bold text-xl flex items-center gap-2">
-          <span>🛡️</span> Audit Guardrails &amp; Database Tools
+          <i data-lucide="shield-check" class="w-5 h-5 text-emerald-700"></i>
+          <span>Audit Guardrails &amp; Database Tools</span>
         </h3>
 
         <div class="bg-matcha/40 nb-border rounded-2xl p-4 flex items-center justify-between gap-3">
@@ -828,8 +874,9 @@
               Recalculate completeness percentages, missing fields, and safety speed dial scores across all records.
             </p>
           </div>
-          <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold shrink-0 self-start sm:self-center">
-            🔄 Re-Scan Now
+          <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold shrink-0 self-start sm:self-center inline-flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Re-Scan Now</span>
           </button>
         </div>
       </div>
@@ -843,7 +890,7 @@
     <div class="bg-butter nb-card w-full max-w-lg p-5 sm:p-6 space-y-4 shadow-[8px_8px_0px_#18181B] animate-fadeIn">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <span class="text-2xl">🔑</span>
+          <i data-lucide="key-round" class="w-6 h-6 text-ink"></i>
           <h3 class="font-display font-bold text-xl">Connect GenAI API Key</h3>
         </div>
         <button onclick="closeApiKeyModal()" class="w-8 h-8 rounded-full bg-cream nb-border flex items-center justify-center font-extrabold hover:bg-peach">✕</button>
@@ -859,17 +906,19 @@
           type="button"
           id="modal-prov-gemini"
           onclick="setActiveProvider('gemini')"
-          class="flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition"
+          class="flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center justify-center gap-1.5"
         >
-          ✨ Gemini (AI Studio)
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>Gemini (AI Studio)</span>
         </button>
         <button
           type="button"
           id="modal-prov-groq"
           onclick="setActiveProvider('groq')"
-          class="flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition"
+          class="flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition inline-flex items-center justify-center gap-1.5"
         >
-          ⚡ Groq Cloud
+          <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+          <span>Groq Cloud</span>
         </button>
       </div>
 
@@ -907,20 +956,25 @@
        MOBILE FLOATING PILL NAVIGATION BAR (5 Tabs — Dribbble Style)
        ========================================================================= -->
   <nav class="lg:hidden fixed bottom-3 left-3 right-3 z-40 bg-ink nb-border rounded-full p-2 flex items-center justify-around shadow-[4px_4px_0px_rgba(24,24,27,0.4)]">
-    <button onclick="switchTab('home')" id="mob-tab-home" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
-      🏠 Home
+    <button onclick="switchTab('home')" id="mob-tab-home" class="mob-tab-btn px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition inline-flex items-center gap-1">
+      <i data-lucide="home" class="w-3.5 h-3.5"></i>
+      <span>Home</span>
     </button>
-    <button onclick="switchTab('database')" id="mob-tab-database" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
-      🗄️ Database
+    <button onclick="switchTab('database')" id="mob-tab-database" class="mob-tab-btn px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition inline-flex items-center gap-1">
+      <i data-lucide="database" class="w-3.5 h-3.5"></i>
+      <span>DB</span>
     </button>
-    <button onclick="switchTab('auditor')" id="mob-tab-auditor" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
-      ⚡ Auditor
+    <button onclick="switchTab('auditor')" id="mob-tab-auditor" class="mob-tab-btn px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition inline-flex items-center gap-1">
+      <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+      <span>Audit</span>
     </button>
-    <button onclick="switchTab('needs')" id="mob-tab-needs" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
-      🎯 Needs
+    <button onclick="switchTab('needs')" id="mob-tab-needs" class="mob-tab-btn px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition inline-flex items-center gap-1">
+      <i data-lucide="target" class="w-3.5 h-3.5"></i>
+      <span>Needs</span>
     </button>
-    <button onclick="switchTab('settings')" id="mob-tab-settings" class="mob-tab-btn px-3 py-1.5 rounded-full text-xs font-extrabold transition">
-      ⚙️ Config
+    <button onclick="switchTab('settings')" id="mob-tab-settings" class="mob-tab-btn px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition inline-flex items-center gap-1">
+      <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+      <span>Config</span>
     </button>
   </nav>
 
@@ -931,7 +985,7 @@
     <div class="bg-butter nb-card w-full max-w-xl max-h-[90vh] overflow-y-auto p-5 sm:p-7 space-y-4 shadow-[8px_8px_0px_#18181B]">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <span class="text-2xl">🥗</span>
+          <i data-lucide="salad" class="w-6 h-6 text-emerald-800"></i>
           <h3 class="font-display font-bold text-xl sm:text-2xl">Add Food Record to Audit</h3>
         </div>
         <button onclick="closeAddModal()" class="w-8 h-8 rounded-full bg-cream nb-border flex items-center justify-center font-extrabold hover:bg-peach">✕</button>
@@ -1036,7 +1090,8 @@
         name: 'NitroBlast Whey Crunch Bar',
         brand: 'IronPulse Labs',
         category: 'Protein Snack',
-        emoji: '🍫',
+        icon: 'candy',
+        iconColor: 'text-amber-700',
         serving_size: '60g bar',
         calories: 240,
         protein_g: 22,
@@ -1053,7 +1108,8 @@
         name: 'Matcha Oat Energy Smoothie',
         brand: 'GreenLeaf Co.',
         category: 'Beverage',
-        emoji: '🍵',
+        icon: 'cup-soda',
+        iconColor: 'text-emerald-700',
         serving_size: '330ml bottle',
         calories: 175,
         protein_g: 6,
@@ -1070,7 +1126,8 @@
         name: 'PurePeak Unflavored Whey Isolate',
         brand: 'CleanMacro',
         category: 'Gym Supplement',
-        emoji: '🥤',
+        icon: 'milk',
+        iconColor: 'text-sky-700',
         serving_size: '30g scoop',
         calories: 115,
         protein_g: 26,
@@ -1087,7 +1144,8 @@
         name: 'Spicy Kimchi Instant Ramen',
         brand: 'SeoulDash',
         category: 'Instant Meal',
-        emoji: '🍜',
+        icon: 'soup',
+        iconColor: 'text-orange-700',
         serving_size: null,     // MISSING
         calories: 480,
         protein_g: 9,
@@ -1104,7 +1162,8 @@
         name: 'Organic Sprouted Pea & Hemp Blend',
         brand: 'TerraFit',
         category: 'Plant Supplement',
-        emoji: '🌱',
+        icon: 'sprout',
+        iconColor: 'text-emerald-700',
         serving_size: '35g scoop',
         calories: 135,
         protein_g: 24,
@@ -1121,7 +1180,8 @@
         name: 'Greek Berry Chia Yogurt Cup',
         brand: 'MeadowFresh',
         category: 'Daily Health',
-        emoji: '🫐',
+        icon: 'cherry',
+        iconColor: 'text-rose-700',
         serving_size: '150g cup',
         calories: 140,
         protein_g: 14,
@@ -1138,7 +1198,8 @@
         name: 'Mystery Street-Style Sriracha Chips',
         brand: 'CrunchHaus',
         category: 'Snack',
-        emoji: '🌶️',
+        icon: 'flame',
+        iconColor: 'text-red-700',
         serving_size: '28g',
         calories: null,         // MISSING
         protein_g: null,        // MISSING
@@ -1248,6 +1309,12 @@
       }
     }
 
+    function refreshIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
     function escapeHtml(str) {
       if (str === null || str === undefined) return '';
       return String(str)
@@ -1328,7 +1395,9 @@
           >
             <div class="flex items-start justify-between gap-2">
               <div class="flex items-center gap-2.5 min-w-0">
-                <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center text-xl shrink-0">${p.emoji || '🍽️'}</span>
+                <span class="w-11 h-11 rounded-full bg-cream nb-border flex items-center justify-center shrink-0">
+                  <i data-lucide="${escapeHtml(p.icon || 'utensils')}" class="w-5 h-5 ${escapeHtml(p.iconColor || 'text-ink')}"></i>
+                </span>
                 <div class="min-w-0">
                   <p class="font-display font-bold text-sm leading-tight truncate">${escapeHtml(p.name)}</p>
                   <p class="text-[11px] font-semibold text-ink/70 truncate">${escapeHtml(p.brand)} • ${escapeHtml(p.id)}</p>
@@ -1349,12 +1418,13 @@
           </button>
         `;
       }).join('');
+      refreshIcons();
     }
 
     function syncProductSelectors() {
       const optionsHtml = foodDatabase.map(p => {
         const audit = auditProduct(p);
-        return `<option value="${p.id}" ${p.id === selectedProductId ? 'selected' : ''}>${p.emoji || '🍽️'} ${escapeHtml(p.name)} — ${audit.priority} (${audit.safetyScore}/100)</option>`;
+        return `<option value="${p.id}" ${p.id === selectedProductId ? 'selected' : ''}>${escapeHtml(p.name)} — ${audit.priority} (${audit.safetyScore}/100)</option>`;
       }).join('');
 
       const audSel = document.getElementById('auditor-product-select');
@@ -1382,7 +1452,7 @@
       const audit = auditProduct(product);
 
       // Hero header
-      document.getElementById('selected-emoji').textContent = product.emoji || '🍽️';
+      document.getElementById('selected-emoji').innerHTML = `<i data-lucide="${escapeHtml(product.icon || 'utensils')}" class="w-7 h-7 ${escapeHtml(product.iconColor || 'text-ink')}"></i>`;
       document.getElementById('selected-category').textContent = product.category || 'Food Item';
       document.getElementById('selected-name').textContent = product.name;
       document.getElementById('selected-brand').textContent = `${product.brand || 'Unbranded'} • ${product.id}`;
@@ -1482,7 +1552,9 @@
       if (audit.missingFields.length === 0) {
         listEl.innerHTML = `
           <div class="bg-matcha/45 nb-border rounded-2xl p-4 flex items-center gap-3">
-            <span class="text-2xl">🎉</span>
+            <span class="w-10 h-10 rounded-full bg-cream nb-border flex items-center justify-center shrink-0">
+              <i data-lucide="party-popper" class="w-5 h-5 text-emerald-700"></i>
+            </span>
             <div>
               <p class="font-display font-bold text-sm">100% Database Record Completeness!</p>
               <p class="text-xs font-semibold text-ink/75 mt-0.5">All required nutrition, serving, ingredient, and allergen fields are verified present.</p>
@@ -1518,6 +1590,7 @@
           `;
         }).join('');
       }
+      refreshIcons();
     }
 
     /* =========================================================================
@@ -1536,9 +1609,9 @@
       document.querySelectorAll('.goal-btn').forEach(btn => {
         const isTarget = btn.getAttribute('data-goal') === goalKey;
         if (isTarget) {
-          btn.className = 'goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold';
+          btn.className = 'goal-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5';
         } else {
-          btn.className = 'goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold';
+          btn.className = 'goal-btn nb-pill bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5';
         }
       });
 
@@ -1715,11 +1788,12 @@
 
       // Render Checklist
       document.getElementById('verdict-checklist').innerHTML = checks.map(c => {
-        const icon = c.status === 'PASS' ? '✅' : c.status === 'FAIL' ? '❌' : '⚠️';
+        const iconName = c.status === 'PASS' ? 'check-circle-2' : c.status === 'FAIL' ? 'x-circle' : 'alert-triangle';
+        const iconColor = c.status === 'PASS' ? 'text-emerald-700' : c.status === 'FAIL' ? 'text-red-700' : 'text-amber-700';
         const color = c.status === 'PASS' ? 'text-green-900 bg-matcha/40' : c.status === 'FAIL' ? 'text-red-900 bg-peach/40' : 'text-amber-900 bg-butter/40';
         return `
           <div class="flex items-center gap-2 p-2 rounded-xl nb-border ${color}">
-            <span class="text-sm shrink-0">${icon}</span>
+            <i data-lucide="${iconName}" class="w-4 h-4 ${iconColor} shrink-0"></i>
             <span class="text-xs font-bold leading-tight">${escapeHtml(c.text)}</span>
           </div>
         `;
@@ -1727,6 +1801,7 @@
 
       // Database Supplement & Swap Matcher (Strictly Grounded in Local Database)
       renderDatabaseSupplement(product, failCount > 0 || unknownCount > 0);
+      refreshIcons();
     }
 
     function renderDatabaseSupplement(currentProduct, needsAlternative) {
@@ -1757,7 +1832,9 @@
       resultsContainer.innerHTML = `
         <div class="bg-white nb-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-start gap-3">
-            <span class="w-12 h-12 rounded-full bg-cream nb-border flex items-center justify-center text-2xl shrink-0 shadow-[2px_2px_0px_#18181B]">${best.p.emoji || '🌱'}</span>
+            <span class="w-12 h-12 rounded-full bg-cream nb-border flex items-center justify-center shrink-0 shadow-[2px_2px_0px_#18181B]">
+              <i data-lucide="${escapeHtml(best.p.icon || 'sprout')}" class="w-6 h-6 ${escapeHtml(best.p.iconColor || 'text-emerald-700')}"></i>
+            </span>
             <div>
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-matcha nb-border">TOP DATABASE MATCH</span>
@@ -1777,7 +1854,9 @@
         ${second ? `
           <div class="bg-cream/80 nb-border rounded-2xl p-3 flex items-center justify-between gap-2">
             <div class="flex items-center gap-2.5">
-              <span class="text-lg">${second.p.emoji || '🥛'}</span>
+              <span class="w-8 h-8 rounded-full bg-white nb-border flex items-center justify-center shrink-0">
+                <i data-lucide="${escapeHtml(second.p.icon || 'milk')}" class="w-4 h-4 ${escapeHtml(second.p.iconColor || 'text-sky-700')}"></i>
+              </span>
               <div>
                 <p class="font-display font-bold text-xs">${escapeHtml(second.p.name)}</p>
                 <p class="text-[10px] font-semibold text-ink/70">Safety Score: ${second.audit.safetyScore}/100 • Clean Record</p>
@@ -1789,6 +1868,7 @@
           </div>
         ` : ''}
       `;
+      refreshIcons();
     }
 
     /* =========================================================================
@@ -1805,13 +1885,13 @@
       const groqGroup = document.getElementById('groq-input-group');
 
       if (provider === 'gemini') {
-        if (geminiBtn) geminiBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition';
-        if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition';
+        if (geminiBtn) geminiBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center gap-1.5';
+        if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition inline-flex items-center gap-1.5';
         if (geminiGroup) geminiGroup.classList.remove('hidden');
         if (groqGroup) groqGroup.classList.add('hidden');
       } else {
-        if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition';
-        if (geminiBtn) geminiBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition';
+        if (groqBtn) groqBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center gap-1.5';
+        if (geminiBtn) geminiBtn.className = 'px-3.5 py-1 rounded-full text-xs font-extrabold text-ink hover:bg-butter/60 transition inline-flex items-center gap-1.5';
         if (groqGroup) groqGroup.classList.remove('hidden');
         if (geminiGroup) geminiGroup.classList.add('hidden');
       }
@@ -1825,8 +1905,8 @@
 
       if (modalGemini && modalGroq) {
         if (provider === 'gemini') {
-          modalGemini.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition';
-          modalGroq.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition';
+          modalGemini.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center justify-center gap-1.5';
+          modalGroq.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition inline-flex items-center justify-center gap-1.5';
           if (modalLabel) modalLabel.textContent = 'Google Gemini API Key (AI Studio)';
           if (modalInput) {
             modalInput.placeholder = 'AIzaSy...';
@@ -1834,8 +1914,8 @@
           }
           if (modalHelper) modalHelper.innerHTML = 'Get your free key at <a href="https://aistudio.google.com/" target="_blank" rel="noopener" class="underline font-extrabold text-ink">aistudio.google.com</a>';
         } else {
-          modalGroq.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition';
-          modalGemini.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition';
+          modalGroq.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold bg-ink text-cream transition inline-flex items-center justify-center gap-1.5';
+          modalGemini.className = 'flex-1 py-1.5 rounded-full text-xs font-extrabold text-ink transition inline-flex items-center justify-center gap-1.5';
           if (modalLabel) modalLabel.textContent = 'Groq Cloud API Key';
           if (modalInput) {
             modalInput.placeholder = 'gsk_...';
@@ -1967,7 +2047,7 @@
     async function callGeminiWithBackoff(promptText) {
       const activeKey = userGeminiApiKey;
       if (!activeKey) {
-        throw new Error('Google Gemini API Key is missing. Click the 🔑 API Key button at the top to add your key from Google AI Studio.');
+        throw new Error('Google Gemini API Key is missing. Click the API Key button at the top to add your key from Google AI Studio.');
       }
 
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(activeKey)}`;
@@ -2007,7 +2087,7 @@
     async function callGroqWithBackoff(promptText) {
       const activeKey = userGroqApiKey;
       if (!activeKey) {
-        throw new Error('Groq Cloud API Key is missing. Click the 🔑 API Key button at the top to configure your Groq key.');
+        throw new Error('Groq Cloud API Key is missing. Click the API Key button at the top to configure your Groq key.');
       }
 
       const endpoint = 'https://api.groq.com/openai/v1/chat/completions';
@@ -2110,7 +2190,7 @@ Deliver a concise, structured audit report with:
             <p class="font-extrabold text-sm">Could not complete AI audit</p>
             <p class="text-xs mt-1 font-semibold">${escapeHtml(err.message)}</p>
             <div class="mt-2.5 flex items-center justify-between gap-2 flex-wrap">
-              <p class="text-[11px] text-ink/80">Tip: Click the 🔑 API Key button at the top header to enter your key.</p>
+              <p class="text-[11px] text-ink/80">Tip: Click the API Key button at the top header to enter your key.</p>
               <button onclick="openApiKeyModal()" class="nb-pill bg-butter px-3 py-1 text-[11px] font-extrabold">Open API Modal →</button>
             </div>
           </div>
@@ -2162,7 +2242,8 @@ Deliver a concise, structured audit report with:
         name,
         brand: document.getElementById('new-brand').value.trim() || 'Custom Entry',
         category: 'Custom Audit',
-        emoji: '🥗',
+        icon: 'salad',
+        iconColor: 'text-emerald-700',
         serving_size: document.getElementById('new-serving').value.trim() || null,
         calories: parseNullableNumber('new-calories'),
         protein_g: parseNullableNumber('new-protein'),
@@ -2254,6 +2335,7 @@ Deliver a concise, structured audit report with:
       evaluateUserNeeds();
       setActiveProvider(activeProvider);
       switchTab('home');
+      refreshIcons();
     });
   </script>
 </body>
