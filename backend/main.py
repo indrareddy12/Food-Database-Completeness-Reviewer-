@@ -31,6 +31,7 @@ from triage_service import (
     get_active_groq_key,
     get_active_gemini_key
 )
+from validator import audit_math_and_chemical_checks
 
 frontend_dir = current_dir.parent
 ALLOWED_UPLOAD_EXTENSIONS = {".csv", ".xlsx"}
@@ -297,12 +298,19 @@ def audit_product_triage(record_id: str):
     client_groq = data.get("groq_api_key")
     client_gemini = data.get("gemini_api_key")
 
+    # Run deterministic mathematical and chemical checks on Deep Audit click & inject into prompt
+    deep_checks = audit_math_and_chemical_checks(rec)
+    math_checks = deep_checks["math_checks"]
+    chemical_checks = deep_checks["chemical_checks"]
+
     audit_result = run_triage_audit(
         record=rec,
         audit=rec.get("audit", {}),
         anomalies=rec.get("anomalies", []),
         client_groq_key=client_groq,
-        client_gemini_key=client_gemini
+        client_gemini_key=client_gemini,
+        math_checks=math_checks,
+        chemical_checks=chemical_checks,
     )
 
     return jsonify(audit_result)

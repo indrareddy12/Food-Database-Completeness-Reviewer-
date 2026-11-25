@@ -6,6 +6,7 @@ All missing fields are explicitly preserved and labeled as MISSING.
 """
 
 import math
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -277,4 +278,163 @@ def detect_dataset_duplicates(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         "lookup": duplicates_lookup,
         "duplicate_groups_count": sum(1 for ids in groups.values() if len(ids) > 1),
         "total_duplicate_records": total_duplicate_items
+    }
+
+
+_CHEMICAL_ADDITIVE_PATTERNS: List[Tuple[str, str, str]] = [
+    (r"\bE\s?(?:1\d{2}|2\d{2}|3\d{2}|4\d{2}|5\d{2}|6\d{2}|9\d{2}|1[0-5]\d{2})[a-z]?\b", "MEDIUM", "E-number food additive"),
+    (r"\b(?:sodium\s+nitrite|sodium\s+nitrate|potassium\s+nitrite|potassium\s+nitrate|e\s?249|e\s?250|e\s?251|e\s?252)\b", "HIGH", "Nitrite/nitrate curing preservative"),
+    (r"\b(?:sul[fph]ites?|sulfur\s+dioxide|sulphur\s+dioxide|sodium\s+metabisul[fph]ite|potassium\s+bisul[fph]ite|e\s?22[0-8])\b", "HIGH", "Sulfite preservative (asthma/allergen sensitivity risk)"),
+    (r"\b(?:aspartame|acesulfame[\s-]*(?:k|potassium)?|sucralose|saccharin|neotame|e\s?950|e\s?951|e\s?954|e\s?955)\b", "MEDIUM", "Artificial non-nutritive sweetener"),
+    (r"\b(?:sodium\s+benzoate|potassium\s+sorbate|benzoic\s+acid|calcium\s+propionate|\bbha\b|\bbht\b|\btbhq\b|e\s?20[0-3]|e\s?21[0-3]|e\s?32[01])\b", "MEDIUM", "Synthetic chemical preservative/antioxidant"),
+    (r"\b(?:monosodium\s+glutamate|\bmsg\b|disodium\s+inosinate|disodium\s+guanylate|e\s?62[0-5])\b", "LOW", "Chemical flavor enhancer"),
+    (r"\b(?:tartrazine|allura\s+red|sunset\s+yellow|brilliant\s+blue|red\s*#?40|yellow\s*#?[56]|blue\s*#?1|e\s?102|e\s?110|e\s?129|e\s?133)\b", "MEDIUM", "Synthetic azo/food colorant"),
+    (r"\b(?:partially\s+hydrogenated|hydrogenated\s+(?:vegetable|palm|soybean|cottonseed)?\s*oil)\b", "HIGH", "Hydrogenated fat (potential industrial trans-fat source)"),
+]
+
+_ALLERGEN_INGREDIENT_MAP: Dict[str, Tuple[str, ...]] = {
+    "milk": ("milk", "whey", "casein", "caseinate", "lactose", "butter", "buttermilk", "cream", "cheese", "yogurt"),
+    "peanuts": ("peanut", "arachis"),
+    "tree_nuts": ("almond", "walnut", "cashew", "hazelnut", "pistachio", "pecan", "macadamia", "brazil nut", "pine nut"),
+    "soy": ("soy", "soya", "soybean", "tofu", "edamame", "soy lecithin"),
+    "wheat_gluten": ("wheat", "gluten", "barley", "rye", "spelt", "semolina", "durum"),
+    "eggs": ("egg", "eggs", "albumin", "ovalbumin", "lysozyme"),
+    "fish": ("fish", "salmon", "tuna", "cod", "anchovy", "anchovies", "sardine", "mackerel", "trout"),
+    "crustaceans": ("shrimp", "prawn", "crab", "lobster", "crayfish", "krill"),
+    "sesame": ("sesame", "tahini"),
+    "mustard": ("mustard",),
+}
+
+
+def audit_math_and_chemical_checks(record: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+    """
+    Runs deterministic on-demand mathematical and chemical safety checks for Deep Audit
+    prompt injection without inventing or imputing missing values.
+    """
+    base_anomalies = audit_cross_field_anomalies(record)
+    math_checks: List[Dict[str, Any]] = []
+    chemical_checks: List[Dict[str, Any]] = []
+
+    for a in base_anomalies:
+        if a.get("type") in ("sodium_exceeds_salt", "salt_sodium_mismatch"):
+            chemical_checks.append(a)
+        else:
+            math_checks.append(a)
+
+    def get_num(key: str) -> Optional[float]:
+        val = record.get(key)
+        if isinstance(val, bool) or is_missing_value(val):
+            return None
+        try:
+            num = float(val)
+            return num if math.isfinite(num) else None
+        except (ValueError, TypeError):
+            return None
+
+    calories = get_num("calories")
+    protein = get_num("protein_g")
+    carbs = get_num("carbs_g")
+    fat = get_num("fat_g")
+    fiber = get_num("fiber_g") or 0.0
+
+    # Atwater macronutrient energy balance check (4 kcal/g protein & carbs, 9 kcal/g fat)
+    if calories is not None and protein is not None and carbs is not None and fat is not None:
+        expected_kcal = (4.0 * protein) + (4.0 * carbs) + (9.0 * fat)
+        diff_kcal = abs(calories - expected_kcal)
+        rel_diff = diff_kcal / max(calories, expected_kcal, 1.0)
+        if diff_kcal > 45.0 and rel_diff > 0.30 and abs(calories - (expected_kcal + 2.0 * fiber)) > 45.0:
+            math_checks.append({
+                "type": "atwater_energy_mismatch",
+                "field": "calories",
+                "severity": "MEDIUM",
+                "message": (
+                    f"Atwater energy balance discrepancy: Declared calories ({calories:.1f} kcal) differ from "
+                    f"macro-derived estimate (~{expected_kcal:.1f} kcal from 4*P + 4*C + 9*F)."
+                ),
+            })
+
+    # Combined macronutrient mass sum check (>105g per 100g tolerance)
+    if protein is not None and carbs is not None and fat is not None:
+        macro_sum = protein + carbs + fat
+        if macro_sum > 105.0:
+            math_checks.append({
+                "type": "macro_sum_exceeds_100g",
+                "field": "protein_g,carbs_g,fat_g",
+                "severity": "CRITICAL",
+                "message": (
+                    f"Mass conservation contradiction: Protein ({protein:.1f}g) + Carbs ({carbs:.1f}g) + "
+                    f"Fat ({fat:.1f}g) sums to {macro_sum:.1f}g per 100g (exceeds 100g physical mass)."
+                ),
+            })
+
+    # Chemical & ingredient formulation scan
+    raw_ing = record.get("ingredients_text")
+    if is_missing_value(raw_ing):
+        ing_list = record.get("ingredients")
+        if isinstance(ing_list, list) and not is_missing_value(ing_list):
+            raw_ing = ", ".join(str(x) for x in ing_list if not is_missing_value(x))
+        else:
+            raw_ing = None
+
+    raw_alg = record.get("allergens_text")
+    if is_missing_value(raw_alg):
+        alg_list = record.get("allergens")
+        if isinstance(alg_list, list) and not is_missing_value(alg_list):
+            raw_alg = ", ".join(str(x) for x in alg_list if not is_missing_value(x))
+        else:
+            raw_alg = None
+
+    if not raw_ing or is_missing_value(raw_ing):
+        chemical_checks.append({
+            "type": "chemical_scan_blocked_missing_ingredients",
+            "field": "ingredients",
+            "severity": "CRITICAL",
+            "message": "Ingredient formulation is MISSING: chemical additives, E-numbers, preservatives, and hidden allergens cannot be verified.",
+        })
+    else:
+        ing_str = str(raw_ing)
+        ing_lower = ing_str.lower()
+
+        # Scan chemical additives / preservatives / sweeteners / dyes
+        for pattern, severity, label in _CHEMICAL_ADDITIVE_PATTERNS:
+            matches = sorted({m.group(0).strip() for m in re.finditer(pattern, ing_str, flags=re.IGNORECASE)})
+            if matches:
+                chemical_checks.append({
+                    "type": "chemical_additive_detected",
+                    "field": "ingredients",
+                    "severity": severity,
+                    "message": f"{label} detected in ingredients: {', '.join(matches[:6])}.",
+                })
+
+        # Cross-check ingredient keywords against declared allergens
+        alg_lower = str(raw_alg or "").lower()
+        alg_missing = not raw_alg or is_missing_value(raw_alg)
+        for allergen_group, keywords in _ALLERGEN_INGREDIENT_MAP.items():
+            matched_kw = [kw for kw in keywords if re.search(rf"\b{re.escape(kw)}\b", ing_lower)]
+            if matched_kw:
+                group_declared = any(kw in alg_lower for kw in keywords) or allergen_group.replace("_", " ") in alg_lower
+                if alg_missing:
+                    chemical_checks.append({
+                        "type": "allergen_ingredient_undeclared",
+                        "field": "allergens",
+                        "severity": "CRITICAL",
+                        "message": (
+                            f"Chemical/allergen hazard: Ingredient text contains '{matched_kw[0]}' ({allergen_group}) "
+                            "while Allergens declaration is MISSING."
+                        ),
+                    })
+                elif not group_declared and "none" not in alg_lower:
+                    chemical_checks.append({
+                        "type": "allergen_ingredient_mismatch",
+                        "field": "allergens",
+                        "severity": "HIGH",
+                        "message": (
+                            f"Allergen cross-check alert: Ingredient '{matched_kw[0]}' ({allergen_group}) "
+                            f"is present in ingredients but not explicitly listed in allergens ('{raw_alg}')."
+                        ),
+                    })
+
+    return {
+        "math_checks": math_checks,
+        "chemical_checks": chemical_checks,
     }

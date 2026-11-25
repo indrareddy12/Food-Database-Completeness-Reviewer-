@@ -213,19 +213,8 @@
         </button>
       </nav>
 
-      <!-- Top Header Action Controls (API Key Quick Pill + Add Record) -->
+      <!-- Top Header Action Controls (Add Record) -->
       <div class="flex items-center gap-2">
-        <button
-          onclick="openApiKeyModal()"
-          id="top-api-key-btn"
-          class="nb-pill bg-cream hover:bg-white px-3 sm:px-3.5 py-2 text-xs font-extrabold flex items-center gap-1.5 shrink-0"
-          title="Configure Gemini or Groq API Key"
-        >
-          <i data-lucide="key-round" class="w-3.5 h-3.5 text-amber-700"></i>
-          <span id="top-api-label" class="hidden sm:inline">API Key</span>
-          <span id="top-api-dot" class="w-2.5 h-2.5 rounded-full bg-butter border border-ink inline-block" title="API Status"></span>
-        </button>
-
         <button onclick="openAddModal()" class="nb-pill bg-berry px-3.5 sm:px-4 py-2 text-xs font-extrabold flex items-center gap-1.5 shrink-0">
           <i data-lucide="plus" class="w-4 h-4"></i>
           <span class="hidden sm:inline">Add Record</span>
@@ -256,47 +245,24 @@
           </div>
         </div>
 
-        <div id="dataset-toggle-buttons" class="flex flex-wrap items-center gap-2">
-          <button
-            id="btn-ds-demo"
-            onclick="switchDataset('demo')"
-            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-ink text-cream transition inline-flex items-center gap-1.5"
-            title="Default Open Food Facts benchmark (552 items)"
+        <div class="flex-1 max-w-md">
+          <label for="dataset-select" class="sr-only">Select Active Dataset</label>
+          <select
+            id="dataset-select"
+            onchange="switchDataset(this.value)"
+            class="w-full bg-white nb-input px-4 py-2 text-xs sm:text-sm font-extrabold text-ink cursor-pointer"
           >
-            <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-            <span>Demo Subset (552 rows)</span>
-          </button>
-          <button
-            id="btn-ds-full"
-            onclick="switchDataset('full')"
-            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-white text-ink hover:bg-cream transition inline-flex items-center gap-1.5"
-            title="Full Preprocessed Catalog (16,091 rows)"
-          >
-            <i data-lucide="package" class="w-3.5 h-3.5"></i>
-            <span>Full Catalog (16,091 rows)</span>
-            <span id="badge-ds-full" class="px-1.5 py-0.2 rounded-full text-[9px] bg-peach/40 uppercase">Workspace Check</span>
-          </button>
-          <button
-            id="btn-ds-synthetic"
-            onclick="switchDataset('synthetic')"
-            class="ds-pill nb-pill px-3.5 py-1.5 text-xs font-extrabold bg-white text-ink hover:bg-cream transition inline-flex items-center gap-1.5"
-            title="Synthetic 2,000 Dataset (food_completeness_dataset_2000.xlsx)"
-          >
-            <i data-lucide="flask-conical" class="w-3.5 h-3.5"></i>
-            <span>Synthetic (2,000 rows)</span>
-            <span id="badge-ds-synthetic" class="px-1.5 py-0.2 rounded-full text-[9px] bg-peach/40 uppercase">Workspace Check</span>
-          </button>
+            <option value="demo">Demo Subset (552 rows)</option>
+            <option value="full">Full Catalog (16,091 rows)</option>
+            <option value="synthetic">Synthetic (2,000 rows)</option>
+          </select>
         </div>
       </div>
 
       <div class="flex items-center gap-2 self-start md:self-auto flex-wrap">
-        <span id="backend-conn-badge" class="nb-pill bg-matcha px-3 py-1.5 text-[11px] font-extrabold inline-flex items-center gap-1.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-ink inline-block"></span>
-          <span id="backend-conn-text">Backend: Connecting...</span>
-        </span>
         <button
           onclick="triggerFileUploadModal()"
-          class="nb-pill bg-skyMint px-3 py-1.5 text-[11px] font-extrabold inline-flex items-center gap-1.5"
+          class="nb-pill bg-skyMint px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5"
           title="Upload full or synthetic dataset file directly"
         >
           <i data-lucide="folder-up" class="w-3.5 h-3.5"></i>
@@ -354,14 +320,14 @@
           </div>
           <span class="mt-4 px-3 py-1 bg-ink text-cream rounded-full text-[11px] font-extrabold uppercase">Live Database Snapshot</span>
           <p class="text-xs font-bold text-ink/85 mt-2">
-            Click the <strong class="text-ink inline-flex items-center gap-1 align-baseline"><i data-lucide="key-round" class="w-3 h-3 inline"></i> API Key</strong> button above to connect your Google AI Studio or Groq key.
+            Open <strong class="text-ink cursor-pointer underline" onclick="switchTab('settings')">Settings</strong> to check Backend, Groq, Gemini, and Pinecone connection status.
           </p>
         </div>
       </div>
 
-      <!-- Global Database Health Strip (6 Key Metrics: Total, Critical, Complete, Avg, Anomalies, Duplicates) -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <button onclick="switchTab('database'); setFilter('ALL');" class="text-left bg-cream nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
+      <!-- Global Database Health Strip (5 Key Metrics: Total, Critical, Complete, Avg, Duplicates) -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <button onclick="switchTab('database'); setFilter('CRITICAL');" class="text-left bg-cream nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-extrabold uppercase text-ink/60">Total Items</span>
             <i data-lucide="package" class="w-4 h-4 text-ink"></i>
@@ -375,7 +341,7 @@
           </div>
           <p id="stat-critical" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
-        <button onclick="switchTab('database'); setFilter('COMPLETE');" class="text-left bg-matcha nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
+        <button onclick="switchTab('auditor')" class="text-left bg-matcha nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-extrabold uppercase text-ink/80">100% Complete</span>
             <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-700"></i>
@@ -388,13 +354,6 @@
             <i data-lucide="bar-chart-3" class="w-4 h-4 text-sky-800"></i>
           </div>
           <p id="stat-avg" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0%</p>
-        </button>
-        <button onclick="switchTab('database'); setFilter('ANOMALIES');" class="text-left bg-butter nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] font-extrabold uppercase text-ink/80">Math Anomalies</span>
-            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-800"></i>
-          </div>
-          <p id="stat-anomalies" class="font-display font-bold text-2xl sm:text-3xl leading-tight mt-1">0</p>
         </button>
         <button onclick="switchTab('database'); setFilter('DUPLICATES');" class="text-left bg-lilac nb-card-sm p-3.5 flex flex-col justify-between hover:-translate-y-0.5 transition">
           <div class="flex items-center justify-between">
@@ -412,7 +371,7 @@
             <span class="inline-block px-3 py-1 bg-butter nb-border rounded-full text-xs font-extrabold">Step 01</span>
             <h3 class="font-display font-bold text-xl mt-3">Scan &amp; Prioritize Records</h3>
             <p class="text-xs font-semibold text-ink/75 mt-1 leading-relaxed">
-              View all products in the Database tab, filter by missing safety severity or math anomalies, or add your own incomplete food item to test.
+              Browse paginated products in the Database tab, filter by missing safety severity (Critical, High, Complete), or add your own food item to test.
             </p>
           </div>
           <button onclick="switchTab('database')" class="nb-pill bg-butter px-4 py-2 text-xs font-extrabold self-start">Go to Database →</button>
@@ -449,12 +408,12 @@
       <div class="bg-cream nb-card p-5">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <div>
-            <h2 class="font-display font-bold text-2xl flex items-center gap-2">
+            <h2 class="font-display font-bold text-2xl flex flex-wrap items-center gap-2">
               <i data-lucide="database" class="w-6 h-6 text-ink"></i>
               <span>Product Database &amp; Review Queue</span>
               <span id="dataset-count-badge" class="px-2.5 py-0.5 text-xs font-extrabold bg-butter nb-border rounded-full">0 Records</span>
             </h2>
-            <p class="text-xs sm:text-sm font-semibold text-ink/70">Click any product card to open its full Completeness Audit &amp; Safety Speed Dial.</p>
+            <p class="text-xs sm:text-sm font-semibold text-ink/70 mt-0.5">Click any product card to open its full Completeness Audit &amp; Safety Speed Dial.</p>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="auditAllDatabase()" class="nb-pill bg-skyMint px-4 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
@@ -474,21 +433,15 @@
             <input
               id="db-search"
               type="text"
-              oninput="renderProductList()"
+              oninput="onDbSearchInput()"
               placeholder="Search by product name, brand, category, or barcode..."
               class="w-full bg-white nb-input px-4 py-2.5 text-xs sm:text-sm font-semibold placeholder:text-ink/45"
             />
           </div>
           <div id="filter-pills" class="flex flex-wrap gap-2">
-            <button data-filter="ALL" onclick="setFilter('ALL')" class="filter-btn nb-pill bg-ink text-cream px-3.5 py-2 text-xs font-extrabold">All</button>
-            <button data-filter="CRITICAL" onclick="setFilter('CRITICAL')" class="filter-btn nb-pill bg-peach px-3.5 py-2 text-xs font-extrabold">Critical</button>
-            <button data-filter="HIGH" onclick="setFilter('HIGH')" class="filter-btn nb-pill bg-butter px-3.5 py-2 text-xs font-extrabold">High</button>
-            <button data-filter="COMPLETE" onclick="setFilter('COMPLETE')" class="filter-btn nb-pill bg-matcha px-3.5 py-2 text-xs font-extrabold">Complete</button>
-            <button data-filter="ANOMALIES" onclick="setFilter('ANOMALIES')" class="filter-btn nb-pill bg-white text-ink hover:bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
-              <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-700"></i>
-              <span>Math Anomalies (<span id="filter-anomalies-count">0</span>)</span>
-            </button>
-            <button data-filter="DUPLICATES" onclick="setFilter('DUPLICATES')" class="filter-btn nb-pill bg-white text-ink hover:bg-cream px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
+            <button data-filter="CRITICAL" onclick="setFilter('CRITICAL')" class="filter-btn nb-pill bg-peach px-3.5 py-2 text-xs font-extrabold ring-2 ring-ink ring-offset-2">Critical (<span id="filter-critical-count">0</span>)</button>
+            <button data-filter="HIGH" onclick="setFilter('HIGH')" class="filter-btn nb-pill bg-butter px-3.5 py-2 text-xs font-extrabold">High (<span id="filter-high-count">0</span>)</button>
+            <button data-filter="DUPLICATES" onclick="setFilter('DUPLICATES')" class="filter-btn nb-pill bg-lilac px-3.5 py-2 text-xs font-extrabold inline-flex items-center gap-1.5">
               <i data-lucide="copy" class="w-3.5 h-3.5 text-ink"></i>
               <span>Duplicates (<span id="filter-duplicates-count">0</span>)</span>
             </button>
@@ -497,6 +450,11 @@
 
         <!-- Responsive Product Grid -->
         <div id="product-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Pagination Controls -->
+        <div id="db-pagination" class="mt-5 pt-4 border-t-2 border-ink/15 flex flex-col sm:flex-row items-center justify-between gap-3">
           <!-- Dynamically populated -->
         </div>
       </div>
@@ -654,17 +612,17 @@
             </div>
           </div>
 
-          <!-- CROSS-FIELD MATH ANOMALIES & DUPLICATE WARNING CARD -->
-          <div id="anomalies-card" class="bg-peach/30 nb-card p-5 hidden">
-            <div class="flex items-center justify-between mb-2">
+          <!-- DEEP AUDIT MATH & CHEMICAL CHECKS CARD (POPULATED ON DEEP AUDIT CLICK) -->
+          <div id="anomalies-card" class="bg-butter/35 nb-card p-5 hidden">
+            <div class="flex items-center justify-between mb-2 gap-2">
               <h3 class="font-display font-bold text-lg flex items-center gap-2">
-                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-800"></i>
-                <span>Cross-Field Math &amp; Chemistry Contradictions</span>
+                <i data-lucide="flask-conical" class="w-5 h-5 text-ink"></i>
+                <span>Deep Audit: Math &amp; Chemical Verification</span>
               </h3>
-              <span id="anomaly-count-badge" class="px-2.5 py-0.5 text-[10px] font-extrabold bg-peach text-ink nb-border rounded-full uppercase">0 Issues</span>
+              <span id="anomaly-count-badge" class="px-2.5 py-0.5 text-[10px] font-extrabold bg-butter text-ink nb-border rounded-full uppercase">Checked</span>
             </div>
             <div id="anomalies-list" class="space-y-2 text-xs font-bold text-ink">
-              <!-- Dynamically populated -->
+              <!-- Dynamically populated when GenAI Deep Audit runs -->
             </div>
           </div>
 
@@ -820,6 +778,49 @@
          TAB 5: SETTINGS PAGE (API KEYS & SYSTEM PREFERENCES)
          ======================================================================= -->
     <section id="view-settings" class="tab-view max-w-3xl mx-auto space-y-5">
+      <!-- Live System & AI Engine Status Card (Backend, Groq, Gemini) -->
+      <div class="bg-cream nb-card p-6 space-y-4">
+        <div class="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h2 class="font-display font-bold text-2xl flex items-center gap-2">
+              <i data-lucide="activity" class="w-6 h-6 text-ink"></i>
+              <span>System &amp; AI Connection Status</span>
+            </h2>
+            <p class="text-xs sm:text-sm font-semibold text-ink/75 mt-1">
+              Check live Flask backend connectivity and Groq / Gemini API configuration status.
+            </p>
+          </div>
+          <button type="button" onclick="checkBackendHealth()" class="nb-pill bg-skyMint px-3.5 py-1.5 text-xs font-extrabold inline-flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Re-Check Status</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="bg-white nb-border rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[10px] font-extrabold uppercase text-ink/60">Flask API Backend</p>
+              <p id="backend-conn-text" class="font-display font-bold text-sm mt-0.5">Backend: Connecting...</p>
+            </div>
+            <span id="backend-conn-badge" class="nb-pill bg-matcha px-3 py-1 text-[11px] font-extrabold inline-flex items-center gap-1.5 shrink-0">
+              <span class="w-2.5 h-2.5 rounded-full bg-ink inline-block"></span>
+              <span id="backend-conn-short">Checking</span>
+            </span>
+          </div>
+
+          <div class="bg-white nb-border rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[10px] font-extrabold uppercase text-ink/60">LLM Triage Engine</p>
+              <p id="settings-groq-text" class="font-display font-bold text-sm mt-0.5">Checking Groq / Gemini...</p>
+            </div>
+            <span id="top-api-key-summary" class="nb-pill bg-cream px-3 py-1 text-[11px] font-extrabold inline-flex items-center gap-1.5 shrink-0">
+              <span id="top-api-dot" class="w-2.5 h-2.5 rounded-full bg-butter border border-ink inline-block"></span>
+              <span id="top-api-label">API Key</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- Gemini & Groq API Key Card -->
       <div class="bg-butter nb-card p-6">
         <div class="flex items-start justify-between gap-3 flex-wrap mb-4">
@@ -1231,7 +1232,9 @@
     ];
 
     let selectedProductId = '8908010900056';
-    let activeFilter = 'ALL';
+    let activeFilter = 'CRITICAL';
+    let currentPage = 1;
+    const PAGE_SIZE = 12;
     let activeGoal = 'gym';
     let activeProvider = localStorage.getItem('nutriaudit_provider') || 'groq';
     let userGeminiApiKey = localStorage.getItem('nutriaudit_gemini_key') || '';
@@ -1495,12 +1498,12 @@
       const audits = foodDatabase.map(auditProduct);
       const total = audits.length;
       const criticalCount = audits.filter(a => a.priority === 'CRITICAL').length;
+      const highCount = audits.filter(a => a.priority === 'HIGH').length;
       const completeCount = audits.filter(a => a.priority === 'COMPLETE').length;
       const avgCompleteness = total > 0
         ? Math.round(audits.reduce((sum, a) => sum + a.completenessPct, 0) / total)
         : 0;
 
-      const anomaliesCount = audits.filter(a => a.anomalies && a.anomalies.length > 0).length;
       const duplicatesCount = audits.filter(a => a.isDuplicate).length;
 
       document.getElementById('stat-total').textContent = total;
@@ -1508,13 +1511,16 @@
       document.getElementById('stat-avg').textContent = `${avgCompleteness}%`;
       document.getElementById('stat-complete').textContent = completeCount;
 
-      const statAnom = document.getElementById('stat-anomalies');
-      if (statAnom) statAnom.textContent = anomaliesCount;
       const statDups = document.getElementById('stat-duplicates');
       if (statDups) statDups.textContent = duplicatesCount;
 
-      const filAnom = document.getElementById('filter-anomalies-count');
-      if (filAnom) filAnom.textContent = anomaliesCount;
+      const dbDupCount = document.getElementById('db-duplicates-count');
+      if (dbDupCount) dbDupCount.textContent = duplicatesCount;
+
+      const filCrit = document.getElementById('filter-critical-count');
+      if (filCrit) filCrit.textContent = criticalCount;
+      const filHigh = document.getElementById('filter-high-count');
+      if (filHigh) filHigh.textContent = highCount;
       const filDups = document.getElementById('filter-duplicates-count');
       if (filDups) filDups.textContent = duplicatesCount;
 
@@ -1523,9 +1529,10 @@
     }
 
     function setFilter(filter) {
-      activeFilter = filter;
+      activeFilter = ['CRITICAL', 'HIGH', 'DUPLICATES'].includes(filter) ? filter : 'CRITICAL';
+      currentPage = 1;
       document.querySelectorAll('.filter-btn').forEach(btn => {
-        const isTarget = btn.getAttribute('data-filter') === filter;
+        const isTarget = btn.getAttribute('data-filter') === activeFilter;
         if (isTarget) {
           btn.classList.add('ring-2', 'ring-ink', 'ring-offset-2');
         } else {
@@ -1533,6 +1540,79 @@
         }
       });
       renderProductList();
+    }
+
+    function onDbSearchInput() {
+      currentPage = 1;
+      renderProductList();
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderProductList();
+      const dbView = document.getElementById('view-database');
+      if (dbView) {
+        dbView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function renderPagination(totalItems, totalPages, startIdx, endIdx) {
+      const pagEl = document.getElementById('db-pagination');
+      if (!pagEl) return;
+
+      if (totalItems === 0) {
+        pagEl.innerHTML = '';
+        return;
+      }
+
+      const pages = [];
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        const winStart = Math.max(2, currentPage - 1);
+        const winEnd = Math.min(totalPages - 1, currentPage + 1);
+        if (winStart > 2) pages.push('...');
+        for (let i = winStart; i <= winEnd; i++) pages.push(i);
+        if (winEnd < totalPages - 1) pages.push('...');
+        pages.push(totalPages);
+      }
+
+      const pageButtonsHtml = pages.map(p => {
+        if (p === '...') {
+          return `<span class="px-2 text-xs font-extrabold text-ink/60">...</span>`;
+        }
+        const active = p === currentPage;
+        return `
+          <button
+            onclick="goToPage(${p})"
+            class="min-w-[34px] h-[34px] px-2.5 nb-border rounded-full text-xs font-extrabold transition ${
+              active ? 'bg-ink text-cream shadow-[2px_2px_0px_#18181B]' : 'bg-white text-ink hover:bg-butter/70'
+            }"
+          >${p}</button>
+        `;
+      }).join('');
+
+      pagEl.innerHTML = `
+        <p class="text-xs font-bold text-ink/75">
+          Showing <span class="font-extrabold text-ink">${startIdx + 1}–${endIdx}</span> of
+          <span class="font-extrabold text-ink">${totalItems}</span> ${activeFilter === 'ALL' ? '' : activeFilter + ' '}records
+          (Page ${currentPage} of ${totalPages})
+        </p>
+        <div class="flex items-center flex-wrap gap-1.5">
+          <button
+            onclick="goToPage(${Math.max(1, currentPage - 1)})"
+            ${currentPage <= 1 ? 'disabled' : ''}
+            class="nb-pill px-3 py-1.5 text-xs font-extrabold bg-white text-ink disabled:opacity-40 disabled:cursor-not-allowed hover:bg-butter/70"
+          >← Prev</button>
+          ${pageButtonsHtml}
+          <button
+            onclick="goToPage(${Math.min(totalPages, currentPage + 1)})"
+            ${currentPage >= totalPages ? 'disabled' : ''}
+            class="nb-pill px-3 py-1.5 text-xs font-extrabold bg-white text-ink disabled:opacity-40 disabled:cursor-not-allowed hover:bg-butter/70"
+          >Next →</button>
+        </div>
+      `;
     }
 
     function renderProductList() {
@@ -1543,12 +1623,8 @@
       const filtered = foodDatabase.filter(p => {
         const audit = auditProduct(p);
         let matchesFilter = true;
-        if (activeFilter === 'ALL') {
-          matchesFilter = true;
-        } else if (activeFilter === 'CRITICAL' || activeFilter === 'HIGH' || activeFilter === 'COMPLETE') {
+        if (activeFilter === 'CRITICAL' || activeFilter === 'HIGH') {
           matchesFilter = (audit.priority === activeFilter);
-        } else if (activeFilter === 'ANOMALIES') {
-          matchesFilter = Boolean(audit.anomalies && audit.anomalies.length > 0);
         } else if (activeFilter === 'DUPLICATES') {
           matchesFilter = Boolean(audit.isDuplicate);
         }
@@ -1567,20 +1643,25 @@
         container.innerHTML = `
           <div class="col-span-full bg-white nb-border rounded-3xl p-8 text-center">
             <p class="font-display font-bold text-lg">No matching food records found</p>
-            <p class="text-xs font-semibold text-ink/70 mt-1">Try clearing your search or switching priority / anomaly filters.</p>
+            <p class="text-xs font-semibold text-ink/70 mt-1">Try clearing your search or switching priority filters.</p>
           </div>
         `;
+        renderPagination(0, 1, 0, 0);
         return;
       }
 
-      const displaySubset = filtered.slice(0, 120);
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const startIdx = (currentPage - 1) * PAGE_SIZE;
+      const endIdx = Math.min(startIdx + PAGE_SIZE, filtered.length);
+      const displaySubset = filtered.slice(startIdx, endIdx);
 
       container.innerHTML = displaySubset.map(p => {
         const audit = auditProduct(p);
         const style = getPriorityStyle(audit.priority);
         const isSelected = String(p.id) === String(selectedProductId);
-        const hasAnomalies = audit.anomalies && audit.anomalies.length > 0;
-        const isDup = audit.isDuplicate;
         const iconObj = p.icon ? { icon: p.icon, iconColor: p.iconColor || 'text-ink' } : assignFoodIcon(p.name, p.category);
         const displayName = p.name ? escapeHtml(p.name) : '<span class="text-red-700 font-extrabold">MISSING NAME</span>';
         const displayBrand = p.brand ? escapeHtml(p.brand) : 'MISSING BRAND';
@@ -1604,8 +1685,6 @@
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${style.badge}">
                   ${audit.priority}
                 </span>
-                ${hasAnomalies ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-peach text-ink nb-border inline-flex items-center gap-1" title="${audit.anomalies.length} math contradictions"><i data-lucide="alert-triangle" class="w-2.5 h-2.5"></i> Math</span>` : ''}
-                ${isDup ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold uppercase bg-lilac text-ink nb-border inline-flex items-center gap-1" title="Duplicate product entry"><i data-lucide="copy" class="w-2.5 h-2.5"></i> Dup</span>` : ''}
               </div>
             </div>
 
@@ -1618,6 +1697,7 @@
           </button>
         `;
       }).join('');
+      renderPagination(filtered.length, totalPages, startIdx, endIdx);
       refreshIcons();
     }
 
@@ -1794,46 +1874,11 @@
         }).join('');
       }
 
-      // Render Cross-Field Math Anomalies & Duplicate Alert (Lucide Icons)
+      // Hide on-demand Deep Audit Math & Chemical card until GenAI Deep Audit is triggered
       const anomCard = document.getElementById('anomalies-card');
-      const anomBadge = document.getElementById('anomaly-count-badge');
       const anomList = document.getElementById('anomalies-list');
-
-      const anomalies = audit.anomalies || [];
-      const dupInfo = audit.duplicateInfo;
-
-      if (anomalies.length > 0 || dupInfo) {
-        if (anomCard) anomCard.classList.remove('hidden');
-        if (anomBadge) anomBadge.textContent = `${anomalies.length + (dupInfo ? 1 : 0)} Issues`;
-        if (anomList) {
-          let html = '';
-          if (dupInfo) {
-            html += `
-              <div class="bg-lilac/45 nb-border rounded-xl p-3 flex items-start gap-2.5">
-                <i data-lucide="copy" class="w-4 h-4 text-ink shrink-0 mt-0.5"></i>
-                <div>
-                  <p class="font-extrabold text-xs">Duplicate SKU Identified</p>
-                  <p class="text-[11px] font-semibold mt-0.5">Shares identical product name and brand with ${dupInfo.count - 1} other item(s) in this dataset (${escapeHtml(dupInfo.otherIds.join(', '))}).</p>
-                </div>
-              </div>
-            `;
-          }
-          anomalies.forEach(a => {
-            html += `
-              <div class="bg-peach/50 nb-border rounded-xl p-3 flex items-start gap-2.5">
-                <i data-lucide="alert-triangle" class="w-4 h-4 text-red-800 shrink-0 mt-0.5"></i>
-                <div>
-                  <p class="font-extrabold text-xs">[${escapeHtml(a.severity)}] ${escapeHtml(a.type.replace(/_/g, ' ').toUpperCase())}</p>
-                  <p class="text-[11px] font-semibold mt-0.5 leading-relaxed">${escapeHtml(a.message)}</p>
-                </div>
-              </div>
-            `;
-          });
-          anomList.innerHTML = html;
-        }
-      } else {
-        if (anomCard) anomCard.classList.add('hidden');
-      }
+      if (anomCard) anomCard.classList.add('hidden');
+      if (anomList) anomList.innerHTML = '';
 
       refreshIcons();
     }
@@ -1860,14 +1905,9 @@
 
       activeDataset = datasetKey;
 
-      document.querySelectorAll('.ds-pill').forEach(btn => {
-        btn.classList.remove('bg-ink', 'text-cream');
-        btn.classList.add('bg-white', 'text-ink');
-      });
-      const activeBtn = document.getElementById(`btn-ds-${datasetKey}`);
-      if (activeBtn) {
-        activeBtn.classList.remove('bg-white', 'text-ink');
-        activeBtn.classList.add('bg-ink', 'text-cream');
+      const dsSelect = document.getElementById('dataset-select');
+      if (dsSelect && dsSelect.value !== datasetKey) {
+        dsSelect.value = datasetKey;
       }
 
       const activeLabel = document.getElementById('active-dataset-name-label');
@@ -1899,6 +1939,7 @@
           if (resp.ok) {
             const data = await resp.json();
             foodDatabase = data.records;
+            currentPage = 1;
             const dupRes = computeDatasetDuplicates(foodDatabase);
             duplicatesLookup = dupRes.lookup;
             selectedProductId = foodDatabase.length > 0 ? String(foodDatabase[0].id) : '';
@@ -2265,10 +2306,206 @@
     /* =========================================================================
        7. GENAI DEEP AUDIT TRIAGE (GROQ / GEMINI / ZERO-HALLUCINATION)
        ========================================================================= */
+    const CHEMICAL_ADDITIVE_PATTERNS = [
+      { re: /\bE\s?(?:1\d{2}|2\d{2}|3\d{2}|4\d{2}|5\d{2}|6\d{2}|9\d{2}|1[0-5]\d{2})[a-z]?\b/gi, severity: 'MEDIUM', label: 'E-number food additive' },
+      { re: /\b(?:sodium\s+nitrite|sodium\s+nitrate|potassium\s+nitrite|potassium\s+nitrate|e\s?249|e\s?250|e\s?251|e\s?252)\b/gi, severity: 'HIGH', label: 'Nitrite/nitrate curing preservative' },
+      { re: /\b(?:sul[fph]ites?|sulfur\s+dioxide|sulphur\s+dioxide|sodium\s+metabisul[fph]ite|potassium\s+bisul[fph]ite|e\s?22[0-8])\b/gi, severity: 'HIGH', label: 'Sulfite preservative (asthma/allergen risk)' },
+      { re: /\b(?:aspartame|acesulfame[\s-]*(?:k|potassium)?|sucralose|saccharin|neotame|e\s?950|e\s?951|e\s?954|e\s?955)\b/gi, severity: 'MEDIUM', label: 'Artificial non-nutritive sweetener' },
+      { re: /\b(?:sodium\s+benzoate|potassium\s+sorbate|benzoic\s+acid|calcium\s+propionate|\bbha\b|\bbht\b|\btbhq\b|e\s?20[0-3]|e\s?21[0-3]|e\s?32[01])\b/gi, severity: 'MEDIUM', label: 'Synthetic chemical preservative/antioxidant' },
+      { re: /\b(?:monosodium\s+glutamate|\bmsg\b|disodium\s+inosinate|disodium\s+guanylate|e\s?62[0-5])\b/gi, severity: 'LOW', label: 'Chemical flavor enhancer' },
+      { re: /\b(?:tartrazine|allura\s+red|sunset\s+yellow|brilliant\s+blue|red\s*#?40|yellow\s*#?[56]|blue\s*#?1|e\s?102|e\s?110|e\s?129|e\s?133)\b/gi, severity: 'MEDIUM', label: 'Synthetic food colorant' },
+      { re: /\b(?:partially\s+hydrogenated|hydrogenated\s+(?:vegetable|palm|soybean|cottonseed)?\s*oil)\b/gi, severity: 'HIGH', label: 'Hydrogenated fat (potential trans-fat source)' }
+    ];
+
+    const ALLERGEN_INGREDIENT_MAP = {
+      milk: ['milk', 'whey', 'casein', 'caseinate', 'lactose', 'butter', 'buttermilk', 'cream', 'cheese', 'yogurt'],
+      peanuts: ['peanut', 'arachis'],
+      tree_nuts: ['almond', 'walnut', 'cashew', 'hazelnut', 'pistachio', 'pecan', 'macadamia', 'brazil nut', 'pine nut'],
+      soy: ['soy', 'soya', 'soybean', 'tofu', 'edamame', 'soy lecithin'],
+      wheat_gluten: ['wheat', 'gluten', 'barley', 'rye', 'spelt', 'semolina', 'durum'],
+      eggs: ['egg', 'eggs', 'albumin', 'ovalbumin', 'lysozyme'],
+      fish: ['fish', 'salmon', 'tuna', 'cod', 'anchovy', 'anchovies', 'sardine', 'mackerel', 'trout'],
+      crustaceans: ['shrimp', 'prawn', 'crab', 'lobster', 'crayfish', 'krill'],
+      sesame: ['sesame', 'tahini'],
+      mustard: ['mustard']
+    };
+
+    function runMathAndChemicalChecks(product) {
+      const base = computeCrossFieldAnomalies(product);
+      const mathChecks = [];
+      const chemicalChecks = [];
+
+      base.forEach(a => {
+        if (a.type === 'sodium_exceeds_salt' || a.type === 'salt_sodium_mismatch') {
+          chemicalChecks.push(a);
+        } else {
+          mathChecks.push(a);
+        }
+      });
+
+      const cal = typeof product.calories === 'number' ? product.calories : null;
+      const prot = typeof product.protein_g === 'number' ? product.protein_g : null;
+      const carbs = typeof product.carbs_g === 'number' ? product.carbs_g : null;
+      const fat = typeof product.fat_g === 'number' ? product.fat_g : null;
+      const fiber = typeof product.fiber_g === 'number' ? product.fiber_g : 0;
+
+      if (cal !== null && prot !== null && carbs !== null && fat !== null) {
+        const expectedKcal = 4 * prot + 4 * carbs + 9 * fat;
+        const diffKcal = Math.abs(cal - expectedKcal);
+        const relDiff = diffKcal / Math.max(cal, expectedKcal, 1);
+        if (diffKcal > 45 && relDiff > 0.30 && Math.abs(cal - (expectedKcal + 2 * fiber)) > 45) {
+          mathChecks.push({
+            type: 'atwater_energy_mismatch',
+            field: 'calories',
+            severity: 'MEDIUM',
+            message: `Atwater energy balance discrepancy: Declared calories (${cal.toFixed(1)} kcal) differ from macro-derived estimate (~${expectedKcal.toFixed(1)} kcal from 4*P + 4*C + 9*F).`
+          });
+        }
+      }
+
+      if (prot !== null && carbs !== null && fat !== null) {
+        const macroSum = prot + carbs + fat;
+        if (macroSum > 105) {
+          mathChecks.push({
+            type: 'macro_sum_exceeds_100g',
+            field: 'protein_g,carbs_g,fat_g',
+            severity: 'CRITICAL',
+            message: `Mass conservation contradiction: Protein (${prot.toFixed(1)}g) + Carbs (${carbs.toFixed(1)}g) + Fat (${fat.toFixed(1)}g) sums to ${macroSum.toFixed(1)}g per 100g (exceeds 100g physical mass).`
+          });
+        }
+      }
+
+      const ingMissing = isFieldMissing(product.ingredients) && isFieldMissing(product.ingredients_text);
+      const rawIng = !ingMissing
+        ? String(product.ingredients_text || (Array.isArray(product.ingredients) ? product.ingredients.join(', ') : product.ingredients))
+        : '';
+
+      const algMissing = isFieldMissing(product.allergens) && isFieldMissing(product.allergens_text);
+      const rawAlg = !algMissing
+        ? String(product.allergens_text || (Array.isArray(product.allergens) ? product.allergens.join(', ') : product.allergens))
+        : '';
+
+      if (ingMissing || !rawIng.trim()) {
+        chemicalChecks.push({
+          type: 'chemical_scan_blocked_missing_ingredients',
+          field: 'ingredients',
+          severity: 'CRITICAL',
+          message: 'Ingredient formulation is MISSING: chemical additives, E-numbers, preservatives, and hidden allergens cannot be verified.'
+        });
+      } else {
+        CHEMICAL_ADDITIVE_PATTERNS.forEach(rule => {
+          const matches = Array.from(new Set((rawIng.match(rule.re) || []).map(m => m.trim())));
+          if (matches.length > 0) {
+            chemicalChecks.push({
+              type: 'chemical_additive_detected',
+              field: 'ingredients',
+              severity: rule.severity,
+              message: `${rule.label} detected in ingredients: ${matches.slice(0, 6).join(', ')}.`
+            });
+          }
+        });
+
+        const ingLower = rawIng.toLowerCase();
+        const algLower = rawAlg.toLowerCase();
+        Object.entries(ALLERGEN_INGREDIENT_MAP).forEach(([group, keywords]) => {
+          const foundKw = keywords.find(kw => new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(ingLower));
+          if (foundKw) {
+            const declared = keywords.some(kw => algLower.includes(kw)) || algLower.includes(group.replace('_', ' '));
+            if (algMissing) {
+              chemicalChecks.push({
+                type: 'allergen_ingredient_undeclared',
+                field: 'allergens',
+                severity: 'CRITICAL',
+                message: `Chemical/allergen hazard: Ingredient text contains '${foundKw}' (${group}) while Allergens declaration is MISSING.`
+              });
+            } else if (!declared && !algLower.includes('none')) {
+              chemicalChecks.push({
+                type: 'allergen_ingredient_mismatch',
+                field: 'allergens',
+                severity: 'HIGH',
+                message: `Allergen cross-check alert: Ingredient '${foundKw}' (${group}) is present in ingredients but not explicitly listed in allergens ('${rawAlg}').`
+              });
+            }
+          }
+        });
+      }
+
+      return { mathChecks, chemicalChecks };
+    }
+
+    function renderDeepChecksCard(mathChecks, chemicalChecks) {
+      const anomCard = document.getElementById('anomalies-card');
+      const anomBadge = document.getElementById('anomaly-count-badge');
+      const anomList = document.getElementById('anomalies-list');
+      if (!anomCard || !anomList) return;
+
+      const totalIssues = mathChecks.length + chemicalChecks.length;
+      anomCard.classList.remove('hidden');
+      if (anomBadge) {
+        anomBadge.textContent = totalIssues > 0 ? `${totalIssues} Findings Injected` : 'All Checks Passed';
+        anomBadge.className = `px-2.5 py-0.5 text-[10px] font-extrabold nb-border rounded-full uppercase ${
+          totalIssues > 0 ? 'bg-peach text-ink' : 'bg-matcha text-ink'
+        }`;
+      }
+
+      let html = '';
+      if (mathChecks.length === 0) {
+        html += `
+          <div class="bg-matcha/45 nb-border rounded-xl p-3 flex items-start gap-2.5">
+            <i data-lucide="calculator" class="w-4 h-4 text-emerald-800 shrink-0 mt-0.5"></i>
+            <div>
+              <p class="font-extrabold text-xs">[MATH CHECK] PASSED — INJECTED INTO PROMPT</p>
+              <p class="text-[11px] font-semibold mt-0.5">No macro-cap (>100g), Atwater calorie balance, or sugar/fat hierarchy contradictions detected.</p>
+            </div>
+          </div>
+        `;
+      } else {
+        mathChecks.forEach(m => {
+          html += `
+            <div class="bg-peach/50 nb-border rounded-xl p-3 flex items-start gap-2.5">
+              <i data-lucide="calculator" class="w-4 h-4 text-red-800 shrink-0 mt-0.5"></i>
+              <div>
+                <p class="font-extrabold text-xs">[MATH • ${escapeHtml(m.severity)}] ${escapeHtml(m.type.replace(/_/g, ' ').toUpperCase())}</p>
+                <p class="text-[11px] font-semibold mt-0.5 leading-relaxed">${escapeHtml(m.message)}</p>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      if (chemicalChecks.length === 0) {
+        html += `
+          <div class="bg-matcha/45 nb-border rounded-xl p-3 flex items-start gap-2.5">
+            <i data-lucide="flask-conical" class="w-4 h-4 text-emerald-800 shrink-0 mt-0.5"></i>
+            <div>
+              <p class="font-extrabold text-xs">[CHEMICAL CHECK] PASSED — INJECTED INTO PROMPT</p>
+              <p class="text-[11px] font-semibold mt-0.5">Salt/sodium stoichiometry verified; no flagged additives, E-numbers, or ingredient-allergen mismatches detected.</p>
+            </div>
+          </div>
+        `;
+      } else {
+        chemicalChecks.forEach(c => {
+          html += `
+            <div class="bg-lilac/45 nb-border rounded-xl p-3 flex items-start gap-2.5">
+              <i data-lucide="flask-conical" class="w-4 h-4 text-ink shrink-0 mt-0.5"></i>
+              <div>
+                <p class="font-extrabold text-xs">[CHEMICAL • ${escapeHtml(c.severity)}] ${escapeHtml(c.type.replace(/_/g, ' ').toUpperCase())}</p>
+                <p class="text-[11px] font-semibold mt-0.5 leading-relaxed">${escapeHtml(c.message)}</p>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      anomList.innerHTML = html;
+      refreshIcons();
+    }
+
     async function runAIDeepReview() {
       const product = foodDatabase.find(p => String(p.id) === String(selectedProductId)) || foodDatabase[0];
       if (!product) return;
       const audit = auditProduct(product);
+      let deepChecks = runMathAndChemicalChecks(product);
 
       const btn = document.getElementById('btn-gemini-audit');
       const btnText = document.getElementById('gemini-btn-text');
@@ -2277,14 +2514,15 @@
       const modelBadge = document.getElementById('ai-model-badge');
 
       btn.disabled = true;
-      btnText.textContent = 'Auditing with Zero-Hallucination Guardrail...';
+      btnText.textContent = 'Running Math + Chemical Checks & Auditing...';
       outputCard.classList.remove('hidden');
+      renderDeepChecksCard(deepChecks.mathChecks, deepChecks.chemicalChecks);
 
       if (modelBadge) {
         modelBadge.textContent = isBackendConnected ? 'Connecting...' : (activeProvider === 'gemini' ? 'gemini-2.5-flash' : 'groq');
       }
 
-      outputContent.innerHTML = `<p class="animate-pulse font-bold">Connecting to Zero-Hallucination Audit Engine (${isBackendConnected ? 'Groq Backend (.env)' : activeProvider.toUpperCase()})...</p>`;
+      outputContent.innerHTML = `<p class="animate-pulse font-bold">Injecting Math &amp; Chemical Verification Checks into Zero-Hallucination Audit Engine (${isBackendConnected ? 'Groq Backend (.env)' : activeProvider.toUpperCase()})...</p>`;
 
       try {
         let aiText = '';
@@ -2296,7 +2534,9 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               groq_api_key: userGroqApiKey || null,
-              gemini_api_key: userGeminiApiKey || null
+              gemini_api_key: userGeminiApiKey || null,
+              math_checks: deepChecks.mathChecks,
+              chemical_checks: deepChecks.chemicalChecks
             })
           });
 
@@ -2307,6 +2547,13 @@
 
           const data = await resp.json();
           aiText = data.content || '';
+          if (Array.isArray(data.math_checks) || Array.isArray(data.chemical_checks)) {
+            deepChecks = {
+              mathChecks: data.math_checks || deepChecks.mathChecks,
+              chemicalChecks: data.chemical_checks || deepChecks.chemicalChecks
+            };
+            renderDeepChecksCard(deepChecks.mathChecks, deepChecks.chemicalChecks);
+          }
           if (modelBadge && data.model) {
             modelBadge.textContent = `${(data.provider || 'GROQ').toUpperCase()} / ${(data.model || '').toUpperCase()}`;
           }
@@ -2315,13 +2562,33 @@
           }
         } else {
           const userNeedNote = document.getElementById('custom-need-note')?.value || 'General health';
-          const clientPrompt = `You are NutriAudit AI, an expert food safety and database auditor.\nCRITICAL DIRECTIVE: NEVER invent, guess, or estimate missing ingredients, allergens, or nutrients.\nRecord: ${JSON.stringify(product)}\nMissing fields: ${audit.missingFields.map(f => f.key).join(', ') || 'None'}\nUser Goal: ${userNeedNote}`;
+          const mathBlock = deepChecks.mathChecks.length > 0
+            ? deepChecks.mathChecks.map(m => `- [${m.severity}] ${m.message}`).join('\n')
+            : '- PASS: No mathematical, macro-bound, or Atwater energy contradictions found on declared values.';
+          const chemBlock = deepChecks.chemicalChecks.length > 0
+            ? deepChecks.chemicalChecks.map(c => `- [${c.severity}] ${c.message}`).join('\n')
+            : '- PASS: No salt/sodium stoichiometry contradictions, flagged chemical additives, or ingredient-allergen mismatches detected.';
+
+          const clientPrompt = [
+            'You are NutriAudit AI, an expert food safety and database auditor.',
+            'CRITICAL DIRECTIVE: NEVER invent, guess, or estimate missing ingredients, allergens, or nutrients.',
+            `Record: ${JSON.stringify(product)}`,
+            `Missing fields: ${audit.missingFields.map(f => f.key).join(', ') || 'None'}`,
+            '',
+            'ON-DEMAND MATHEMATICAL VERIFICATION CHECKS (INJECTED ON DEEP AUDIT):',
+            mathBlock,
+            '',
+            'ON-DEMAND CHEMICAL & INGREDIENT SAFETY CHECKS (INJECTED ON DEEP AUDIT):',
+            chemBlock,
+            '',
+            `User Goal: ${userNeedNote}`
+          ].join('\n');
           if (activeProvider === 'gemini' && userGeminiApiKey) {
             aiText = await callGeminiWithBackoff(clientPrompt);
           } else if (activeProvider === 'groq' && userGroqApiKey) {
             aiText = await callGroqWithBackoff(clientPrompt);
           } else {
-            aiText = buildClientDeterministicAudit(product, audit);
+            aiText = buildClientDeterministicAudit(product, audit, deepChecks);
           }
         }
 
@@ -2351,7 +2618,8 @@
       }
     }
 
-    function buildClientDeterministicAudit(product, audit) {
+    function buildClientDeterministicAudit(product, audit, deepChecks = null) {
+      const checks = deepChecks || runMathAndChemicalChecks(product);
       const riskPoints = [];
       const missingCrit = audit.missingFields.filter(f => f.severity === 'CRITICAL').map(f => f.label);
       const missingHigh = audit.missingFields.filter(f => f.severity === 'HIGH').map(f => f.label);
@@ -2369,8 +2637,11 @@
         riskPoints.push('* All primary safety and nutritional metrics are declared.');
       }
 
-      const anomPoints = (audit.anomalies || []).map(a => `* [${a.severity}] ${a.message}`);
-      if (anomPoints.length === 0) anomPoints.push('* No mathematical or chemical contradictions detected.');
+      const mathPoints = (checks.mathChecks || []).map(m => `* [${m.severity}] ${m.message}`);
+      if (mathPoints.length === 0) mathPoints.push('* PASS: No mathematical, macro-bound, or Atwater calorie contradictions detected.');
+
+      const chemPoints = (checks.chemicalChecks || []).map(c => `* [${c.severity}] ${c.message}`);
+      if (chemPoints.length === 0) chemPoints.push('* PASS: No salt/sodium stoichiometry errors, flagged chemical additives, or allergen-ingredient mismatches detected.');
 
       return `### Zero-Hallucination Verification Guarantee
 **ACTIVE GUARDRAIL:** No missing data points were inferred, estimated, or imputed for **${product.name || 'MISSING'}**. All missing fields are strictly preserved as \`MISSING\`.
@@ -2379,8 +2650,11 @@
 **Risk Assessment:**
 ${riskPoints.join('\n')}
 
-### Detected Cross-Field Anomalies & Contradictions
-${anomPoints.join('\n')}
+### Mathematical Checks (Injected on Deep Audit)
+${mathPoints.join('\n')}
+
+### Chemical & Ingredient Safety Checks (Injected on Deep Audit)
+${chemPoints.join('\n')}
 
 ### Actionable QA Verification Guidance
 1. Cross-check manufacturer official technical specification sheet for '${product.brand || 'MISSING'}'.
@@ -2464,11 +2738,17 @@ ${anomPoints.join('\n')}
 
       const topDot = document.getElementById('top-api-dot');
       const topLabel = document.getElementById('top-api-label');
+      const groqText = document.getElementById('settings-groq-text');
       if (topDot) {
         topDot.className = `w-2.5 h-2.5 rounded-full ${hasGroq || hasGemini ? 'bg-[#22c55e]' : 'bg-butter'} border border-ink inline-block`;
       }
       if (topLabel) {
-        topLabel.textContent = isBackendConnected ? 'Groq (.env)' : (hasGroq ? 'Groq Active' : (hasGemini ? 'Gemini Active' : 'API Key'));
+        topLabel.textContent = isBackendConnected ? 'Groq (.env)' : (hasGroq ? 'Groq Active' : (hasGemini ? 'Gemini Active' : 'Not Set'));
+      }
+      if (groqText) {
+        groqText.textContent = isBackendConnected
+          ? 'Groq (.env) Ready on Backend'
+          : (hasGroq ? 'Browser Groq Key Ready' : (hasGemini ? 'Browser Gemini Key Ready' : 'Configure Groq or Gemini Key Below'));
       }
 
       const gemDot = document.getElementById('gemini-status-dot');
@@ -2654,6 +2934,7 @@ ${anomPoints.join('\n')}
       }
 
       foodDatabase.unshift(newRecord);
+      currentPage = 1;
       const dupRes = computeDatasetDuplicates(foodDatabase);
       duplicatesLookup = dupRes.lookup;
 
@@ -2727,6 +3008,7 @@ ${anomPoints.join('\n')}
        ========================================================================= */
     async function checkBackendHealth() {
       const badge = document.getElementById('backend-conn-badge');
+      const shortBadge = document.getElementById('backend-conn-short');
       const text = document.getElementById('backend-conn-text');
 
       try {
@@ -2735,7 +3017,8 @@ ${anomPoints.join('\n')}
           const data = await resp.json();
           isBackendConnected = true;
 
-          if (badge) badge.className = 'nb-pill bg-matcha px-3 py-1.5 text-[11px] font-extrabold inline-flex items-center gap-1.5';
+          if (badge) badge.className = 'nb-pill bg-matcha px-3 py-1 text-[11px] font-extrabold inline-flex items-center gap-1.5 shrink-0';
+          if (shortBadge) shortBadge.textContent = 'Online';
           if (text) text.textContent = `Backend: Online (${data.groq_configured ? 'Groq Active' : 'Local'})`;
 
           const dsResp = await fetch(`${apiBaseUrl}/api/datasets`);
@@ -2750,8 +3033,10 @@ ${anomPoints.join('\n')}
         }
       } catch (e) {
         isBackendConnected = false;
-        if (badge) badge.className = 'nb-pill bg-butter px-3 py-1.5 text-[11px] font-extrabold inline-flex items-center gap-1.5';
+        if (badge) badge.className = 'nb-pill bg-butter px-3 py-1 text-[11px] font-extrabold inline-flex items-center gap-1.5 shrink-0';
+        if (shortBadge) shortBadge.textContent = 'Offline';
         if (text) text.textContent = 'Backend: Standalone UI';
+        updateApiStatusUI();
       }
       return false;
     }
@@ -2797,18 +3082,20 @@ ${anomPoints.join('\n')}
     }
 
     function updateDatasetBadgesUI(datasets) {
-      datasets.forEach(ds => {
-        const badge = document.getElementById(`badge-ds-${ds.key}`);
-        if (badge) {
-          if (ds.available) {
-            badge.className = 'px-1.5 py-0.2 rounded-full text-[9px] bg-matcha/80 text-ink uppercase';
-            badge.textContent = `${ds.row_count} rows (Ready)`;
-          } else {
-            badge.className = 'px-1.5 py-0.2 rounded-full text-[9px] bg-peach/40 text-ink uppercase';
-            badge.textContent = 'Not in workspace';
-          }
-        }
-      });
+      const dsSelect = document.getElementById('dataset-select');
+      if (!dsSelect || !Array.isArray(datasets) || datasets.length === 0) return;
+
+      const labelMap = {
+        demo: 'Demo Subset',
+        full: 'Full Catalog',
+        synthetic: 'Synthetic 2,000'
+      };
+
+      dsSelect.innerHTML = datasets.map(ds => {
+        const baseName = labelMap[ds.key] || ds.name || ds.key;
+        const statusSuffix = ds.available ? `${ds.row_count.toLocaleString()} rows • Ready` : 'Upload Required';
+        return `<option value="${escapeHtml(ds.key)}" ${ds.key === activeDataset ? 'selected' : ''}>${escapeHtml(baseName)} (${escapeHtml(statusSuffix)})</option>`;
+      }).join('');
     }
 
     function parseCsvRows(csvText) {
@@ -2952,6 +3239,7 @@ ${anomPoints.join('\n')}
           if (resp.ok) {
             const data = await resp.json();
             foodDatabase = data.records;
+            currentPage = 1;
             const dupRes = computeDatasetDuplicates(foodDatabase);
             duplicatesLookup = dupRes.lookup;
             selectedProductId = foodDatabase.length > 0 ? String(foodDatabase[0].id) : '';

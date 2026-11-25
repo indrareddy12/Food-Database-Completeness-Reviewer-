@@ -19,10 +19,11 @@ from data_connector import DataConnector, DATASET_CONFIGS, assign_food_icon
 from validator import (
     audit_record_completeness,
     audit_cross_field_anomalies,
+    audit_math_and_chemical_checks,
     detect_dataset_duplicates,
     is_missing_value
 )
-from triage_service import run_triage_audit, get_active_groq_key
+from triage_service import run_triage_audit, build_audit_prompt, get_active_groq_key
 
 
 def test_validator_zero_hallucination_and_missing_detection():
@@ -334,9 +335,7 @@ def test_frontend_lucide_icons_and_dataset_toggle():
     assert 'data-lucide="' in content
     # PS 134 bindings
     assert 'id="new-calories"' in content
-    assert 'id="btn-ds-demo"' in content
-    assert 'id="btn-ds-full"' in content
-    assert 'id="btn-ds-synthetic"' in content
+    assert 'id="dataset-select"' in content
     assert 'switchDataset(' in content
     assert 'anomalies-card' in content
     assert 'function saveModalApiKey()' in content
@@ -344,7 +343,73 @@ def test_frontend_lucide_icons_and_dataset_toggle():
     assert 'verdict-checklist' in content
     assert 'parseCsvRows' in content
     assert 'assignFoodIcon' in content
+    assert 'id="db-pagination"' in content
+    assert 'id="filter-duplicates-count"' in content
+    assert 'id="db-duplicates-banner"' not in content
+    assert 'id="backend-conn-badge"' in content
+    assert 'runMathAndChemicalChecks' in content
+    assert 'data-filter="CRITICAL"' in content
+    assert 'data-filter="HIGH"' in content
+    assert 'data-filter="DUPLICATES"' in content
+    assert 'data-filter="ALL"' not in content
+    assert 'data-filter="COMPLETE"' not in content
+    assert 'data-filter="ANOMALIES"' not in content
+    assert 'id="top-api-key-btn"' not in content
     assert '<img' not in content.lower() or 'images.openfoodfacts.net' not in content
+
+
+def test_deep_audit_math_and_chemical_prompt_injection():
+    """Verify Deep Audit runs math + chemical checks on demand and injects both into LLM prompt."""
+    record = {
+        "id": "CHEM-01",
+        "name": "Sparkling Peach Drink",
+        "brand": "TestLab",
+        "category": "Beverage",
+        "serving_size": "250ml",
+        "calories": 350.0,
+        "protein_g": 1.0,
+        "carbs_g": 10.0,
+        "sugar_g": 12.0,
+        "fat_g": 0.0,
+        "sodium_mg": 1500.0,
+        "salt_g": 1.0,
+        "ingredients_text": "Carbonated water, aspartame, E211, whey protein",
+        "allergens_text": None,
+    }
+    audit = audit_record_completeness(record)
+    anomalies = audit_cross_field_anomalies(record)
+    deep = audit_math_and_chemical_checks(record)
+
+    math_types = {m["type"] for m in deep["math_checks"]}
+    chem_types = {c["type"] for c in deep["chemical_checks"]}
+    assert "sugars_exceed_carbs" in math_types
+    assert "atwater_energy_mismatch" in math_types
+    assert "sodium_exceeds_salt" in chem_types
+    assert "chemical_additive_detected" in chem_types
+    assert "allergen_ingredient_undeclared" in chem_types
+
+    prompt = build_audit_prompt(
+        record,
+        audit,
+        anomalies,
+        math_checks=deep["math_checks"],
+        chemical_checks=deep["chemical_checks"],
+    )
+    assert "ON-DEMAND MATHEMATICAL VERIFICATION CHECKS" in prompt
+    assert "ON-DEMAND CHEMICAL & INGREDIENT SAFETY CHECKS" in prompt
+    assert "Atwater energy balance discrepancy" in prompt
+    assert "aspartame" in prompt.lower()
+
+    res = run_triage_audit(
+        record,
+        audit,
+        anomalies,
+        math_checks=deep["math_checks"],
+        chemical_checks=deep["chemical_checks"],
+    )
+    assert res["prompt_checks_injected"] is True
+    assert len(res["math_checks"]) >= 2
+    assert len(res["chemical_checks"]) >= 3
 
 
 if __name__ == "__main__":
