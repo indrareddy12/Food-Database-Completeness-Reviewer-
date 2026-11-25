@@ -83,6 +83,11 @@ def build_pinecone_metadata(
     categories = clean_str(row.get("categories"))
     image_url = clean_str(row.get("image_url"))
 
+    has_missing_critical = (allergens is None) or (ingredients is None) or any(
+        f in ("allergens", "ingredients_text") for f in audit.invalid_fields
+    )
+    completeness_score = float(audit.nutrition_completeness_pct or 0.0)
+
     meta: dict[str, Any] = {
         "code": audit.code,
         "product_name": html.unescape(audit.product_name) if audit.product_name else "",
@@ -91,12 +96,15 @@ def build_pinecone_metadata(
         "allergens": html.unescape(allergens) if allergens else "",
         "has_allergens": allergens is not None,
         "has_ingredients": ingredients is not None,
+        "has_missing_critical": has_missing_critical,
+        "review_priority": audit.baseline_priority,
         "audit_priority": audit.baseline_priority,
+        "completeness_score": completeness_score,
         "needs_llm_review": audit.needs_llm_review,
         "is_verified_safe": audit.baseline_priority in ("NONE", "LOW"),
         "missing_fields": audit.missing_fields,
         "invalid_fields": audit.invalid_fields,
-        "nutrition_completeness_pct": float(audit.nutrition_completeness_pct or 0.0),
+        "nutrition_completeness_pct": completeness_score,
         "text": text[:3500],  # Stay well within Pinecone 40KB metadata limit
     }
     if image_url:
@@ -293,7 +301,9 @@ def query_pinecone(
 
 
 def main() -> None:
-    load_dotenv()
+    repo_root = Path(__file__).resolve().parent.parent
+    load_dotenv(repo_root / ".env")
+    load_dotenv(Path(__file__).resolve().parent / ".env")
     parser = argparse.ArgumentParser(description="Audit, embed, and store food DB in Pinecone.")
     parser.add_argument(
         "--input",
@@ -306,11 +316,23 @@ def main() -> None:
     parser.add_argument("--query", type=str, default=None, help="Run a semantic search query against Pinecone.")
     parser.add_argument("--top-k", type=int, default=5, help="Number of search results.")
     parser.add_argument("--safe-only", action="store_true", help="Filter out HIGH/MEDIUM priority unverified items.")
-    parser.add_argument("--index", type=str, default=os.environ.get("PINECONE_INDEX_NAME", "nutriaudit-food-db"))
+    parser.add_argument(
+        "--index",
+        type=str,
+        default=os.environ.get("PINECONE_INDEX")
+        or os.environ.get("PINECONE_INDEX_NAME")
+        or "food-database-completeness",
+    )
     parser.add_argument("--namespace", type=str, default="food-products")
     parser.add_argument("--model", type=str, default=os.environ.get("PINECONE_EMBED_MODEL", "multilingual-e5-large"))
     parser.add_argument("--cloud", type=str, default=os.environ.get("PINECONE_CLOUD", "aws"))
-    parser.add_argument("--region", type=str, default=os.environ.get("PINECONE_REGION", "us-east-1"))
+    parser.add_argument(
+        "--region",
+        type=str,
+        default=os.environ.get("PINECONE_ENVIRONMENT")
+        or os.environ.get("PINECONE_REGION")
+        or "us-east-1",
+    )
     args = parser.parse_args()
 
     if args.query:
