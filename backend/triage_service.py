@@ -12,6 +12,8 @@ from typing import Any, Dict, List, Optional
 import requests
 from dotenv import load_dotenv
 
+from validator import audit_math_and_chemical_checks
+
 logger = logging.getLogger("nutriaudit.triage")
 
 # Load workspace .env
@@ -43,8 +45,14 @@ def get_active_gemini_key() -> Optional[str]:
     return None
 
 
-def build_audit_prompt(record: Dict[str, Any], audit: Dict[str, Any], anomalies: list) -> str:
-    """Build a structured zero-hallucination audit prompt."""
+def build_audit_prompt(
+    record: Dict[str, Any],
+    audit: Dict[str, Any],
+    anomalies: list,
+    math_checks: Optional[List[Dict[str, Any]]] = None,
+    chemical_checks: Optional[List[Dict[str, Any]]] = None,
+) -> str:
+    """Build a structured zero-hallucination audit prompt with live math and chemical checks."""
     product_name = record.get("name") or "MISSING"
     brand = record.get("brand") or "MISSING"
     category = record.get("category") or "MISSING"
@@ -70,6 +78,21 @@ def build_audit_prompt(record: Dict[str, Any], audit: Dict[str, Any], anomalies:
     ingredients = record.get("ingredients_text") or (", ".join(record.get("ingredients") or []) if record.get("ingredients") else "MISSING")
     allergens = record.get("allergens_text") or (", ".join(record.get("allergens") or []) if record.get("allergens") else "MISSING")
 
+    if math_checks is None or chemical_checks is None:
+        computed = audit_math_and_chemical_checks(record)
+        math_checks = computed["math_checks"] if math_checks is None else math_checks
+        chemical_checks = computed["chemical_checks"] if chemical_checks is None else chemical_checks
+
+    math_str = "\n".join(
+        f"  - [{m.get('severity', 'INFO')}] {m.get('message')}"
+        for m in math_checks
+    ) if math_checks else "  - PASS: No mathematical, macro-bound, or Atwater energy contradictions found on declared values."
+
+    chemical_str = "\n".join(
+        f"  - [{c.get('severity', 'INFO')}] {c.get('message')}"
+        for c in chemical_checks
+    ) if chemical_checks else "  - PASS: No salt/sodium stoichiometry contradictions, flagged chemical additives, or ingredient-allergen mismatches detected."
+
     anomalies_str = "\n".join(
         f"  - [{a.get('severity')}] {a.get('message')}"
         for a in anomalies
@@ -80,7 +103,7 @@ def build_audit_prompt(record: Dict[str, Any], audit: Dict[str, Any], anomalies:
 CRITICAL DIRECTIVE — ZERO-HALLUCINATION CONTRACT:
 1. You must NEVER invent, estimate, infer, or guess any missing ingredient, allergen, or nutritional metric.
 2. Missing fields MUST be acknowledged explicitly as MISSING. Under no circumstances assume that missing allergens mean the product is allergen-free.
-3. Review the food record below, evaluate completeness and anomalies, and provide an actionable QA verification audit.
+3. Review the food record below, evaluate completeness plus the live mathematical and chemical checks injected below, and provide an actionable QA verification audit.
 
 FOOD RECORD UNDER AUDIT:
 - Product Name: {product_name}
@@ -102,10 +125,16 @@ DETERMINISTIC VALIDATION ENGINE FINDINGS:
 - Cross-Field Anomalies:
 {anomalies_str}
 
+ON-DEMAND MATHEMATICAL VERIFICATION CHECKS (INJECTED ON DEEP AUDIT):
+{math_str}
+
+ON-DEMAND CHEMICAL & INGREDIENT SAFETY CHECKS (INJECTED ON DEEP AUDIT):
+{chemical_str}
+
 Please generate an audit response structured with these exact plain-text section headings (no emojis):
 1. ZERO-HALLUCINATION VERIFICATION GUARANTEE: Affirm explicitly that no missing metrics were inferred.
 2. TRIAGE PRIORITY & RISK ASSESSMENT: Why this record requires review (e.g. anaphylaxis risk from missing allergens, compliance failure from missing ingredients, or metabolic risk).
-3. DETECTED ANOMALIES & OMISSIONS: Breakdown of missing fields and any mathematical contradictions.
+3. MATHEMATICAL & CHEMICAL CHECK FINDINGS: Breakdown of all mathematical balance checks (Atwater energy, macro caps, sugar/fat hierarchy) and chemical checks (NaCl stoichiometry, E-numbers/preservatives/sweeteners, allergen cross-checks) alongside missing fields.
 4. ACTIONABLE QA VERIFICATION GUIDANCE: Concrete, step-by-step instructions for human food safety auditors (packaging verification, manufacturer spec request, laboratory assay).
 """
     return prompt
@@ -115,7 +144,9 @@ def generate_deterministic_fallback_audit(
     record: Dict[str, Any],
     audit: Dict[str, Any],
     anomalies: list,
-    provider_warnings: Optional[List[str]] = None
+    provider_warnings: Optional[List[str]] = None,
+    math_checks: Optional[List[Dict[str, Any]]] = None,
+    chemical_checks: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """
     Deterministic rule-based audit report matching the zero-hallucination contract.
@@ -143,9 +174,18 @@ def generate_deterministic_fallback_audit(
     if not risk_points:
         risk_points.append("All primary safety and nutritional parameters are declared.")
 
-    anomaly_texts = [f"* [{a.get('severity')}] {a.get('message')}" for a in anomalies]
-    if not anomaly_texts:
-        anomaly_texts = ["* No mathematical or chemical contradictions detected."]
+    if math_checks is None or chemical_checks is None:
+        computed = audit_math_and_chemical_checks(record)
+        math_checks = computed["math_checks"] if math_checks is None else math_checks
+        chemical_checks = computed["chemical_checks"] if chemical_checks is None else chemical_checks
+
+    math_texts = [f"* [{m.get('severity', 'INFO')}] {m.get('message')}" for m in math_checks]
+    if not math_texts:
+        math_texts = ["* PASS: No mathematical, macro-bound, or Atwater calorie contradictions detected."]
+
+    chemical_texts = [f"* [{c.get('severity', 'INFO')}] {c.get('message')}" for c in chemical_checks]
+    if not chemical_texts:
+        chemical_texts = ["* PASS: No salt/sodium stoichiometry errors, flagged chemical additives, or ingredient-allergen mismatches detected."]
 
     guidance = [
         f"1. Request official product specification sheet from manufacturer '{brand}'.",
@@ -165,12 +205,14 @@ def generate_deterministic_fallback_audit(
 **Risk Evaluation:**
 {chr(10).join('* ' + p for p in risk_points)}
 
-### Detected Omissions & Anomalies
+### Mathematical & Chemical Check Findings
 - **Missing Critical Fields:** {', '.join(missing_crit) if missing_crit else 'None'}
 - **Missing High-Priority Fields:** {', '.join(missing_high) if missing_high else 'None'}
 - **Missing Secondary Fields:** {', '.join(missing_low) if missing_low else 'None'}
-**Cross-Field Math Findings:**
-{chr(10).join(anomaly_texts)}
+**Mathematical Checks:**
+{chr(10).join(math_texts)}
+**Chemical & Ingredient Safety Checks:**
+{chr(10).join(chemical_texts)}
 
 ### Actionable QA Verification Guidance
 {chr(10).join(guidance)}{fallback_note}
@@ -182,6 +224,9 @@ def generate_deterministic_fallback_audit(
         "content": content,
         "review_priority": priority,
         "zero_hallucination_guaranteed": True,
+        "math_checks": math_checks,
+        "chemical_checks": chemical_checks,
+        "prompt_checks_injected": True,
         "warnings": warnings_list,
         "fallback_reason": "; ".join(warnings_list) if warnings_list else "No external LLM key configured."
     }
@@ -192,12 +237,26 @@ def run_triage_audit(
     audit: Dict[str, Any],
     anomalies: list,
     client_groq_key: Optional[str] = None,
-    client_gemini_key: Optional[str] = None
+    client_gemini_key: Optional[str] = None,
+    math_checks: Optional[List[Dict[str, Any]]] = None,
+    chemical_checks: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """
     Run triage audit using Groq, Gemini, or safe logged deterministic fallback.
+    Computes on-demand mathematical and chemical checks and injects them into the LLM prompt.
     """
-    prompt = build_audit_prompt(record, audit, anomalies)
+    if math_checks is None or chemical_checks is None:
+        computed = audit_math_and_chemical_checks(record)
+        math_checks = computed["math_checks"] if math_checks is None else math_checks
+        chemical_checks = computed["chemical_checks"] if chemical_checks is None else chemical_checks
+
+    prompt = build_audit_prompt(
+        record,
+        audit,
+        anomalies,
+        math_checks=math_checks,
+        chemical_checks=chemical_checks,
+    )
     provider_warnings: List[str] = []
 
     # 1. Try Groq (Preferred with active Groq API Key)
@@ -235,6 +294,9 @@ def run_triage_audit(
                         "content": ai_content,
                         "review_priority": audit.get("review_priority"),
                         "zero_hallucination_guaranteed": True,
+                        "math_checks": math_checks,
+                        "chemical_checks": chemical_checks,
+                        "prompt_checks_injected": True,
                         "warnings": provider_warnings
                     }
                 msg = f"Groq ({model}) returned HTTP {resp.status_code}"
@@ -276,6 +338,9 @@ def run_triage_audit(
                     "content": ai_text,
                     "review_priority": audit.get("review_priority"),
                     "zero_hallucination_guaranteed": True,
+                    "math_checks": math_checks,
+                    "chemical_checks": chemical_checks,
+                    "prompt_checks_injected": True,
                     "warnings": provider_warnings
                 }
             msg = f"Gemini returned HTTP {resp.status_code}"
@@ -291,4 +356,11 @@ def run_triage_audit(
             provider_warnings.append(msg)
 
     # 3. Safe, deterministic fallback that logs & reports warnings explicitly
-    return generate_deterministic_fallback_audit(record, audit, anomalies, provider_warnings=provider_warnings)
+    return generate_deterministic_fallback_audit(
+        record,
+        audit,
+        anomalies,
+        provider_warnings=provider_warnings,
+        math_checks=math_checks,
+        chemical_checks=chemical_checks,
+    )
