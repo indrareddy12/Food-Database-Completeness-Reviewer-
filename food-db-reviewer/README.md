@@ -83,7 +83,7 @@ Real-world food catalogs rarely fail cleanly with just `null`. Stage 1 explicitl
                                          |
                                          v
 +-------------------------------------------------------------------------+
-|                       Streamlit Audit Dashboard                         |
+|                       NutriAudit Web Dashboard (index.html)               |
 |  - Priority Queue (HIGH -> MEDIUM -> LOW) & Verified Catalog            |
 |  - Per-field Missing vs. Invalid Breakdown & Reviewer Action Plan       |
 +-------------------------------------------------------------------------+

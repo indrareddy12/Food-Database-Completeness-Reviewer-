@@ -220,6 +220,10 @@ def upsert_to_pinecone(
             "PINECONE_API_KEY is not set. Add it to .env or export it in your terminal."
         )
 
+    if not docs:
+        print(json.dumps({"status": "SKIPPED", "message": "No valid documents to upsert."}, indent=2))
+        return
+
     pc = Pinecone(api_key=api_key)
     texts = [d["text"] for d in docs]
     embeddings = embed_texts_pinecone(pc, texts, model=embed_model, input_type="passage")

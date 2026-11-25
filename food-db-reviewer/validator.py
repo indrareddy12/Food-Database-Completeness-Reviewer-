@@ -8,6 +8,7 @@ ever inventing, estimating, or modifying missing or invalid values.
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -166,6 +167,22 @@ def _classify_field(
                         reason="List contains non-string or blank entries.",
                     ),
                 )
+            meaningful = [
+                item
+                for item in cleaned
+                if item.strip().lower() not in PLACEHOLDER_STRINGS
+                or (rule.name == "allergens" and item.strip().lower() == "none")
+            ]
+            if len(meaningful) == 0:
+                return (
+                    MissingFieldDetail(
+                        field=rule.name,
+                        tier=rule.tier,
+                        raw_value=raw_val,
+                        reason="List contains only placeholder values; declaration is missing.",
+                    ),
+                    None,
+                )
             return None, None
 
         if _is_placeholder_str(raw_val):
@@ -223,6 +240,17 @@ def _classify_field(
                 tier=rule.tier,
                 raw_value=raw_val,
                 reason=f"Expected non-negative number, got {raw_val!r}.",
+            ),
+        )
+
+    if math.isnan(raw_val) or math.isinf(raw_val):
+        return (
+            None,
+            InvalidFieldDetail(
+                field=rule.name,
+                tier=rule.tier,
+                raw_value=raw_val,
+                reason="Non-finite numeric value (NaN or Infinity).",
             ),
         )
 

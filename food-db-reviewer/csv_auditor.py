@@ -190,22 +190,24 @@ def audit_csv_row(row_index: int, row: dict[str, Any]) -> CsvAuditRecord:
                 f"{col}={num} exceeds 100g per 100g product (likely mg/unit confusion)."
             )
 
-    # Cross-field physical sanity checks
+    # Cross-field physical sanity checks (impossible ratios invalidate the field and block is_verified_safe)
     if (
         "sugars_100g" in parsed_nums
         and "carbohydrates_100g" in parsed_nums
         and parsed_nums["sugars_100g"] > parsed_nums["carbohydrates_100g"] + 0.5
     ):
-        warnings.append(
-            f"sugars_100g ({parsed_nums['sugars_100g']}) > carbohydrates_100g ({parsed_nums['carbohydrates_100g']})."
+        invalid_fields.append("sugars_100g")
+        invalid_reasons["sugars_100g"] = (
+            f"Sugars ({parsed_nums['sugars_100g']}g) exceed total carbohydrates ({parsed_nums['carbohydrates_100g']}g)."
         )
     if (
         "saturated_fat_100g" in parsed_nums
         and "fat_100g" in parsed_nums
         and parsed_nums["saturated_fat_100g"] > parsed_nums["fat_100g"] + 0.5
     ):
-        warnings.append(
-            f"saturated_fat_100g ({parsed_nums['saturated_fat_100g']}) > fat_100g ({parsed_nums['fat_100g']})."
+        invalid_fields.append("saturated_fat_100g")
+        invalid_reasons["saturated_fat_100g"] = (
+            f"Saturated fat ({parsed_nums['saturated_fat_100g']}g) exceeds total fat ({parsed_nums['fat_100g']}g)."
         )
 
     # Priority classification
