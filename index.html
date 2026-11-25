@@ -1841,8 +1841,8 @@
     /* =========================================================================
        5. DATASET TOGGLE CONTROLLER (PS 134 Requirement)
        ========================================================================= */
-    async function switchDataset(datasetKey) {
-      if (datasetKey === activeDataset && foodDatabase.length > 1) {
+    async function switchDataset(datasetKey, customLabel = null) {
+      if (datasetKey === activeDataset && foodDatabase.length > 1 && datasetKey !== 'custom') {
         return;
       }
 
@@ -1877,7 +1877,7 @@
           full: 'Full Preprocessed Catalog (16,091 rows)',
           synthetic: 'Synthetic 2,000 Dataset'
         };
-        activeLabel.textContent = nameMap[datasetKey] || datasetKey;
+        activeLabel.textContent = customLabel ? `Uploaded: ${customLabel}` : (nameMap[datasetKey] || datasetKey);
       }
 
       showToast(`Loading dataset '${datasetKey}'...`, 'bg-skyMint');
@@ -1947,10 +1947,10 @@
           });
           const result = await resp.json().catch(() => ({}));
           if (resp.ok) {
-            showToast(`Uploaded ${result.filename || file.name}! Reloading dataset...`, 'bg-matcha');
+            showToast(`Uploaded ${result.filename || file.name}! Loading records...`, 'bg-matcha');
             await checkBackendHealth();
             if (result.matched_dataset) {
-              await switchDataset(result.matched_dataset);
+              await switchDataset(result.matched_dataset, result.filename || file.name);
             }
             return;
           } else {

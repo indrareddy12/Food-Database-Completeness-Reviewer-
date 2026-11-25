@@ -208,8 +208,19 @@ def upload_dataset_file():
             matched_key = key
             break
 
-    if matched_key:
-        connector.active_dataset_key = matched_key
+    if not matched_key:
+        matched_key = "custom"
+        DATASET_CONFIGS["custom"] = {
+            "key": "custom",
+            "name": f"Uploaded ({safe_filename})",
+            "filenames": [safe_filename],
+            "format": "xlsx_synthetic" if ext == ".xlsx" else "csv_off",
+            "expected_rows": 0,
+            "is_default": False,
+            "description": f"User-uploaded dataset: {safe_filename}",
+        }
+
+    connector.active_dataset_key = matched_key
 
     return jsonify({
         "status": "success",

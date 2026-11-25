@@ -233,12 +233,18 @@ def test_upload_security_sanitization():
     r2 = client.post("/api/datasets/upload", data={"file": (io.BytesIO(b"<p>bad</p>"), "index.html")}, content_type="multipart/form-data")
     assert r2.status_code == 400
 
-    # 3. Valid CSV upload lands safely in isolated uploads/ directory
-    r3 = client.post("/api/datasets/upload", data={"file": (io.BytesIO(b"code,product_name\n1,Test\n"), "test_upload_tmp.csv")}, content_type="multipart/form-data")
+    # 3. Valid CSV upload lands safely in isolated uploads/ directory and loads as custom dataset
+    r3 = client.post("/api/datasets/upload", data={"file": (io.BytesIO(b"code,product_name\n999,Custom Test Food\n"), "test_upload_tmp.csv")}, content_type="multipart/form-data")
     assert r3.status_code == 200
+    r3_data = r3.get_json()
+    assert r3_data["matched_dataset"] == "custom"
+    custom_recs = client.get("/api/records?dataset=custom").get_json()
+    assert custom_recs["stats"]["total"] == 1
+    assert custom_recs["records"][0]["name"] == "Custom Test Food"
     uploaded_file = UPLOAD_DIR / "test_upload_tmp.csv"
     assert uploaded_file.exists()
     # Cleanup test upload artifact
+    DATASET_CONFIGS.pop("custom", None)
     uploaded_file.unlink(missing_ok=True)
     if UPLOAD_DIR.exists() and not any(UPLOAD_DIR.iterdir()):
         shutil.rmtree(UPLOAD_DIR, ignore_errors=True)
