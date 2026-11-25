@@ -6,7 +6,7 @@
 
 ---
 
-## Summary of Changes
+## Summary of Changes 
 
 ### 1. Review 1 Core Skeleton & Zero-Hallucination Validator (`food-db-reviewer/`)
 - **[food-db-reviewer/README.md](food-db-reviewer/README.md)**: Documented problem understanding, the zero-hallucination constraint, Tier 1/2/3 field risk taxonomy, dirty-data edge cases (`null`, `""`, `"N/A"`, `"TBD"`, `"unknown"`, `[]`, negative numbers), ASCII two-stage hybrid pipeline architecture, anti-hallucination guardrails, and CLI usage.
