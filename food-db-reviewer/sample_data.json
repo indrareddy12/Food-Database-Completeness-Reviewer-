@@ -1,0 +1,106 @@
+[
+  {
+    "id": "FOOD-001",
+    "name": "Hazelnut Granola",
+    "brand": "MorningPeak Foods",
+    "category": "Breakfast Cereal",
+    "serving_size": "55g",
+    "calories": 250,
+    "protein_g": 6.5,
+    "carbs_g": 34.0,
+    "fat_g": 10.0,
+    "sugar_g": 9.0,
+    "sodium_mg": 85,
+    "ingredients": [
+      "Rolled Oats",
+      "Roasted Hazelnuts",
+      "Honey",
+      "Sunflower Oil",
+      "Sea Salt"
+    ],
+    "allergens": null
+  },
+  {
+    "id": "FOOD-002",
+    "name": "Kids Mango Fruit Drink",
+    "brand": "SunnySip",
+    "category": "Beverage",
+    "serving_size": "200ml carton",
+    "calories": 95,
+    "protein_g": 0.5,
+    "carbs_g": 23.0,
+    "fat_g": 0.0,
+    "sugar_g": "N/A",
+    "sodium_mg": "TBD",
+    "ingredients": [
+      "Water",
+      "Mango Puree",
+      "Cane Sugar",
+      "Ascorbic Acid"
+    ],
+    "allergens": [
+      "None"
+    ]
+  },
+  {
+    "id": "FOOD-003",
+    "name": "Himalayan Pink Salt",
+    "brand": "PureEarth Pantry",
+    "category": "Seasoning",
+    "serving_size": "",
+    "calories": 0,
+    "protein_g": 0.0,
+    "carbs_g": 0.0,
+    "fat_g": 0.0,
+    "sugar_g": 0.0,
+    "sodium_mg": 590,
+    "ingredients": [
+      "Unrefined Himalayan Pink Salt"
+    ],
+    "allergens": [
+      "None"
+    ]
+  },
+  {
+    "id": "FOOD-004",
+    "name": "Protein Almond Bar",
+    "brand": "ApexFuel",
+    "category": "Protein Snack",
+    "serving_size": "60g bar",
+    "calories": -150,
+    "protein_g": "unknown",
+    "carbs_g": 18.0,
+    "fat_g": 9.0,
+    "sugar_g": 5.0,
+    "sodium_mg": 140,
+    "ingredients": [
+      "Almonds",
+      "Whey Protein Isolate",
+      "Chicory Root Fiber",
+      "Cocoa Butter"
+    ],
+    "allergens": [
+      "Tree Nuts (Almonds)",
+      "Milk"
+    ]
+  },
+  {
+    "id": "FOOD-005",
+    "name": "Plain Rolled Oats",
+    "brand": "HarvestMill",
+    "category": "Grains & Oats",
+    "serving_size": "40g dry",
+    "calories": 150,
+    "protein_g": 5.0,
+    "carbs_g": 27.0,
+    "fat_g": 3.0,
+    "sugar_g": 1.0,
+    "sodium_mg": 0,
+    "ingredients": [
+      "100% Whole Grain Rolled Oats"
+    ],
+    "allergens": [
+      "None"
+    ]
+  }
+]
